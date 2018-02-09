@@ -97,12 +97,12 @@ endif
 ###########################################################
 
 FIBER_PATH = ../..
-FIBER_INC  = $(FIBER_PATH)/c/include
+FIBER_INC  = $(FIBER_PATH)/include
 FIBER_LIB  = $(FIBER_PATH)
 
 EXTLIBS =
 CFLAGS += -I$(FIBER_INC)
-LDFLAGS = -lfiber $(EXTLIBS) $(SYSLIB)
+LDFLAGS = -L$(FIBER_PATH) -lfiber $(EXTLIBS) $(SYSLIB)
 
 ###########################################################
 

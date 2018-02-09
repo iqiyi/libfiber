@@ -6,10 +6,12 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <signal.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #endif
-#include "lib_acl.h"
 #include "fiber/lib_fiber.h"
-#include "stamp.h"
+#include "../stamp.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 # define snprintf	_snprintf
@@ -47,7 +49,7 @@ static void echo_client(SOCKET fd)
 #else
 		if (write(fd, str, strlen(str)) <= 0) {
 #endif
-			printf("write error: %s\r\n", acl_last_serror());
+			printf("write error: %s\r\n", strerror(errno));
 			break;
 		}
 
@@ -67,7 +69,7 @@ static void echo_client(SOCKET fd)
 		ret = read(fd, buf, sizeof(buf));
 #endif
 		if (ret <= 0) {
-			printf("read error: %s\r\n", acl_last_serror());
+			printf("read error: %s\r\n", strerror(errno));
 			break;
 		}
 
@@ -81,11 +83,14 @@ static void echo_client(SOCKET fd)
 #endif
 }
 
-static void fiber_connect(ACL_FIBER *fiber acl_unused, void *ctx acl_unused)
+static void fiber_connect(ACL_FIBER *fiber, void *ctx)
 {
 	SOCKET  fd = socket(AF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in sa;
 	socklen_t len = (socklen_t) sizeof(sa);
+
+	(void) fiber;
+	(void) ctx;
 
 	assert(fd != INVALID_SOCKET);
 
@@ -107,7 +112,7 @@ static void fiber_connect(ACL_FIBER *fiber acl_unused, void *ctx acl_unused)
 
 		printf("fiber-%d: connect %s:%d error %s\r\n",
 			acl_fiber_self(), __server_ip, __server_port,
-			acl_last_serror());
+			strerror(errno));
 
 		__total_error_clients++;
 	} else {
@@ -134,14 +139,15 @@ static void fiber_connect(ACL_FIBER *fiber acl_unused, void *ctx acl_unused)
 			__total_clients, __total_error_clients,
 			__total_count, spent,
 			(__total_count * 1000) / (spent > 0 ? spent : 1));
-
-//		acl_fiber_schedule_stop();
 	}
 }
 
-static void fiber_main(ACL_FIBER *fiber acl_unused, void *ctx acl_unused)
+static void fiber_main(ACL_FIBER *fiber, void *ctx)
 {
 	int i;
+
+	(void) fiber;
+	(void) ctx;
 
 	for (i = 0; i < __max_fibers; i++)
 		acl_fiber_create(fiber_connect, NULL, __stack_size);
@@ -166,9 +172,6 @@ int main(int argc, char *argv[])
 {
 	int   ch, event_mode = FIBER_EVENT_KERNEL;
        
-	acl_lib_init();
-	acl_msg_stdout_enable(1);
-
 #if !defined(_WIN32) && !defined(_WIN64)
 	signal(SIGPIPE, SIG_IGN);
 #endif

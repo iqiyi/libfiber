@@ -7,6 +7,9 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <poll.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #endif
 #include "fiber/lib_fiber.h"
 
@@ -46,7 +49,7 @@ static int check_read(int fd, int timeout)
 
 	n = POLL(&pfd, 1, timeout);
 	if (n < 0) {
-		printf("poll error: %s\r\n", acl_last_serror());
+		printf("poll error: %s\r\n", strerror(errno));
 		return -1;
 	}
 
@@ -151,7 +154,7 @@ static void fiber_accept(ACL_FIBER *fiber, void *ctx)
 #else
 	if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) {
 #endif
-		printf("setsockopt error %s\r\n", acl_last_serror());
+		printf("setsockopt error %s\r\n", strerror(errno));
 		exit (1);
 	}
 
@@ -173,7 +176,7 @@ static void fiber_accept(ACL_FIBER *fiber, void *ctx)
 		SOCKET *pfd;
 		SOCKET cfd = ACCEPT(lfd, (struct sockaddr *)& sa, (socklen_t *) &len);
 		if (cfd == INVALID_SOCKET) {
-			printf("accept error %s\r\n", acl_last_serror());
+			printf("accept error %s\r\n", strerror(errno));
 			break;
 		}
 
@@ -261,8 +264,6 @@ int main(int argc, char *argv[])
 #if !defined(_WIN32) && !defined(_WIN64)
 	signal(SIGPIPE, SIG_IGN);
 #endif
-	acl_lib_init();
-	acl_msg_stdout_enable(1);
 	acl_fiber_msg_stdout_enable(1);
 
 #ifdef	SCHEDULE_AUTO
