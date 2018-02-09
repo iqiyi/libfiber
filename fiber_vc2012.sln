@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib_fiber", "lib_fiber_vc2012.vcxproj", "{34506C5D-E131-43BB-9656-BA39F0B56485}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{7EE518F4-4973-47A2-8484-652761BEAB03}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "samples\server\server_vc2012.vcxproj", "{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "samples\client\client_vc2012.vcxproj", "{A08F48F5-D359-4332-8743-F9D85887AEF6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		DebugDll|Win32 = DebugDll|Win32
+		Release|Win32 = Release|Win32
+		ReleaseDll|Win32 = ReleaseDll|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.Debug|Win32.ActiveCfg = Debug|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.Debug|Win32.Build.0 = Debug|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.Release|Win32.ActiveCfg = Release|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.Release|Win32.Build.0 = Release|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{34506C5D-E131-43BB-9656-BA39F0B56485}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.Debug|Win32.Build.0 = Debug|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.Release|Win32.ActiveCfg = Release|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.Release|Win32.Build.0 = Release|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.Debug|Win32.Build.0 = Debug|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.Release|Win32.ActiveCfg = Release|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.Release|Win32.Build.0 = Release|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{A08F48F5-D359-4332-8743-F9D85887AEF6}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2} = {7EE518F4-4973-47A2-8484-652761BEAB03}
+		{A08F48F5-D359-4332-8743-F9D85887AEF6} = {7EE518F4-4973-47A2-8484-652761BEAB03}
+	EndGlobalSection
+EndGlobal

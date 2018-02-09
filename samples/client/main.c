@@ -3,12 +3,16 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#if !defined(_WIN32) && !defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
+#include <winsock2.h>
+#include "../patch.h"
+#else
 #include <unistd.h>
 #include <signal.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+
 #endif
 #include "fiber/lib_fiber.h"
 #include "../stamp.h"
@@ -35,7 +39,10 @@ static int __max_fibers   = 100;
 static int __left_fibers  = 100;
 static int __read_data    = 1;
 static int __stack_size   = 32000;
+
+#if !defined(_WIN32) && !defined(_WIN64)
 static struct timeval __begin;
+#endif
 
 static void echo_client(SOCKET fd)
 {
@@ -128,6 +135,7 @@ static void fiber_connect(ACL_FIBER *fiber, void *ctx)
 	printf("max_fibers: %d, left: %d\r\n", __max_fibers, __left_fibers);
 
 	if (__left_fibers == 0) {
+#if !defined(_WIN32) && !defined(_WIN64)
 		double spent;
 		struct timeval end;
 
@@ -139,6 +147,7 @@ static void fiber_connect(ACL_FIBER *fiber, void *ctx)
 			__total_clients, __total_error_clients,
 			__total_count, spent,
 			(__total_count * 1000) / (spent > 0 ? spent : 1));
+#endif
 	}
 }
 
@@ -153,6 +162,7 @@ static void fiber_main(ACL_FIBER *fiber, void *ctx)
 		acl_fiber_create(fiber_connect, NULL, __stack_size);
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)
 static void usage(const char *procname)
 {
 	printf("usage: %s -h [help]\r\n"
@@ -167,10 +177,14 @@ static void usage(const char *procname)
 		" -z stack_size\r\n"
 		" -n max_loop\r\n", procname);
 }
+#endif
 
 int main(int argc, char *argv[])
 {
-	int   ch, event_mode = FIBER_EVENT_KERNEL;
+#if !defined(_WIN32) && !defined(_WIN64)
+	int   ch;
+#endif
+	int   event_mode = FIBER_EVENT_KERNEL;
        
 #if !defined(_WIN32) && !defined(_WIN64)
 	signal(SIGPIPE, SIG_IGN);
@@ -178,6 +192,9 @@ int main(int argc, char *argv[])
 
 	snprintf(__server_ip, sizeof(__server_ip), "%s", "127.0.0.1");
 
+#if defined(_WIN32) || defined(_WIN64)
+	socket_init();
+#else
 	while ((ch = getopt(argc, argv, "hc:n:s:p:t:r:Sd:z:e:")) > 0) {
 		switch (ch) {
 		case 'h':
@@ -223,15 +240,23 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
+#endif
 
 	acl_fiber_msg_stdout_enable(1);
+
+#if !defined(_WIN32) && !defined(_WIN64)
 	gettimeofday(&__begin, NULL);
+#endif
 
 	acl_fiber_create(fiber_main, NULL, 32768);
 
 	printf("call fiber_schedule with=%d\r\n", event_mode);
 
 	acl_fiber_schedule_with(event_mode);
+
+#if defined(_WIN32) || defined(_WIN64)
+	socket_end();
+#endif
 
 	return 0;
 }

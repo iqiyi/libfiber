@@ -4,7 +4,10 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
-#if !defined(_WIN32) && !defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
+#include <winsock2.h>
+#include "../patch.h"
+#else
 #include <unistd.h>
 #include <poll.h>
 #include <netinet/in.h>
@@ -196,19 +199,22 @@ static void fiber_accept(ACL_FIBER *fiber, void *ctx)
 #define SCHEDULE_AUTO
 
 #ifndef	SCHEDULE_AUTO
-static void fiber_memcheck(ACL_FIBER *fiber acl_unused, void *ctx acl_unused)
+static void fiber_memcheck(ACL_FIBER *fiber, void *ctx)
 {
+	(void) fiber;
+	(void) ctx;
+
 	while (1) {
 #if defined(_WIN32) || defined(_WIN64)
 		acl_fiber_delay(1000);
 #else
 		sleep(1);
 #endif
-		acl_default_meminfo();
 	}
 }
 #endif
 
+#if !defined(_WIN32) && !defined(_WIN64)
 static void usage(const char *procname)
 {
 	printf("usage: %s -h [help]\r\n"
@@ -220,13 +226,20 @@ static void usage(const char *procname)
 		" -z stack_size\r\n"
 		" -S [if using single IO, default: no]\r\n", procname);
 }
+#endif
 
 int main(int argc, char *argv[])
 {
-	int   ch, event_mode = FIBER_EVENT_KERNEL;
+#if !defined(_WIN32) && !defined(_WIN64)
+	int   ch;
+#endif
+	int   event_mode = FIBER_EVENT_KERNEL;
 
 	snprintf(__listen_ip, sizeof(__listen_ip), "%s", "127.0.0.1");
 
+#if defined(_WIN32) || defined(_WIN64)
+	socket_init();
+#else
 	while ((ch = getopt(argc, argv, "hs:p:r:q:Sz:e:")) > 0) {
 		switch (ch) {
 		case 'h':
@@ -261,7 +274,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#if !defined(_WIN32) && !defined(_WIN64)
 	signal(SIGPIPE, SIG_IGN);
 #endif
 	acl_fiber_msg_stdout_enable(1);
@@ -279,6 +291,10 @@ int main(int argc, char *argv[])
 
 	printf("call fiber_schedule\r\n");
 	acl_fiber_schedule_with(event_mode);
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+	socket_end();
 #endif
 
 	return 0;
