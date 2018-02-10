@@ -3,26 +3,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#if defined(_WIN32) || defined(_WIN64)
-#include <winsock2.h>
-#include "../patch.h"
-#else
-#include <unistd.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-
-#endif
 #include "fiber/lib_fiber.h"
+#include "../patch.h"
 #include "../stamp.h"
-
-#if defined(_WIN32) || defined(_WIN64)
-# define snprintf	_snprintf
-#else
-# define SOCKET		int
-# define INVALID_SOCKET	-1
-#endif
 
 static char __server_ip[64];
 static int  __server_port = 9001;
@@ -31,7 +14,6 @@ static long long int __total_count = 0;
 static int __total_clients         = 0;
 static int __total_error_clients   = 0;
 
-static int __fiber_delay  = 0;
 static int __conn_timeout = 0;
 static int __rw_timeout   = 0;
 static int __max_loop     = 10000;
@@ -51,11 +33,7 @@ static void echo_client(SOCKET fd)
 	const char *str = "hello world\r\n";
 
 	for (i = 0; i < __max_loop; i++) {
-#if defined(_WIN32) || defined(_WIN64)
 		if (acl_fiber_send(fd, str, strlen(str), 0) <= 0) {
-#else
-		if (write(fd, str, strlen(str)) <= 0) {
-#endif
 			printf("write error: %s\r\n", strerror(errno));
 			break;
 		}
@@ -70,11 +48,7 @@ static void echo_client(SOCKET fd)
 			continue;
 		}
 
-#if defined(_WIN32) || defined(_WIN64)
 		ret = acl_fiber_recv(fd, buf, sizeof(buf), 0);
-#else
-		ret = read(fd, buf, sizeof(buf));
-#endif
 		if (ret <= 0) {
 			printf("read error: %s\r\n", strerror(errno));
 			break;
@@ -83,51 +57,26 @@ static void echo_client(SOCKET fd)
 		__total_count++;
 	}
 
-#if defined(_WIN32) || defined(_WIN64)
 	acl_fiber_close(fd);
-#else
-	close(fd);
-#endif
 }
 
 static void fiber_connect(ACL_FIBER *fiber, void *ctx)
 {
-	SOCKET  fd = socket(AF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in sa;
-	socklen_t len = (socklen_t) sizeof(sa);
+	SOCKET  fd = socket_connect(__server_ip, __server_port);
 
 	(void) fiber;
 	(void) ctx;
 
-	assert(fd != INVALID_SOCKET);
-
-	memset(&sa, 0, sizeof(sa));
-	sa.sin_family = AF_INET;
-	sa.sin_port   = htons(__server_port);
-	sa.sin_addr.s_addr = inet_addr(__server_ip);
-
-	if (__fiber_delay > 0)
-		acl_fiber_delay(__fiber_delay);
-
-#if defined(_WIN32) || defined(_WIN64)
-	if (acl_fiber_connect(fd, (const struct sockaddr *) &sa, len) < 0) {
-		acl_fiber_close(fd);
-#else
-	if (connect(fd, (const struct sockaddr *) &sa, len) < 0) {
-		close(fd);
-#endif
-
+	if (fd == INVALID_SOCKET) {
 		printf("fiber-%d: connect %s:%d error %s\r\n",
 			acl_fiber_self(), __server_ip, __server_port,
 			strerror(errno));
-
 		__total_error_clients++;
 	} else {
 		__total_clients++;
 		printf("fiber-%d: connect %s:%d ok, clients: %d, fd: %d\r\n",
 			acl_fiber_self(), __server_ip, __server_port,
 			__total_clients, fd);
-
 		echo_client(fd);
 	}
 
@@ -158,11 +107,11 @@ static void fiber_main(ACL_FIBER *fiber, void *ctx)
 	(void) fiber;
 	(void) ctx;
 
-	for (i = 0; i < __max_fibers; i++)
+	for (i = 0; i < __max_fibers; i++) {
 		acl_fiber_create(fiber_connect, NULL, __stack_size);
+	}
 }
 
-#if !defined(_WIN32) && !defined(_WIN64)
 static void usage(const char *procname)
 {
 	printf("usage: %s -h [help]\r\n"
@@ -173,29 +122,19 @@ static void usage(const char *procname)
 		" -r rw_timeout\r\n"
 		" -c max_fibers\r\n"
 		" -S [if using single IO, dafault: no]\r\n"
-		" -d fiber_delay_ms\r\n"
 		" -z stack_size\r\n"
 		" -n max_loop\r\n", procname);
 }
-#endif
 
 int main(int argc, char *argv[])
 {
-#if !defined(_WIN32) && !defined(_WIN64)
-	int   ch;
-#endif
-	int   event_mode = FIBER_EVENT_KERNEL;
+	int   ch, event_mode = FIBER_EVENT_KERNEL;
        
-#if !defined(_WIN32) && !defined(_WIN64)
-	signal(SIGPIPE, SIG_IGN);
-#endif
-
 	snprintf(__server_ip, sizeof(__server_ip), "%s", "127.0.0.1");
 
-#if defined(_WIN32) || defined(_WIN64)
 	socket_init();
-#else
-	while ((ch = getopt(argc, argv, "hc:n:s:p:t:r:Sd:z:e:")) > 0) {
+
+	while ((ch = getopt(argc, argv, "hc:n:s:p:t:r:Sz:e:")) > 0) {
 		switch (ch) {
 		case 'h':
 			usage(argv[0]);
@@ -222,25 +161,21 @@ int main(int argc, char *argv[])
 		case 'S':
 			__read_data = 0;
 			break;
-		case 'd':
-			__fiber_delay = atoi(optarg);
-			break;
 		case 'z':
 			__stack_size = atoi(optarg);
 			break;
 		case 'e':
-			if (strcasecmp(optarg, "select") == 0)
+			if (strcmp(optarg, "select") == 0)
 				event_mode = FIBER_EVENT_SELECT;
-			else if (strcasecmp(optarg, "poll") == 0)
+			else if (strcmp(optarg, "poll") == 0)
 				event_mode = FIBER_EVENT_POLL;
-			else if (strcasecmp(optarg, "kernel") == 0)
+			else if (strcmp(optarg, "kernel") == 0)
 				event_mode = FIBER_EVENT_KERNEL;
 			break;
 		default:
 			break;
 		}
 	}
-#endif
 
 	acl_fiber_msg_stdout_enable(1);
 

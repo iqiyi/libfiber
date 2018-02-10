@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #if defined(_WIN32) || defined (_WIN64)
+# include <winsock2.h>
+
 typedef long ssize_t;
 
 # define	FIBER_ETIMEDOUT		WSAETIMEDOUT
@@ -730,6 +732,12 @@ FIBER_API void acl_fiber_msg_stdout_enable(int onoff);
  * @return {int} 错误号
  */
 FIBER_API int acl_fiber_last_error(void);
+
+/**
+ * 获得上次系统调用出错时的错误信息
+ * @return {const char*}
+ */
+FIBER_API const char *acl_fiber_last_serror(void);
 
 /**
  * 手工设置错误号

@@ -227,6 +227,11 @@ const char *last_serror(void)
 	return msg_strerror(error, buf, __buf_size);
 }
 
+const char *acl_fiber_last_serror(void)
+{
+	return last_serror();
+}
+
 void msg_printf(const char *fmt,...)
 {
 	char  buf[2048];

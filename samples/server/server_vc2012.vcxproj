@@ -180,6 +180,7 @@ copy ..\..\c\lib_fiber.dll .\ /Y</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\getopt.c" />
     <ClCompile Include="..\patch.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>

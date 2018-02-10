@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "samples\server\se
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "samples\client\client_vc2012.vcxproj", "{A08F48F5-D359-4332-8743-F9D85887AEF6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinEchod", "samples\WinEchod\WinEchod.vcxproj", "{F74A61AD-A309-47A5-A7C6-BAC888660BBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,6 +43,14 @@ Global
 		{A08F48F5-D359-4332-8743-F9D85887AEF6}.Release|Win32.Build.0 = Release|Win32
 		{A08F48F5-D359-4332-8743-F9D85887AEF6}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
 		{A08F48F5-D359-4332-8743-F9D85887AEF6}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.Debug|Win32.Build.0 = Debug|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.Release|Win32.ActiveCfg = Release|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.Release|Win32.Build.0 = Release|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,5 +58,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{EE518BE5-94B2-4F8E-82CC-C08503BBD6B2} = {7EE518F4-4973-47A2-8484-652761BEAB03}
 		{A08F48F5-D359-4332-8743-F9D85887AEF6} = {7EE518F4-4973-47A2-8484-652761BEAB03}
+		{F74A61AD-A309-47A5-A7C6-BAC888660BBC} = {7EE518F4-4973-47A2-8484-652761BEAB03}
 	EndGlobalSection
 EndGlobal

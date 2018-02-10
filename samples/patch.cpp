@@ -1,6 +1,6 @@
+#include "stdafx.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
@@ -58,7 +58,7 @@ SOCKET socket_listen(const char *ip, int port)
 
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd == INVALID_SOCKET) {
-		printf("create socket error, %s\r\n", strerror(errno));
+		printf("create socket error, %s\r\n", acl_fiber_last_serror());
 		getchar();
 		exit (1);
 	}
@@ -68,18 +68,18 @@ SOCKET socket_listen(const char *ip, int port)
 #else
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) {
 #endif
-		printf("setsockopt error %s\r\n", strerror(errno));
+		printf("setsockopt error %s\r\n", acl_fiber_last_serror());
 		exit (1);
 	}
 
 	if (bind(fd, (struct sockaddr *) &sa, sizeof(struct sockaddr)) < 0) {
-		printf("bind error %s\r\n", strerror(errno));
+		printf("bind error %s\r\n", acl_fiber_last_serror());
 		getchar();
 		exit (1);
 	}
 
 	if (acl_fiber_listen(fd, 128) < 0) {
-		printf("listen error %s\r\n", strerror(errno));
+		printf("listen error %s\r\n", acl_fiber_last_serror());
 		getchar();
 		exit (1);
 	}
@@ -104,7 +104,7 @@ SOCKET socket_connect(const char *ip, int port)
 	socklen_t len = (socklen_t) sizeof(sa);
 
 	if (fd == INVALID_SOCKET) {
-		printf("create socket error %s\r\n", strerror(errno));
+		printf("create socket error %s\r\n", acl_fiber_last_serror());
 		return INVALID_SOCKET;
 	}
 
@@ -116,7 +116,7 @@ SOCKET socket_connect(const char *ip, int port)
 	if (acl_fiber_connect(fd, (const struct sockaddr *) &sa, len) < 0) {
 		acl_fiber_close(fd);
 		printf("%s: connect %s:%d erorr %s\r\n",
-			ip, port, strerror(errno));
+			ip, port, acl_fiber_last_serror());
 		return INVALID_SOCKET;
 	}
 	return fd;
