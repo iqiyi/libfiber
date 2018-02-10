@@ -116,7 +116,7 @@ SOCKET socket_connect(const char *ip, int port)
 	if (acl_fiber_connect(fd, (const struct sockaddr *) &sa, len) < 0) {
 		acl_fiber_close(fd);
 		printf("%s: connect %s:%d erorr %s\r\n",
-			ip, port, acl_fiber_last_serror());
+			__FUNCTION__, ip, port, acl_fiber_last_serror());
 		return INVALID_SOCKET;
 	}
 	return fd;
