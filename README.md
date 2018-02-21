@@ -13,7 +13,7 @@ Event|Linux|BSD|Windows
 <b>Win GUI message</b>|no|no|yes
 
 ## One server sample
-```C
+~~~C
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -29,7 +29,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	char buf[8192];
 
 	while (1) {
-		int ret = acl_fiber_recv(*pfd, buf, sizeof(buf) - 1, 0);
+		int ret = acl_fiber_recv(*pfd, buf, sizeof(buf), 0);
 		if (ret == 0) {
 			break;
 		} else if (ret < 0) {
@@ -38,7 +38,6 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 			}
 			break;
 		}
-		buf[ret] = 0;
 		if (acl_fiber_send(*pfd, buf, ret) < 0) {
 			break;
 		}
@@ -57,7 +56,7 @@ static void fiber_accept(ACL_FIBER *fb, void *ctx)
 
 	for (;;) {
 		SOCKET *pfd, cfd = socket_accept(lfd);
-		if (cfd == -1) {
+		if (cfd == INVALID_SOCKET) {
 			printf("accept error %s\r\n", acl_fiber_last_serror());
 			break;
 		}
@@ -70,24 +69,36 @@ static void fiber_accept(ACL_FIBER *fb, void *ctx)
 	exit (1);
 }
 
+// FIBER_EVENT_KERNEL represents the event type on
+// Linux(epoll), BSD(kqueue), Windows(iocp)
+// FIBER_EVENT_POLL: poll on Linux/BSD/Windows
+// FIBER_EVENT_SELECT: select on Linux/BSD/Windows
+// FIBER_EVENT_WMSG: Win GUI message on Windows
+// acl_fiber_create/acl_fiber_schedule_with are in `lib_fiber.h`.
+// socket_listen/socket_accept/socket_close are in patch.c of the samples path.
+
 int main(void)
 {
-	// FIBER_EVENT_KERNEL represents the event type on
-	// Linux(epoll), BSD(kqueue), Windows(iocp)
-	// FIBER_EVENT_POLL: poll on Linux/BSD/Windows
-	// FIBER_EVENT_SELECT: select on Linux/BSD/Windows
-	// FIBER_EVENT_WMSG: Win GUI message on Windows
-	// acl_fiber_create/acl_fiber_schedule_with are in `lib_fiber.h`.
-	// socket_listen/socket_accept/socket_close are in patch.c of the samples path.
-
 	int event_mode = FIBER_EVENT_KERNEL;
+
+#if defined(_WIN32) || defined(_WIN64)
+	socket_init();
+#endif
 
 	acl_fiber_create(fiber_accept, NULL, __stack_size);
 	acl_fiber_schedule_with(event_mode);
+
+#if defined(_WIN32) || defined(_WIN64)
+	socket_end();
+#endif
+
 	return 0;
 }
-```
-```C
+~~~
+
+## One client sample
+
+~~~C
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -147,4 +158,4 @@ int main(void)
 
 	return 0;
 }
-```
+~~~
