@@ -175,5 +175,4 @@ fiber_server: fiber_server.c
 
 fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber
-```
 ~~~
