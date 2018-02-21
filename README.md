@@ -21,7 +21,7 @@ Event|Linux|BSD|Windows
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "lib_fiber.h"
+#include "fiber/lib_fiber.h"
 #include "patch.h" // in the samples path
 
 static size_t      __stack_size  = 128000;
@@ -43,7 +43,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 			}
 			break;
 		}
-		if (acl_fiber_send(*pfd, buf, ret) < 0) {
+		if (acl_fiber_send(*pfd, buf, ret, 0) < 0) {
 			break;
 		}
 	}
@@ -110,7 +110,7 @@ int main(void)
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "lib_fiber.h"
+#include "fiber/lib_fiber.h"
 #include "patch.h" // in the samples path
 
 static const char *__server_ip   = "127.0.0.1";
@@ -130,17 +130,17 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	}
 
 	for (i = 0; i < 1024; i++) {
-		if (acl_fiber_send(cfd, s, strlen(s)) <= 0) {
+		if (acl_fiber_send(cfd, s, strlen(s), 0) <= 0) {
 			printf("send error %s\r\n", acl_fiber_last_serror());
 			break;
 		}
-		ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0));
+		ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0);
 		if (ret <= 0) {
 			break;
 		}
 	}
 
-	acl_fiber_close(fd);
+	acl_fiber_close(cfd);
 }
 
 int main(void)
@@ -171,8 +171,8 @@ int main(void)
 ## BUILDING
 ~~~
 fiber_server: fiber_server.c
-	gcc -o fiber_server fiber_server.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber
+	gcc -o fiber_server fiber_server.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 
 fiber_client: fiber_client.c
-	gcc -o fiber_client fiber_client.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber
+	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ~~~

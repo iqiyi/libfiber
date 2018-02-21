@@ -29,6 +29,7 @@ typedef long ssize_t;
 # define	FIBER_EINPROGRESS	WSAEINPROGRESS
 
 #else
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
