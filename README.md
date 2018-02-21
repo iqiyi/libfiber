@@ -116,7 +116,7 @@ int main(void)
 static const char *__server_ip   = "127.0.0.1";
 static int         __server_port = 9001;
 
-// socket_init/socket_end/socket_connect/socket_close are in patch.c of the samples patch
+// socket_init/socket_end/socket_connect/socket_close are in patch.c of the samples path
 
 static void fiber_client(ACL_FIBER *fb, void *ctx)
 {
