@@ -12,12 +12,17 @@ Event|Linux|BSD|Windows
 <b>iocp</b>|no|no|yes
 <b>Win GUI message</b>|no|no|yes
 
-## One server sample
+## SAMPLES
+
+### One server sample
 ~~~C
+// fiber_server.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "fiber/lib_fiber.h"
+#include "lib_fiber.h"
+#include "patch.h" // in the samples path
 
 static size_t      __stack_size  = 128000;
 static const char *__listen_ip   = "127.0.0.1";
@@ -96,14 +101,17 @@ int main(void)
 }
 ~~~
 
-## One client sample
+### One client sample
 
 ~~~C
+// fiber_client.c
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "fiber/lib_fiber.h"
+#include "lib_fiber.h"
+#include "patch.h" // in the samples path
 
 static const char *__server_ip   = "127.0.0.1";
 static int         __server_port = 9001;
@@ -158,4 +166,14 @@ int main(void)
 
 	return 0;
 }
+~~~
+
+## BUILDING
+~~~
+fiber_server: fiber_server.c
+	gcc -o fiber_server fiber_server.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber
+
+fiber_client: fiber_client.c
+	gcc -o fiber_client fiber_client.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber
+```
 ~~~
