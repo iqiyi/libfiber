@@ -1,18 +1,22 @@
 # The high performance coroutine library, supporting Linux/BSD/Windows
 
-* [which IO events are supported?](#which-IO-events-are-supported-)
+<!-- vim-markdown-toc GFM -->
+
+* [which IO events are supported?](#which-IO-events-are-supported)
 * [SAMPLES](#SAMPLES)
-	* [One server sample](#One-server-sample)
-	* [One client sample](#One-client-sample)
+    * [One server sample](#One-server-sample)
+    * [One client sample](#One-client-sample)
 * [BUILDING](#BUILDING)
 * [API support](#API support)
-	* [Base API](#Base-API)
-	* [IO API](#IO-API)
-	* [Net API](#Net-API)
-	* [Channel API](#Channel-API)
-	* [Sync API](#Sync-API)
+    * [Base API](#Base-API)
+    * [IO API](#IO-API)
+    * [Net API](#Net-API)
+    * [Channel API](#Channel-API)
+    * [Sync API](#Sync-API)
 
-## which IO events are supported?
+<!-- vim-markdown-toc -->
+
+## which IO events are supported
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
 Event|Linux|BSD|Windows
@@ -180,7 +184,7 @@ int main(void)
 }
 ~~~
 
-## <b>BUILDING</b>
+## BUILDING
 ~~~
 fiber_server: fiber_server.c
 	gcc -o fiber_server fiber_server.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
@@ -189,7 +193,7 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ~~~
 
-## API support
+## API support  
 
 ### Base API  
 acl_fiber_create  
