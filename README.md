@@ -1,6 +1,6 @@
 # The high performance coroutine library, supporting Linux/BSD/Windows
 
-## which IO events are supported ?
+## <b>which IO events are supported ?</b>
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
 Event|Linux|BSD|Windows
@@ -12,7 +12,7 @@ Event|Linux|BSD|Windows
 <b>iocp</b>|no|no|yes
 <b>Win GUI message</b>|no|no|yes
 
-## SAMPLES
+## <b>SAMPLES</b>
 
 ### One server sample
 ~~~C
@@ -168,7 +168,7 @@ int main(void)
 }
 ~~~
 
-## BUILDING
+## <b>BUILDING</b>
 ~~~
 fiber_server: fiber_server.c
 	gcc -o fiber_server fiber_server.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
@@ -176,3 +176,96 @@ fiber_server: fiber_server.c
 fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ~~~
+
+## <b>API support</b>
+
+### <b>Base API</b>  
+acl_fiber_create  
+acl_fiber_self  
+acl_fiber_status  
+acl_fiber_kill   
+acl_fiber_killed  
+acl_fiber_signal  
+acl_fiber_yield  
+acl_fiber_ready  
+acl_fiber_switch  
+acl_fiber_schedule_init  
+acl_fiber_schedule  
+acl_fiber_schedule_with  
+acl_fiber_scheduled  
+acl_fiber_schedule_stop  
+acl_fiber_set_specific  
+acl_fiber_get_specific  
+acl_fiber_delay  
+acl_fiber_last_error  
+acl_fiber_last_serror  
+
+### <b>IO API</b>
+acl_fiber_recv  
+acl_fiber_recvfrom  
+acl_fiber_read  
+acl_fiber_readv  
+acl_fiber_recvmsg  
+acl_fiber_write  
+acl_fiber_writev  
+acl_fiber_send  
+acl_fiber_sendto  
+acl_fiber_sendmsg  
+acl_fiber_select  
+acl_fiber_poll  
+acl_fiber_close  
+
+### <b>Net API</b>
+acl_fiber_socket  
+acl_fiber_listen  
+acl_fiber_accept  
+acl_fiber_connect  
+
+### <b>Channel API<b>  
+acl_channel_create  
+acl_channel_free  
+acl_channel_send  
+acl_channel_send_nb  
+acl_channel_recv  
+acl_channel_recv_nb  
+acl_channel_sendp  
+acl_channel_recvp  
+acl_channel_sendp_nb  
+acl_channel_recvp_nb  
+acl_channel_sendul  
+acl_channel_recvul  
+acl_channel_sendul_nb  
+acl_channel_recvul_nb  
+
+### Mutex & Sync types
+<b>ACL_FIBER_MUTEX</b>  
+acl_fiber_mutex_create  
+acl_fiber_mutex_free  
+acl_fiber_mutex_lock  
+acl_fiber_mutex_trylock  
+acl_fiber_mutex_unlock  
+
+<b>ACL_FIBER_RWLOCK</b>  
+acl_fiber_rwlock_create  
+acl_fiber_rwlock_free  
+acl_fiber_rwlock_rlock  
+acl_fiber_rwlock_tryrlock  
+acl_fiber_rwlock_wlock  
+acl_fiber_rwlock_trywlock  
+acl_fiber_rwlock_runlock  
+acl_fiber_rwlock_wunlock  
+
+<b>ACL_FIBER_EVENT</b>  
+acl_fiber_event_create  
+acl_fiber_event_free  
+acl_fiber_event_wait  
+acl_fiber_event_trywait  
+acl_fiber_event_notify  
+
+<b>ACL_FIBER_SEM</b>  
+acl_fiber_sem_create  
+acl_fiber_sem_free  
+acl_fiber_sem_wait  
+acl_fiber_sem_trywait  
+acl_fiber_sem_post  
+acl_fiber_sem_num  
