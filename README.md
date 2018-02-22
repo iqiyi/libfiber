@@ -2,17 +2,17 @@
 
 <!-- vim-markdown-toc GFM -->
 
-* [which IO events are supported?](#which-IO-events-are-supported)
-* [SAMPLES](#SAMPLES)
-    * [One server sample](#One-server-sample)
-    * [One client sample](#One-client-sample)
-* [BUILDING](#BUILDING)
-* [API support](#API-support)
-    * [Base API](#Base-API)
-    * [IO API](#IO-API)
-    * [Net API](#Net-API)
-    * [Channel API](#Channel-API)
-    * [Sync API](#Sync-API)
+* [which IO events are supported?](#which-io-events-are-supported)
+* [SAMPLES](#samples)
+    * [One server sample](#one-server-sample)
+    * [One client sample](#one-client-sample)
+* [BUILDING](#building)
+* [API support](#api-support)
+    * [Base API](#base-api)
+    * [IO API](#io-api)
+    * [Net API](#net-api)
+    * [Channel API](#channel-api)
+    * [Sync API](#sync-api)
 
 <!-- vim-markdown-toc -->
 
