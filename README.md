@@ -1,6 +1,18 @@
 # The high performance coroutine library, supporting Linux/BSD/Windows
 
-## <b>which IO events are supported ?</b>
+* [which IO events are supported?](#which-IO-events-are-supported-)
+* [SAMPLES](#SAMPLES)
+	* [One server sample](#One-server-sample)
+	* [One client sample](#One-client-sample)
+* [BUILDING](#BUILDING)
+* [API support](#API support)
+	* [Base API](#Base-API)
+	* [IO API](#IO-API)
+	* [Net API](#Net-API)
+	* [Channel API](#Channel-API)
+	* [Sync API](#Sync-API)
+
+## which IO events are supported?
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
 Event|Linux|BSD|Windows
@@ -12,7 +24,7 @@ Event|Linux|BSD|Windows
 <b>iocp</b>|no|no|yes
 <b>Win GUI message</b>|no|no|yes
 
-## <b>SAMPLES</b>
+## SAMPLES
 
 ### One server sample
 ~~~C
@@ -177,9 +189,9 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ~~~
 
-## <b>API support</b>
+## API support
 
-### <b>Base API</b>  
+### Base API  
 acl_fiber_create  
 acl_fiber_self  
 acl_fiber_status  
@@ -200,7 +212,7 @@ acl_fiber_delay
 acl_fiber_last_error  
 acl_fiber_last_serror  
 
-### <b>IO API</b>
+### IO API
 acl_fiber_recv  
 acl_fiber_recvfrom  
 acl_fiber_read  
@@ -215,13 +227,13 @@ acl_fiber_select
 acl_fiber_poll  
 acl_fiber_close  
 
-### <b>Net API</b>
+### Net API
 acl_fiber_socket  
 acl_fiber_listen  
 acl_fiber_accept  
 acl_fiber_connect  
 
-### <b>Channel API</b>  
+### Channel API  
 acl_channel_create  
 acl_channel_free  
 acl_channel_send  
@@ -237,7 +249,7 @@ acl_channel_recvul
 acl_channel_sendul_nb  
 acl_channel_recvul_nb  
 
-### Mutex & Sync types
+### Sync API
 <b>ACL_FIBER_MUTEX</b>  
 acl_fiber_mutex_create  
 acl_fiber_mutex_free  
