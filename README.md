@@ -221,7 +221,7 @@ acl_fiber_listen
 acl_fiber_accept  
 acl_fiber_connect  
 
-### <b>Channel API<b>  
+### <b>Channel API</b>  
 acl_channel_create  
 acl_channel_free  
 acl_channel_send  
