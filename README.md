@@ -197,6 +197,10 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ```
 
+## Benchmark
+The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by libmill, golang and libco.
+![Benchmark](#res/benchmark.png)
+
 ## API support  
 
 ### Base API  
