@@ -8,6 +8,8 @@
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
 * [BUILDING](#building)
+    * [On Linux & BSD](#on-linux-bsd)
+	* [On Windows](#on-windows)
 * [Benchmark](#benchmark)
 * [API support](#api-support)
     * [Base API](#base-api)
@@ -212,7 +214,7 @@ fiber_client: fiber_client.c
 You can open the [fiber_vc2012.sln](fiber_vc2012.sln) or [fiber_vc2013.sln](fiber_vc2012.sln) with vc2012 or vc2013, and build the libfiber library and the [samples](samples) included.
 
 ## Benchmark
-The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/acl/tree/master/golang/src/echo), and the sample written by libfiber is in [samples directory](samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
+The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/acl/tree/master/golang/src/echo), and the sample written by libfiber is in [server sample directory](samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
 
 ![Benchmark](res/benchmark.png)
 
