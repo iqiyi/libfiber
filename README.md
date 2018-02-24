@@ -7,6 +7,7 @@
 * [SAMPLES](#samples)
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
+	* [Windows GUI sample](#windows-gui-sample)
 * [BUILDING](#building)
     * [On Linux and BSD](#on-linux-and-bsd)
 	* [On Windows](#on-windows)
@@ -17,6 +18,7 @@
     * [Net API](#net-api)
     * [Channel API](#channel-api)
     * [Sync API](#sync-api)
+* [About API Hook](#about-api-hook)
 
 <!-- vim-markdown-toc -->
 
@@ -191,6 +193,11 @@ int main(void)
 }
 ```
 
+### Windows GUI sample
+There is one Windows GUI sample with libfiber in [directory](WinEchod). The screen shot is ![here](res/winecho.png)  
+
+The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memroy collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronus API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
+
 ## BUILDING
 ### On Linux and BSD
 ```
@@ -310,3 +317,29 @@ acl_fiber_sem_wait
 acl_fiber_sem_trywait  
 acl_fiber_sem_post  
 acl_fiber_sem_num  
+
+## About API Hook
+On Linux & BSD, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
+The standard APIs been hooked are shown below:
+- close
+- sleep
+- read
+- readv
+- recv
+- recvfrom
+- recvmsg
+- write
+- writev
+- send
+- sendto
+- sendmsg
+- sendfile64
+- socket
+- listen
+- accept
+- connect
+- select
+- poll
+- epoll: epoll_create, epoll_ctl, epoll_wait
+- gethostbyname(_r)
+- getaddrinfo/freeaddrinfo
