@@ -8,7 +8,7 @@
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
 * [BUILDING](#building)
-    * [On Linux & BSD](#on-linux-bsd)
+    * [On Linux and BSD](#on-linux-and-bsd)
 	* [On Windows](#on-windows)
 * [Benchmark](#benchmark)
 * [API support](#api-support)
@@ -192,7 +192,7 @@ int main(void)
 ```
 
 ## BUILDING
-### On Linux & BSD
+### On Linux and BSD
 ```
 $cd libfiber
 $make
