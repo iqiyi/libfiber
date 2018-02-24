@@ -228,95 +228,93 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 ## API support  
 
 ### Base API  
-acl_fiber_create  
-acl_fiber_self  
-acl_fiber_status  
-acl_fiber_kill   
-acl_fiber_killed  
-acl_fiber_signal  
-acl_fiber_yield  
-acl_fiber_ready  
-acl_fiber_switch  
-acl_fiber_schedule_init  
-acl_fiber_schedule  
-acl_fiber_schedule_with  
-acl_fiber_scheduled  
-acl_fiber_schedule_stop  
-acl_fiber_set_specific  
-acl_fiber_get_specific  
-acl_fiber_delay  
-acl_fiber_last_error  
-acl_fiber_last_serror  
+- acl_fiber_create  
+- acl_fiber_self  
+- acl_fiber_status  
+- acl_fiber_kill   
+- acl_fiber_killed  
+- acl_fiber_signal  
+- acl_fiber_yield  
+- acl_fiber_ready  
+- acl_fiber_switch  
+- acl_fiber_schedule_init  
+- acl_fiber_schedule  
+- acl_fiber_schedule_with  
+- acl_fiber_scheduled  
+- acl_fiber_schedule_stop  
+- acl_fiber_set_specific  
+- acl_fiber_get_specific  
+- acl_fiber_delay  
+- acl_fiber_last_error  
+- acl_fiber_last_serror  
 
 ### IO API
-acl_fiber_recv  
-acl_fiber_recvfrom  
-acl_fiber_read  
-acl_fiber_readv  
-acl_fiber_recvmsg  
-acl_fiber_write  
-acl_fiber_writev  
-acl_fiber_send  
-acl_fiber_sendto  
-acl_fiber_sendmsg  
-acl_fiber_select  
-acl_fiber_poll  
-acl_fiber_close  
+- acl_fiber_recv  
+- acl_fiber_recvfrom  
+- acl_fiber_read  
+- acl_fiber_readv  
+- acl_fiber_recvmsg  
+- acl_fiber_write  
+- acl_fiber_writev  
+- acl_fiber_send  
+- acl_fiber_sendto  
+- acl_fiber_sendmsg  
+- acl_fiber_select  
+- acl_fiber_poll  
+- acl_fiber_close  
 
 ### Net API
-acl_fiber_socket  
-acl_fiber_listen  
-acl_fiber_accept  
-acl_fiber_connect  
+- acl_fiber_socket  
+- acl_fiber_listen  
+- acl_fiber_accept  
+- acl_fiber_connect  
 
 ### Channel API  
-acl_channel_create  
-acl_channel_free  
-acl_channel_send  
-acl_channel_send_nb  
-acl_channel_recv  
-acl_channel_recv_nb  
-acl_channel_sendp  
-acl_channel_recvp  
-acl_channel_sendp_nb  
-acl_channel_recvp_nb  
-acl_channel_sendul  
-acl_channel_recvul  
-acl_channel_sendul_nb  
-acl_channel_recvul_nb  
+- acl_channel_create  
+- acl_channel_free  
+- acl_channel_send  
+- acl_channel_send_nb  
+- acl_channel_recv  
+- acl_channel_recv_nb  
+- acl_channel_sendp  
+- acl_channel_recvp  
+- acl_channel_sendp_nb  
+- acl_channel_recvp_nb  
+- acl_channel_sendul  
+- acl_channel_recvul  
+- acl_channel_sendul_nb  
+- acl_channel_recvul_nb  
 
 ### Sync API
 <b>ACL_FIBER_MUTEX</b>  
-acl_fiber_mutex_create  
-acl_fiber_mutex_free  
-acl_fiber_mutex_lock  
-acl_fiber_mutex_trylock  
-acl_fiber_mutex_unlock  
+- acl_fiber_mutex_create  
+- acl_fiber_mutex_lock  
+- acl_fiber_mutex_trylock  
+- acl_fiber_mutex_unlock  
 
 <b>ACL_FIBER_RWLOCK</b>  
-acl_fiber_rwlock_create  
-acl_fiber_rwlock_free  
-acl_fiber_rwlock_rlock  
-acl_fiber_rwlock_tryrlock  
-acl_fiber_rwlock_wlock  
-acl_fiber_rwlock_trywlock  
-acl_fiber_rwlock_runlock  
-acl_fiber_rwlock_wunlock  
+- acl_fiber_rwlock_create  
+- acl_fiber_rwlock_free  
+- acl_fiber_rwlock_rlock  
+- acl_fiber_rwlock_tryrlock  
+- acl_fiber_rwlock_wlock  
+- acl_fiber_rwlock_trywlock  
+- acl_fiber_rwlock_runlock  
+- acl_fiber_rwlock_wunlock  
 
 <b>ACL_FIBER_EVENT</b>  
-acl_fiber_event_create  
-acl_fiber_event_free  
-acl_fiber_event_wait  
-acl_fiber_event_trywait  
-acl_fiber_event_notify  
+- acl_fiber_event_create  
+- acl_fiber_event_free  
+- acl_fiber_event_wait  
+- acl_fiber_event_trywait  
+- acl_fiber_event_notify  
 
 <b>ACL_FIBER_SEM</b>  
-acl_fiber_sem_create  
-acl_fiber_sem_free  
-acl_fiber_sem_wait  
-acl_fiber_sem_trywait  
-acl_fiber_sem_post  
-acl_fiber_sem_num  
+- acl_fiber_sem_create  
+- acl_fiber_sem_free  
+- acl_fiber_sem_wait  
+- acl_fiber_sem_post  
+- acl_fiber_sem_num  
 
 ## About API Hook
 On Linux & BSD, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
