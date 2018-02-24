@@ -8,6 +8,7 @@
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
 	* [Windows GUI sample](#windows-gui-sample)
+	* [More SAMPLES](#more-samples)
 * [BUILDING](#building)
     * [On Linux and BSD](#on-linux-and-bsd)
 	* [On Windows](#on-windows)
@@ -198,6 +199,8 @@ There is one Windows GUI sample with libfiber in [directory](samples/WinEchod). 
 
 The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memroy collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronus API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
 
+### More SAMPLES
+You can get more samples in [samples](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples), which use many APIs in [acl project](https://github.com/acl-dev/acl/) library.
 ## BUILDING
 ### On Linux and BSD
 ```
