@@ -199,7 +199,7 @@ fiber_client: fiber_client.c
 
 ## Benchmark
 The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by libmill, golang and libco.
-![Benchmark](#res/benchmark.png)
+![Benchmark](res/benchmark.png)
 
 ## API support  
 
