@@ -190,6 +190,16 @@ int main(void)
 ```
 
 ## BUILDING
+### On Linux & BSD
+```
+$cd libfiber
+$make
+$cd samples
+$make
+```
+
+<b>The simple Makefile shown below:</b>
+
 ```
 fiber_server: fiber_server.c
 	gcc -o fiber_server fiber_server.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
@@ -198,8 +208,11 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ```
 
+### On Windows
+You can open the [fiber_vc2012.sln](fiber_vc2012.sln) or [fiber_vc2013.sln](fiber_vc2012.sln) with vc2012 or vc2013, and build the libfiber library and the [samples](samples) included.
+
 ## Benchmark
-The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by libmill, golang and libco. The samples written by libmill and libco are in [directory](https://github.com/acl-dev/libfiber/tree/master/benchmark), the sample written by golang is in [here](https://github.com/acl-dev/acl/tree/master/golang/src/echo), and the sample written by libfiber is in [samples/server directory](https://github.com/acl-dev/libfiber/tree/master/samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
+The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](https://github.com/acl-dev/libfiber/tree/master/benchmark), the sample written by golang is in [here](https://github.com/acl-dev/acl/tree/master/golang/src/echo), and the sample written by libfiber is in [samples/server directory](https://github.com/acl-dev/libfiber/tree/master/samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
 
 ![Benchmark](res/benchmark.png)
 
