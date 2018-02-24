@@ -3,7 +3,7 @@
 <!-- vim-markdown-toc GFM -->
 
 * [About](#about)
-* [Which IO events are supported?](#which-io-events-are-supported)
+* [Which IO events are supported?](#which-io-events-are-supported-)
 * [SAMPLES](#samples)
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
