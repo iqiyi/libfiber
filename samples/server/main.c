@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
-#include "fiber/lib_fiber.h"
+#include "fiber/libfiber.h"
 #include "../patch.h"
 
 static int  __nconnect = 0;

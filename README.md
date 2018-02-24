@@ -2,7 +2,8 @@
 
 <!-- vim-markdown-toc GFM -->
 
-* [which IO events are supported?](#which-io-events-are-supported)
+* [About](#about)
+* [Which IO events are supported?](#which-io-events-are-supported)
 * [SAMPLES](#samples)
     * [One server sample](#one-server-sample)
     * [One client sample](#one-client-sample)
@@ -16,7 +17,10 @@
 
 <!-- vim-markdown-toc -->
 
-## which IO events are supported
+## About
+The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platfroms including Linux, FreeBSD, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platfrom. With libfiber, you can write network application services having the high performance and large cocurrent more easily than the traditional asynchronus  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's realy amazing.
+
+## Which IO events are supported ?
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
 Event|Linux|BSD|Windows
@@ -31,7 +35,7 @@ Event|Linux|BSD|Windows
 ## SAMPLES
 
 ### One server sample
-~~~C
+```C
 // fiber_server.c
 
 #include <stdio.h>
@@ -115,11 +119,11 @@ int main(void)
 
 	return 0;
 }
-~~~
+```
 
 ### One client sample
 
-~~~C
+```C
 // fiber_client.c
 
 #include <stdio.h>
@@ -182,16 +186,16 @@ int main(void)
 
 	return 0;
 }
-~~~
+```
 
 ## BUILDING
-~~~
+```
 fiber_server: fiber_server.c
 	gcc -o fiber_server fiber_server.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 
 fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
-~~~
+```
 
 ## API support  
 

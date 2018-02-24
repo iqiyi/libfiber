@@ -39,6 +39,6 @@
 #endif
 #endif
 
-#include "fiber/lib_fiber.h"
+#include "fiber/libfiber.h"
 #include "../patch.h"
 

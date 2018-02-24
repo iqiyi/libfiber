@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "fiber/lib_fiber.h"
+#include "fiber/libfiber.h"
 #include "init.h"
 #include "pthread_patch.h"
 #include "msg.h"

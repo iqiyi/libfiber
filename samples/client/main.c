@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#include "fiber/lib_fiber.h"
+#include "fiber/libfiber.h"
 #include "../patch.h"
 #include "../stamp.h"
 

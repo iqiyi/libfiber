@@ -14,121 +14,32 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="源文件\common">
-      <UniqueIdentifier>{02aaa36c-e182-4878-aea8-17c9c7d99f41}</UniqueIdentifier>
+      <UniqueIdentifier>{a4e30a60-8ba1-4956-88b7-dcf8443a121f}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\event">
-      <UniqueIdentifier>{356538fb-5e38-4d2d-9519-4cf6ac50944c}</UniqueIdentifier>
+      <UniqueIdentifier>{a20fc7cb-846b-4781-9c73-aa9d9f5459a0}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\hook">
-      <UniqueIdentifier>{08cf9220-1c0c-4cc0-b340-6f3f2f00b0f5}</UniqueIdentifier>
+      <UniqueIdentifier>{80d04b16-6ee0-4591-8109-0e927bb82a8c}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\dns">
-      <UniqueIdentifier>{db249318-674e-46ed-8d7b-05382163acdd}</UniqueIdentifier>
+      <UniqueIdentifier>{e4a710c4-67ee-45aa-ad51-24a27de64898}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\fiber">
-      <UniqueIdentifier>{baaeb113-34bc-4df8-9649-b024ec495a95}</UniqueIdentifier>
+      <UniqueIdentifier>{99c2d3cb-b0ab-4d18-bfe1-ce369f26202a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="doc">
+      <UniqueIdentifier>{755948d5-bfb6-427f-a8f4-b7eff99e3491}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\common\argv.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\array.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\atomic.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\init.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\iostuff.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\iterator.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\msg.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\ring.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\strops.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_epoll.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_kqueue.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
-    <ClInclude Include="src\hook\hook.h">
-      <Filter>源文件\hook</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dns\dns.h">
-      <Filter>源文件\dns</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dns\sane_inet.h">
-      <Filter>源文件\dns</Filter>
-    </ClInclude>
-    <ClInclude Include="src\dns\valid_hostname.h">
-      <Filter>源文件\dns</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\define.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\fiber.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stdafx.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\fiber\lib_fiber.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\fifo.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\gettimeofday.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\memory.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\pthread_patch.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_select.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_poll.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_wmsg.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\htable.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common\sane_socket.h">
-      <Filter>源文件\common</Filter>
-    </ClInclude>
-    <ClInclude Include="src\event\event_iocp.h">
-      <Filter>源文件\event</Filter>
-    </ClInclude>
+    <Text Include="todo.txt">
+      <Filter>doc</Filter>
+    </Text>
+    <Text Include="..\changes.txt">
+      <Filter>doc</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.c">
@@ -149,7 +60,16 @@
     <ClCompile Include="src\common\doze.c">
       <Filter>源文件\common</Filter>
     </ClCompile>
+    <ClCompile Include="src\common\fifo.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\gettimeofday.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
     <ClCompile Include="src\common\init.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\memory.c">
       <Filter>源文件\common</Filter>
     </ClCompile>
     <ClCompile Include="src\common\msg.c">
@@ -159,6 +79,9 @@
       <Filter>源文件\common</Filter>
     </ClCompile>
     <ClCompile Include="src\common\open_limit.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pthread_patch.c">
       <Filter>源文件\common</Filter>
     </ClCompile>
     <ClCompile Include="src\common\ring.c">
@@ -177,6 +100,12 @@
       <Filter>源文件\event</Filter>
     </ClCompile>
     <ClCompile Include="src\event\event_kqueue.c">
+      <Filter>源文件\event</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_poll.c">
+      <Filter>源文件\event</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\event_select.c">
       <Filter>源文件\event</Filter>
     </ClCompile>
     <ClCompile Include="src\hook\dns_init.c">
@@ -212,6 +141,12 @@
     <ClCompile Include="src\dns\valid_hostname.c">
       <Filter>源文件\dns</Filter>
     </ClCompile>
+    <ClCompile Include="src\fiber\fiber_unix.c">
+      <Filter>源文件\fiber</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fiber\fiber_win.c">
+      <Filter>源文件\fiber</Filter>
+    </ClCompile>
     <ClCompile Include="src\channel.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -236,30 +171,6 @@
     <ClCompile Include="src\file_event.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\common\fifo.c">
-      <Filter>源文件\common</Filter>
-    </ClCompile>
-    <ClCompile Include="src\common\gettimeofday.c">
-      <Filter>源文件\common</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fiber\fiber_unix.c">
-      <Filter>源文件\fiber</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fiber\fiber_win.c">
-      <Filter>源文件\fiber</Filter>
-    </ClCompile>
-    <ClCompile Include="src\common\memory.c">
-      <Filter>源文件\common</Filter>
-    </ClCompile>
-    <ClCompile Include="src\common\pthread_patch.c">
-      <Filter>源文件\common</Filter>
-    </ClCompile>
-    <ClCompile Include="src\event\event_select.c">
-      <Filter>源文件\event</Filter>
-    </ClCompile>
-    <ClCompile Include="src\event\event_poll.c">
-      <Filter>源文件\event</Filter>
-    </ClCompile>
     <ClCompile Include="src\event\event_wmsg.c">
       <Filter>源文件\event</Filter>
     </ClCompile>
@@ -272,5 +183,100 @@
     <ClCompile Include="src\event\event_iocp.c">
       <Filter>源文件\event</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\argv.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\array.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\atomic.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\fifo.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\gettimeofday.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\init.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\iostuff.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\iterator.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\memory.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\msg.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pthread_patch.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\ring.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\strops.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_epoll.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_kqueue.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_poll.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_select.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hook\hook.h">
+      <Filter>源文件\hook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dns\dns.h">
+      <Filter>源文件\dns</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dns\sane_inet.h">
+      <Filter>源文件\dns</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dns\valid_hostname.h">
+      <Filter>源文件\dns</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\define.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fiber.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fiber\libfiber.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_wmsg.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\htable.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\sane_socket.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\event_iocp.h">
+      <Filter>源文件\event</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

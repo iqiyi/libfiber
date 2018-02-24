@@ -93,6 +93,12 @@ BEGIN_MESSAGE_MAP(CWinEchodDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CWinEchodDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
+void CWinEchodDlg::InitFiber(void)
+{
+	// 设置协程调度的事件引擎，同时将协程调度设为非自动启动模式
+	acl_fiber_schedule_init(0);
+	acl_fiber_schedule_set_event(FIBER_EVENT_WMSG);
+}
 
 // CWinEchodDlg 消息处理程序
 
@@ -216,13 +222,6 @@ void CWinEchodDlg::Uni2Str(const CString& in, char* buf, size_t size)
 	buf[len] = 0;
 }
 
-void CWinEchodDlg::InitFiber(void)
-{
-	// 设置协程调度的事件引擎，同时将协程调度设为非自动启动模式
-	acl_fiber_schedule_init(0);
-	acl_fiber_schedule_set_event(FIBER_EVENT_WMSG);
-}
-
 static void fiber_listen(ACL_FIBER* fiber, void* ctx)
 {
 	CListener* listener = (CListener *) ctx;
@@ -251,7 +250,11 @@ void CWinEchodDlg::OnBnClickedListen()
 		GetDlgItem(IDC_LISTEN)->SetWindowText(info);
 
 		CListener* listener = new CListener(lfd);
+
+		// create the fiber to listen and wait for connections
 		m_fiberListen = acl_fiber_create(fiber_listen, listener, 128000);
+
+		// when fiber schedule isn't started, then start it
 		if (!acl_fiber_scheduled())
 			acl_fiber_schedule();
 	}
@@ -302,6 +305,7 @@ void CWinEchodDlg::OnBnClickedConnect()
 	{
 		CConnect* conn = new CConnect(*this, ipbuf,
 			m_listenPort, m_count);
+		// create one fiber to connect the server
 		acl_fiber_create(fiber_connect, conn, 128000);
 	}
 }
@@ -321,6 +325,7 @@ void CWinEchodDlg::OnBnClickedOk()
 	// TODO: 在此添加控件通知处理程序代码
 	if (acl_fiber_scheduled())
 	{
+		// stop the fiber schedule process
 		acl_fiber_schedule_stop();
 	}
 	if (m_cocurrent > 0)

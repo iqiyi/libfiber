@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #endif
-#include "fiber/lib_fiber.h"
+#include "fiber/libfiber.h"
 #include "patch.h"
 
 void socket_init(void)
