@@ -198,7 +198,8 @@ fiber_client: fiber_client.c
 ```
 
 ## Benchmark
-The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by libmill, golang and libco.
+The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by libmill, golang and libco. These samples are in benchmark directory, and the sample written by libfiber is in samples/server directory. The testing client is in [here](#https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](#https://github.com/acl-dev/acl/).
+
 ![Benchmark](res/benchmark.png)
 
 ## API support  
