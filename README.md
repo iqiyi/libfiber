@@ -20,6 +20,7 @@
     * [Channel API](#channel-api)
     * [Sync API](#sync-api)
 * [About API Hook](#about-api-hook)
+* [FAQ](#faq)
 
 <!-- vim-markdown-toc -->
 
@@ -344,3 +345,17 @@ The standard APIs been hooked are shown below:
 - epoll: epoll_create, epoll_ctl, epoll_wait
 - gethostbyname(_r)
 - getaddrinfo/freeaddrinfo
+
+## FAQ
+1. <b>Is the coroutine schedule in multi-threads?</b>  
+No. The coroutine schedule of libfiber is in one single thread. But you can start multiple threads that one one thread has one schedule process.  
+2. <b>How are the multi-cores of CPU used?</b>  
+multiple threads can be started with its own coroutine schedule, each thread can ocpupy one CPU.  
+3. <b>How does different threads mutex in coroutine schedule status?</b>  
+Even though the OS system mutex APIs, such as pthread_mutex_t's APIs can be used, the ACL_FIBER_EVENT's APIs are recommended. It's safety when the OS system mutex APIs are used in short time without recursive invocation. But it's unsafety using system mutex APIs in this case: One coroutine A1 of thread A had locked the thread-mutex-A, the coroutine A2 of thread A wanted to lock the thread-mutex-B which had been locked by one coroutine B1 of thread B, when the coroutine B2 of thread B wanted to lock the thread-mutex-A, thread deadlock happened! So, the coroutine mutex for threads and coroutines named ACL_FIBER_EVENT's APIs of libfiber were created, which can be used to make critical region between multiple coroutines in different threads(multiple continues in the same thread or not; it can also be used for different threads without coroutines).  
+4. <b>Should the mysql-driven source codes be changed when used with libfiber?</b>  
+In UNIX OS, the System IO APIs are hooked by libfiber, so nothing should be changed in mysql-driven.  
+5. <b>How to avoid make the mysqld overloaded when many coroutines started?</b>  
+The ACL_FIBER_SEM's APIs can be used to protect the mysqld being overloaded by many connections of many coroutines. These APIs can limit the connections number to the mysqld from coroutines.  
+6. <b>Does the DNS domain resolving block the coroutine schedule?</b>  
+No, because the System domain-resolving APIs such as gethostbyname(_r) and getaddrinfo are also hooked in libfiber.  
