@@ -21,39 +21,39 @@ extern "C" {
 
 /* fiber_event.c */
 
-/* 线程安全的协程锁，可以用在不同线程的协程之间及不同线程之间的互斥 */
+/* �̰߳�ȫ��Э�������������ڲ�ͬ�̵߳�Э��֮�估��ͬ�߳�֮��Ļ��� */
 typedef struct ACL_FIBER_EVENT ACL_FIBER_EVENT;
 
 /**
- * 创建基于事件的协程/线程混合锁
+ * ���������¼���Э��/�̻߳����
  * @return {ACL_FIBER_EVENT *}
  */
 FIBER_API ACL_FIBER_EVENT *acl_fiber_event_create(void);
 
 /**
- * 释放事件锁
+ * �ͷ��¼���
  * @param {ACL_FIBER_EVENT *}
  */
 FIBER_API void acl_fiber_event_free(ACL_FIBER_EVENT *event);
 
 /**
- * 等待事件锁可用
+ * �ȴ��¼�������
  * @param {ACL_FIBER_EVENT *}
- * @return {int} 返回 0 表示成功，-1 表示出错
+ * @return {int} ���� 0 ��ʾ�ɹ���-1 ��ʾ����
  */
 FIBER_API int acl_fiber_event_wait(ACL_FIBER_EVENT *event);
 
 /**
- * 尝试等待事件锁可用
+ * ���Եȴ��¼�������
  * @param {ACL_FIBER_EVENT *}
- * @return {int} 返回 0 表示成功，-1 表示锁被占用
+ * @return {int} ���� 0 ��ʾ�ɹ���-1 ��ʾ����ռ��
  */
 FIBER_API int acl_fiber_event_trywait(ACL_FIBER_EVENT *event);
 
 /**
- * 事件锁拥有者通知等待者事件锁可用，则等待者收到通知后则可获得事件锁
+ * �¼���ӵ����֪ͨ�ȴ����¼������ã���ȴ����յ�֪ͨ����ɻ���¼���
  * @param {ACL_FIBER_EVENT *}
- * @return {int} 返回 0 表示成功，-1 表示出错
+ * @return {int} ���� 0 ��ʾ�ɹ���-1 ��ʾ����
  */
 FIBER_API int acl_fiber_event_notify(ACL_FIBER_EVENT *event);
 

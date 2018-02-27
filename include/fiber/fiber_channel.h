@@ -22,114 +22,114 @@ extern "C" {
 /* channel communication */
 
 /**
- * åç¨‹é—´é€šä¿¡çš„ç®¡é“
+ * Ğ­³Ì¼äÍ¨ĞÅµÄ¹ÜµÀ
  */
 typedef struct ACL_CHANNEL ACL_CHANNEL;
 
 /**
- * åˆ›å»ºåç¨‹é€šä¿¡ç®¡é“
- * @param elemsize {int} åœ¨ ACL_CHANNEL è¿›è¡Œä¼ è¾“çš„å¯¹è±¡çš„å›ºå®šå°ºå¯¸å¤§å°ï¼ˆå­—èŠ‚ï¼‰
- * @param bufsize {int} ACL_CHANNEL å†…éƒ¨ç¼“å†²åŒºå¤§å°ï¼Œå³å¯ä»¥ç¼“å­˜ elemsize å°ºå¯¸å¤§å°
- *  å¯¹è±¡çš„ä¸ªæ•°
+ * ´´½¨Ğ­³ÌÍ¨ĞÅ¹ÜµÀ
+ * @param elemsize {int} ÔÚ ACL_CHANNEL ½øĞĞ´«ÊäµÄ¶ÔÏóµÄ¹Ì¶¨³ß´ç´óĞ¡£¨×Ö½Ú£©
+ * @param bufsize {int} ACL_CHANNEL ÄÚ²¿»º³åÇø´óĞ¡£¬¼´¿ÉÒÔ»º´æ elemsize ³ß´ç´óĞ¡
+ *  ¶ÔÏóµÄ¸öÊı
  * @return {CHANNNEL*}
  */
 FIBER_API ACL_CHANNEL* acl_channel_create(int elemsize, int bufsize);
 
 /**
- * é‡Šæ”¾ç”± acl_channel_create åˆ›å»ºçš„åç¨‹é€šä¿¡ç®¡é“å¯¹è±¡
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
+ * ÊÍ·ÅÓÉ acl_channel_create ´´½¨µÄĞ­³ÌÍ¨ĞÅ¹ÜµÀ¶ÔÏó
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
  */
 FIBER_API void acl_channel_free(ACL_CHANNEL* c);
 
 /**
- * é˜»å¡å¼å‘æŒ‡å®š ACL_CHANNEL ä¸­å‘é€æŒ‡å®šçš„å¯¹è±¡åœ°å€
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} è¢«å‘é€çš„å¯¹è±¡åœ°å€
- * @return {int} è¿”å›å€¼ >= 0
+ * ×èÈûÊ½ÏòÖ¸¶¨ ACL_CHANNEL ÖĞ·¢ËÍÖ¸¶¨µÄ¶ÔÏóµØÖ·
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ±»·¢ËÍµÄ¶ÔÏóµØÖ·
+ * @return {int} ·µ»ØÖµ >= 0
  */
 FIBER_API int acl_channel_send(ACL_CHANNEL* c, void* v);
 
 /**
- * éé˜»å¡å¼å‘æŒ‡å®š ACL_CHANNEL ä¸­å‘é€æŒ‡å®šçš„å¯¹è±¡ï¼Œå†…éƒ¨ä¼šæ ¹æ® acl_channel_create ä¸­æŒ‡å®š
- * çš„ elemsize å¯¹è±¡å¤§å°è¿›è¡Œæ•°æ®æ‹·è´
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} è¢«å‘é€çš„å¯¹è±¡åœ°å€
+ * ·Ç×èÈûÊ½ÏòÖ¸¶¨ ACL_CHANNEL ÖĞ·¢ËÍÖ¸¶¨µÄ¶ÔÏó£¬ÄÚ²¿»á¸ù¾İ acl_channel_create ÖĞÖ¸¶¨
+ * µÄ elemsize ¶ÔÏó´óĞ¡½øĞĞÊı¾İ¿½±´
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ±»·¢ËÍµÄ¶ÔÏóµØÖ·
  */
 FIBER_API int acl_channel_send_nb(ACL_CHANNEL* c, void* v);
 
 /**
- * ä»æŒ‡å®šçš„ ACL_CHANNEL ä¸­é˜»å¡å¼è¯»å–å¯¹è±¡ï¼Œ
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} å­˜æ”¾ç»“æœå†…å®¹
- * @return {int} è¿”å›å€¼ >= 0 è¡¨ç¤ºæˆåŠŸè¯»åˆ°æ•°æ®
+ * ´ÓÖ¸¶¨µÄ ACL_CHANNEL ÖĞ×èÈûÊ½¶ÁÈ¡¶ÔÏó£¬
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ´æ·Å½á¹ûÄÚÈİ
+ * @return {int} ·µ»ØÖµ >= 0 ±íÊ¾³É¹¦¶Áµ½Êı¾İ
  */
 FIBER_API int acl_channel_recv(ACL_CHANNEL* c, void* v);
 
 /**
- * ä»æŒ‡å®šçš„ ACL_CHANNEL ä¸­éé˜»å¡å¼è¯»å–å¯¹è±¡ï¼Œæ— è®ºæ˜¯å¦è¯»åˆ°æ•°æ®éƒ½ä¼šç«‹å³è¿”å›
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} å­˜æ”¾ç»“æœå†…å®¹
- * @return {int} è¿”å›å€¼ >= 0 è¡¨ç¤ºæˆåŠŸè¯»åˆ°æ•°æ®ï¼Œå¦åˆ™è¡¨ç¤ºæœªè¯»åˆ°æ•°æ®
+ * ´ÓÖ¸¶¨µÄ ACL_CHANNEL ÖĞ·Ç×èÈûÊ½¶ÁÈ¡¶ÔÏó£¬ÎŞÂÛÊÇ·ñ¶Áµ½Êı¾İ¶¼»áÁ¢¼´·µ»Ø
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ´æ·Å½á¹ûÄÚÈİ
+ * @return {int} ·µ»ØÖµ >= 0 ±íÊ¾³É¹¦¶Áµ½Êı¾İ£¬·ñÔò±íÊ¾Î´¶Áµ½Êı¾İ
  */
 FIBER_API int acl_channel_recv_nb(ACL_CHANNEL* c, void* v);
 
 /**
- * å‘æŒ‡å®šçš„ ACL_CHANNEL ä¸­é˜»å¡å¼å‘é€æŒ‡å®šå¯¹è±¡çš„åœ°å€
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} è¢«å‘é€å¯¹è±¡çš„åœ°å€
- * @return {int} è¿”å›å€¼ >= 0
+ * ÏòÖ¸¶¨µÄ ACL_CHANNEL ÖĞ×èÈûÊ½·¢ËÍÖ¸¶¨¶ÔÏóµÄµØÖ·
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ±»·¢ËÍ¶ÔÏóµÄµØÖ·
+ * @return {int} ·µ»ØÖµ >= 0
  */
 FIBER_API int acl_channel_sendp(ACL_CHANNEL* c, void* v);
 
 /**
- * ä»æŒ‡å®šçš„ CHANNLE ä¸­é˜»å¡å¼æ¥æ”¶ç”± acl_channel_sendp å‘é€çš„å¯¹è±¡çš„åœ°å€
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @return {void*} è¿”å›é NULLï¼ŒæŒ‡å®šæ¥æ”¶åˆ°çš„å¯¹è±¡çš„åœ°å€
+ * ´ÓÖ¸¶¨µÄ CHANNLE ÖĞ×èÈûÊ½½ÓÊÕÓÉ acl_channel_sendp ·¢ËÍµÄ¶ÔÏóµÄµØÖ·
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @return {void*} ·µ»Ø·Ç NULL£¬Ö¸¶¨½ÓÊÕµ½µÄ¶ÔÏóµÄµØÖ·
  */
 FIBER_API void *acl_channel_recvp(ACL_CHANNEL* c);
 
 /**
- * å‘æŒ‡å®šçš„ ACL_CHANNEL ä¸­éé˜»å¡å¼å‘é€æŒ‡å®šå¯¹è±¡çš„åœ°å€
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param v {void*} è¢«å‘é€å¯¹è±¡çš„åœ°å€
- * @return {int} è¿”å›å€¼ >= 0
+ * ÏòÖ¸¶¨µÄ ACL_CHANNEL ÖĞ·Ç×èÈûÊ½·¢ËÍÖ¸¶¨¶ÔÏóµÄµØÖ·
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param v {void*} ±»·¢ËÍ¶ÔÏóµÄµØÖ·
+ * @return {int} ·µ»ØÖµ >= 0
  */
 FIBER_API int acl_channel_sendp_nb(ACL_CHANNEL* c, void* v);
 
 /**
- * ä»æŒ‡å®šçš„ CHANNLE ä¸­é˜»å¡å¼æ¥æ”¶ç”± acl_channel_sendp å‘é€çš„å¯¹è±¡çš„åœ°å€
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @return {void*} è¿”å›é NULLï¼ŒæŒ‡å®šæ¥æ”¶åˆ°çš„å¯¹è±¡çš„åœ°å€ï¼Œå¦‚æœè¿”å› NULL è¡¨ç¤º
- *  æ²¡æœ‰è¯»åˆ°ä»»ä½•å¯¹è±¡
+ * ´ÓÖ¸¶¨µÄ CHANNLE ÖĞ×èÈûÊ½½ÓÊÕÓÉ acl_channel_sendp ·¢ËÍµÄ¶ÔÏóµÄµØÖ·
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @return {void*} ·µ»Ø·Ç NULL£¬Ö¸¶¨½ÓÊÕµ½µÄ¶ÔÏóµÄµØÖ·£¬Èç¹û·µ»Ø NULL ±íÊ¾
+ *  Ã»ÓĞ¶Áµ½ÈÎºÎ¶ÔÏó
  */
 FIBER_API void *acl_channel_recvp_nb(ACL_CHANNEL* c);
 
 /**
- * å‘æŒ‡å®šçš„ ACL_CHANNEL ä¸­å‘é€æ— ç¬¦å·é•¿æ•´å½¢æ•°å€¼
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param val {unsigned long} è¦å‘é€çš„æ•°å€¼
- * @return {int} è¿”å›å€¼ >= 0
+ * ÏòÖ¸¶¨µÄ ACL_CHANNEL ÖĞ·¢ËÍÎŞ·ûºÅ³¤ÕûĞÎÊıÖµ
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param val {unsigned long} Òª·¢ËÍµÄÊıÖµ
+ * @return {int} ·µ»ØÖµ >= 0
  */
 FIBER_API int acl_channel_sendul(ACL_CHANNEL* c, unsigned long val);
 
 /**
- * ä»æŒ‡å®šçš„ ACL_CHANNEL ä¸­æ¥æ”¶æ— ç¬¦å·é•¿æ•´å½¢æ•°å€¼
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
+ * ´ÓÖ¸¶¨µÄ ACL_CHANNEL ÖĞ½ÓÊÕÎŞ·ûºÅ³¤ÕûĞÎÊıÖµ
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
  * @return {unsigned long}
  */
 FIBER_API unsigned long acl_channel_recvul(ACL_CHANNEL* c);
 
 /**
- * å‘æŒ‡å®šçš„ ACL_CHANNEL ä¸­ä»¥éé˜»å¡æ–¹å¼å‘é€æ— ç¬¦å·é•¿æ•´å½¢æ•°å€¼
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
- * @param val {unsigned long} è¦å‘é€çš„æ•°å€¼
- * @return {int} è¿”å›å€¼ >= 0
+ * ÏòÖ¸¶¨µÄ ACL_CHANNEL ÖĞÒÔ·Ç×èÈû·½Ê½·¢ËÍÎŞ·ûºÅ³¤ÕûĞÎÊıÖµ
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
+ * @param val {unsigned long} Òª·¢ËÍµÄÊıÖµ
+ * @return {int} ·µ»ØÖµ >= 0
  */
 FIBER_API int acl_channel_sendul_nb(ACL_CHANNEL* c, unsigned long val);
 
 /**
- * ä»æŒ‡å®šçš„ ACL_CHANNEL ä¸­ä»¥éé˜»å¡æ–¹å¼æ¥æ”¶æ— ç¬¦å·é•¿æ•´å½¢æ•°å€¼
- * @param c {ACL_CHANNEL*} ç”± acl_channel_create åˆ›å»ºçš„ç®¡é“å¯¹è±¡
+ * ´ÓÖ¸¶¨µÄ ACL_CHANNEL ÖĞÒÔ·Ç×èÈû·½Ê½½ÓÊÕÎŞ·ûºÅ³¤ÕûĞÎÊıÖµ
+ * @param c {ACL_CHANNEL*} ÓÉ acl_channel_create ´´½¨µÄ¹ÜµÀ¶ÔÏó
  * @return {unsigned long}
  */
 FIBER_API unsigned long acl_channel_recvul_nb(ACL_CHANNEL* c);

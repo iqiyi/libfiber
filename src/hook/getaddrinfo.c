@@ -5,14 +5,14 @@
 #include "hook.h"
 #include "fiber.h"
 
+#ifdef SYS_UNIX
+
 typedef int (*getaddrinfo_fn)(const char *node, const char *service,
 	const struct addrinfo* hints, struct addrinfo **res);
 typedef void (*freeaddrinfo_fn)(struct addrinfo *res);
 
 static getaddrinfo_fn  __sys_getaddrinfo  = NULL;
 static freeaddrinfo_fn __sys_freeaddrinfo = NULL;
-
-#ifdef SYS_UNIX
 
 static void hook_api(void)
 {
