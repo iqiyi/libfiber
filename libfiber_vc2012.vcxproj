@@ -167,6 +167,13 @@
     <Text Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\fiber\fiber_base.h" />
+    <ClInclude Include="include\fiber\fiber_channel.h" />
+    <ClInclude Include="include\fiber\fiber_define.h" />
+    <ClInclude Include="include\fiber\fiber_event.h" />
+    <ClInclude Include="include\fiber\fiber_hook.h" />
+    <ClInclude Include="include\fiber\fiber_lock.h" />
+    <ClInclude Include="include\fiber\fiber_sem.h" />
     <ClInclude Include="include\fiber\libfiber.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\common\argv.h" />

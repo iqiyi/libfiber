@@ -3,12 +3,12 @@
 #include "fiber.h"
 #include "hook.h"
 
+#ifdef SYS_UNIX
+
 typedef int (*gethostbyname_r_fn)(const char *, struct hostent *, char *,
 	size_t, struct hostent **, int *);
 
 static gethostbyname_r_fn __sys_gethostbyname_r = NULL;
-
-#ifdef SYS_UNIX
 
 static void hook_api(void)
 {
@@ -28,14 +28,14 @@ static void hook_init(void)
 
 /****************************************************************************/
 
-struct hostent *gethostbyname(const char *name)
+struct hostent *acl_fiber_gethostbyname(const char *name)
 {
 	static __thread struct hostent ret, *result;
 #define BUF_LEN	4096
 	static __thread char buf[BUF_LEN];
 
-	return gethostbyname_r(name, &ret, buf, BUF_LEN, &result, &h_errno)
-		== 0 ? result : NULL;
+	return acl_fiber_gethostbyname_r(name, &ret, buf, BUF_LEN,
+			&result, &h_errno) == 0 ? result : NULL;
 }
 
 static struct addrinfo *get_addrinfo(const char *name)
@@ -97,7 +97,7 @@ static int save_result(struct hostent *ent, struct addrinfo *res,
 	return i;
 }
 
-int gethostbyname_r(const char *name, struct hostent *ent,
+int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 	char *buf, size_t buflen, struct hostent **result, int *h_errnop)
 {
 	size_t ncopied = 0, len, n;
@@ -182,4 +182,17 @@ int gethostbyname_r(const char *name, struct hostent *ent,
 	return -1;
 }
 
-#endif
+
+struct hostent *gethostbyname(const char *name)
+{
+	return acl_fiber_gethostbyname(name);
+}
+
+int gethostbyname_r(const char *name, struct hostent *ent,
+	char *buf, size_t buflen, struct hostent **result, int *h_errnop)
+{
+	return acl_fiber_gethostbyname_r(name, ent, buf, buflen,
+			result, h_errnop);
+}
+
+#endif /* SYS_UNIX */
