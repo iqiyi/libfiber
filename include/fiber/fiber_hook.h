@@ -61,6 +61,9 @@ FIBER_API int acl_fiber_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 FIBER_API struct hostent *acl_fiber_gethostbyname(const char *name);
 FIBER_API int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 	char *buf, size_t buflen, struct hostent **result, int *h_errnop);
+FIBER_API int acl_fiber_getaddrinfo(const char *node, const char *service,
+	const struct addrinfo* hints, struct addrinfo **res);
+FIBER_API void acl_fiber_freeaddrinfo(struct addrinfo *res);
 
 #endif
 
