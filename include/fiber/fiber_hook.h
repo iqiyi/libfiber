@@ -1,15 +1,3 @@
-/**
- * Copyright (C) 2015-2018
- * All rights reserved.
- *
- * AUTHOR(S)
- *   Zheng Shuxin
- *   E-mail: shuxin.zheng@qq.com
- * 
- * VERSION
- *   Tue 27 Feb 2018 09:18:02 PM CST
- */
-
 #ifndef FIBER_HOOK_INCLUDE_H
 #define FIBER_HOOK_INCLUDE_H
 
