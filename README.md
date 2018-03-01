@@ -298,6 +298,9 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_listen  
 - acl_fiber_accept  
 - acl_fiber_connect  
+- acl_fiber_gethostbyname_r
+- acl_fiber_getaddrinfo
+- acl_fiber_freeaddrinfo
 
 ### Channel API  
 - acl_channel_create  

@@ -1,15 +1,3 @@
-/**
- * Copyright (C) 2015-2018
- * All rights reserved.
- *
- * AUTHOR(S)
- *   Zheng Shuxin
- *   E-mail: shuxin.zheng@qq.com
- * 
- * VERSION
- *   Tue 27 Feb 2018 09:18:02 PM CST
- */
-
 #ifndef FIBER_HOOK_INCLUDE_H
 #define FIBER_HOOK_INCLUDE_H
 
@@ -73,6 +61,9 @@ FIBER_API int acl_fiber_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 FIBER_API struct hostent *acl_fiber_gethostbyname(const char *name);
 FIBER_API int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 	char *buf, size_t buflen, struct hostent **result, int *h_errnop);
+FIBER_API int acl_fiber_getaddrinfo(const char *node, const char *service,
+	const struct addrinfo* hints, struct addrinfo **res);
+FIBER_API void acl_fiber_freeaddrinfo(struct addrinfo *res);
 
 #endif
 
