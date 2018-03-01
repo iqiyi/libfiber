@@ -61,7 +61,11 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	char buf[8192];
 
 	while (1) {
+#if defined(_WIN32) || defined(_WIN64)
 		int ret = acl_fiber_recv(*pfd, buf, sizeof(buf), 0);
+#else
+		int ret = recv(*pfd, buf, sizeof(buf), 0);
+#endif
 		if (ret == 0) {
 			break;
 		} else if (ret < 0) {
@@ -70,7 +74,11 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 			}
 			break;
 		}
+#if defined(_WIN32) || defined(_WIN64)
 		if (acl_fiber_send(*pfd, buf, ret, 0) < 0) {
+#else
+		if (send(*pfd, buf, ret, 0) < 0) {
+#endif			
 			break;
 		}
 	}
@@ -94,11 +102,13 @@ static void fiber_accept(ACL_FIBER *fb, void *ctx)
 		}
 		pfd = (SOCKET *) malloc(sizeof(SOCKET));
 		*pfd = cfd;
+
+		// create and start one fiber to handle the client socket IO
 		acl_fiber_create(fiber_client, pfd, __stack_size);
 	}
 
 	socket_close(lfd);
-	exit (1);
+	exit (0);
 }
 
 // FIBER_EVENT_KERNEL represents the event type on
@@ -117,7 +127,10 @@ int main(void)
 	socket_init();
 #endif
 
+	// create one fiber to accept connections
 	acl_fiber_create(fiber_accept, NULL, __stack_size);
+
+	// start the fiber schedule process
 	acl_fiber_schedule_with(event_mode);
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -157,17 +170,30 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	}
 
 	for (i = 0; i < 1024; i++) {
+#if defined(_WIN32) || defined(_WIN64)
 		if (acl_fiber_send(cfd, s, strlen(s), 0) <= 0) {
+#else
+		if (send(cfd, s, strlen(s), 0) <= 0) {
+#endif			
 			printf("send error %s\r\n", acl_fiber_last_serror());
 			break;
 		}
+
+#if defined(_WIN32) || defined(_WIN64)
 		ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0);
+#else
+		ret = recv(cfd, buf, sizeof(buf), 0);
+#endif		
 		if (ret <= 0) {
 			break;
 		}
 	}
 
+#if defined(_WIN32) || defined(_WIN64)
 	acl_fiber_close(cfd);
+#else
+	close(cfd);
+#endif
 }
 
 int main(void)
@@ -292,6 +318,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 ### Sync API
 <b>ACL_FIBER_MUTEX</b>  
 - acl_fiber_mutex_create  
+- acl_fiber_mutex_free  
 - acl_fiber_mutex_lock  
 - acl_fiber_mutex_trylock  
 - acl_fiber_mutex_unlock  
