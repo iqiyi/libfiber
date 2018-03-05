@@ -29,26 +29,47 @@ static void print_res(struct hostent *h_addrp)
 	printf("\r\n");
 }
 
-static void nslookup(ACL_FIBER *fiber, void *ctx)
+static void nslookup1(const char *name)
 {
-	char  *name = (char *)ctx;
+	struct hostent *h_addrp;
+
+	if ((h_addrp = gethostbyname(name)) == NULL) {
+		printf("%s: can't resolve: %s\r\n", __FUNCTION__, name);
+	} else if (h_addrp == NULL || h_addrp->h_addr_list == NULL) {
+		printf("%s: can't resolve: %s\r\n", __FUNCTION__, name);
+	} else {
+		printf("%s: %s, len=%d\r\n", __FUNCTION__, name, h_addrp->h_length);
+		fflush(stdout);
+		print_res(h_addrp);
+	}
+}
+
+static void nslookup2(const char *name)
+{
 	struct hostent  h_buf;
 	struct hostent *h_addrp;
 	char   buf[1024];
 	int    err;
 
-	(void) fiber;
-
 	if (gethostbyname_r(name, &h_buf, buf, sizeof(buf), &h_addrp, &err)) {
-		printf("can't resolve: %s\r\n", name);
+		printf("%s: can't resolve: %s\r\n", __FUNCTION__, name);
 	} else if (h_addrp == NULL || h_addrp->h_addr_list == NULL) {
-		printf("can't resolve: %s\r\n", name);
+		printf("%s: can't resolve: %s\r\n", __FUNCTION__, name);
 	} else {
-		printf("%s: %d\r\n", name, h_addrp->h_length);
+		printf("%s: %s, len=%d\r\n", __FUNCTION__, name, h_addrp->h_length);
 		fflush(stdout);
 		print_res(h_addrp);
 	}
+}
 
+static void nslookup(ACL_FIBER *fiber, void *ctx)
+{
+	char *name = (char *) ctx;
+
+	(void) fiber;
+
+	nslookup1(name);
+	nslookup2(name);
 	free(name);
 }
 
