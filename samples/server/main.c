@@ -133,7 +133,7 @@ static void fiber_accept(ACL_FIBER *fiber, void *ctx)
 	exit(0);
 }
 
-#define SCHEDULE_AUTO
+//#define SCHEDULE_AUTO
 
 #ifndef	SCHEDULE_AUTO
 static void fiber_memcheck(ACL_FIBER *fiber, void *ctx)
