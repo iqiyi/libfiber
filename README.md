@@ -31,7 +31,7 @@ The libfiber project comes from the coroutine module of the [acl project](#https
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
 Event|Linux|BSD|Mac|Windows
-----------|------|---|---
+-----|----|------|---|---
 <b>select</b>|yes|yes|yes|yes
 <b>poll</b>|yes|yes|yes|yes
 <b>epoll</b>|yes|no|no|no
