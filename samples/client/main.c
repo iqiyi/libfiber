@@ -20,7 +20,7 @@ static int __max_loop     = 10000;
 static int __max_fibers   = 100;
 static int __left_fibers  = 100;
 static int __read_data    = 1;
-static int __stack_size   = 32000;
+static int __stack_size   = 128000;
 
 #if !defined(_WIN32) && !defined(_WIN64)
 static struct timeval __begin;
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 	gettimeofday(&__begin, NULL);
 #endif
 
-	acl_fiber_create(fiber_main, NULL, 32768);
+	acl_fiber_create(fiber_main, NULL, __stack_size);
 
 	printf("call fiber_schedule with=%d\r\n", event_mode);
 
