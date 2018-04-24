@@ -1,4 +1,4 @@
-# The high performance coroutine library, supporting Linux/BSD/Windows
+# The high performance coroutine library, supporting Linux/BSD/Mac/Windows
 
 <!-- vim-markdown-toc GFM -->
 
@@ -10,7 +10,7 @@
 	* [Windows GUI sample](#windows-gui-sample)
 	* [More SAMPLES](#more-samples)
 * [BUILDING](#building)
-    * [On Linux and BSD](#on-linux-and-bsd)
+    * [On Unix](#on-unix)
 	* [On Windows](#on-windows)
 * [Benchmark](#benchmark)
 * [API support](#api-support)
@@ -25,19 +25,19 @@
 <!-- vim-markdown-toc -->
 
 ## About
-The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platfroms including Linux, FreeBSD, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platfrom. With libfiber, you can write network application services having the high performance and large cocurrent more easily than the traditional asynchronus  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's realy amazing.
+The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platfroms including Linux, FreeBSD, MacOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platfrom. With libfiber, you can write network application services having the high performance and large cocurrent more easily than the traditional asynchronus  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's realy amazing.
 
 ## Which IO events are supported ?
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
-Event|Linux|BSD|Windows
+Event|Linux|BSD|Mac|Windows
 ----------|------|---|---
-<b>select</b>|yes|yes|yes
-<b>poll</b>|yes|yes|yes
-<b>epoll</b>|yes|no|no
-<b>kqueue</b>|no|yes|no
-<b>iocp</b>|no|no|yes
-<b>Win GUI message</b>|no|no|yes
+<b>select</b>|yes|yes|yes|yes
+<b>poll</b>|yes|yes|yes|yes
+<b>epoll</b>|yes|no|no|no
+<b>kqueue</b>|no|yes|yes|no
+<b>iocp</b>|no|no|no|yes
+<b>Win GUI message</b>|no|no|no|yes
 
 ## SAMPLES
 
@@ -112,9 +112,9 @@ static void fiber_accept(ACL_FIBER *fb, void *ctx)
 }
 
 // FIBER_EVENT_KERNEL represents the event type on
-// Linux(epoll), BSD(kqueue), Windows(iocp)
-// FIBER_EVENT_POLL: poll on Linux/BSD/Windows
-// FIBER_EVENT_SELECT: select on Linux/BSD/Windows
+// Linux(epoll), BSD(kqueue), Mac(kqueue), Windows(iocp)
+// FIBER_EVENT_POLL: poll on Linux/BSD/Mac/Windows
+// FIBER_EVENT_SELECT: select on Linux/BSD/Mac/Windows
 // FIBER_EVENT_WMSG: Win GUI message on Windows
 // acl_fiber_create/acl_fiber_schedule_with are in `lib_fiber.h`.
 // socket_listen/socket_accept/socket_close are in patch.c of the samples path.
@@ -229,7 +229,7 @@ The server coroutine and client coroutine are all running in the same thread as 
 ### More SAMPLES
 You can get more samples in [samples](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples), which use many APIs in [acl project](https://github.com/acl-dev/acl/) library.
 ## BUILDING
-### On Linux and BSD
+### On Unix
 ```
 $cd libfiber
 $make
@@ -351,7 +351,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_sem_num  
 
 ## About API Hook
-On Linux & BSD, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
+On Linux/BSD/Mac, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
 The standard APIs been hooked are shown below:
 - close
 - sleep
