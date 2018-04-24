@@ -91,16 +91,16 @@ int main(int argc, char *argv[])
 	acl_fiber_msg_stdout_enable(1);
 
 	__nfibers++;
-	acl_fiber_create(poll_sleep, &n, 32768);
+	acl_fiber_create(poll_sleep, &n, 327680);
 
 	__nfibers++;
-	acl_fiber_create(poll_sleep, &n, 32768);
+	acl_fiber_create(poll_sleep, &n, 327680);
 
 	__nfibers++;
-	acl_fiber_create(poll_sleep, &n, 32768);
+	acl_fiber_create(poll_sleep, &n, 327680);
 
 	__nfibers++;
-	acl_fiber_create(poll_sleep, &n, 32768);
+	acl_fiber_create(poll_sleep, &n, 327680);
 
 	acl_fiber_schedule();
 

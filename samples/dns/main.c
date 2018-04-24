@@ -44,6 +44,11 @@ static void nslookup1(const char *name)
 	}
 }
 
+#if defined(__APPLE__)
+extern int gethostbyname_r(const char *name, struct hostent *ent,
+	char *buf, size_t buflen, struct hostent **result, int *h_errnop);
+#endif
+
 static void nslookup2(const char *name)
 {
 	struct hostent  h_buf;
@@ -82,11 +87,26 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	printf("resolve domains in no fiber mode:\r\n");
+
+	nslookup1("www.baidu.com");
+	nslookup1("www.dummy");
+	nslookup2("www.baidu.com");
+	nslookup2("www.dummy");
+
+	printf("enter any key to continue ...");
+	fflush(stdout);
+	getchar();
+
+	printf("-----------------------------------------------------------\r\n");
+
+	printf("resolve domains in fiber mode\r\n");
+
 	ptr = argv[1];
 	p   = ptr;
 	while ((ptr = strtok(p, ",; \t")) != NULL) {
 		char *addr = strdup(ptr);
-		acl_fiber_create(nslookup, addr, 32000);
+		acl_fiber_create(nslookup, addr, 320000);
 		p = NULL;
 	}
 
