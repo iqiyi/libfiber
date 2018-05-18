@@ -1,4 +1,7 @@
 
+89) 2018.5.18
+89.1) bugfix: 针对 poll API，去掉对 POLLERR, POLLHUP 的处理
+
 88) 2018.4.24
 88.1) feature: acl 协程库可以运行在 MacOS 上了
 
