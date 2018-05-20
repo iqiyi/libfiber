@@ -8,6 +8,7 @@
 #include "WinEchod.h"
 #include "WinEchodDlg.h"
 #include "afxdialogex.h"
+#include <cassert>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
