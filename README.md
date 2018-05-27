@@ -1,5 +1,7 @@
 # The high performance coroutine library, supporting Linux/BSD/Mac/Windows
 
+[中文说明](README_cn.md)  
+
 <!-- vim-markdown-toc GFM -->
 
 * [About](#about)
