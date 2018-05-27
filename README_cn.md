@@ -1,34 +1,11 @@
-# The high performance coroutine library, supporting Linux/BSD/Mac/Windows
+# 高性能网络协程库，支持 Linux/BSD/Mac/Windows
 
-<!-- vim-markdown-toc GFM -->
+## 概述
+本协程库来自于 [acl 工程](#https://github.com/acl-dev/acl) 协程模块。目前支持的操作系统有：Linux，FreeBSD，MacOS 和 Windows，支持的事件类型有：select，poll，epoll，kqueue，iocp 及 Windows GUI 窗口消息。通过 libfiber 网络协程库，用户可以非常容易地写出高性能、高可靠的网络通信服务。因为使用了同步顺序编程的思维方式，相对于异步模式（无论是 reactor 模型还是 proactor 模型），编写网络应用更加简单。  
+libfiber 不仅支持常见的 IO 事件引擎，而且支持 Win32 GUI 界面消息引擎，这样当你使用 MFC，wtl 或其它 GUI 界面库编写界面网络应用时，也会变得异常简单，这的确是件令人兴奋的事。
 
-* [About](#about)
-* [Which IO events are supported?](#which-io-events-are-supported-)
-* [SAMPLES](#samples)
-    * [One server sample](#one-server-sample)
-    * [One client sample](#one-client-sample)
-	* [Windows GUI sample](#windows-gui-sample)
-	* [More SAMPLES](#more-samples)
-* [BUILDING](#building)
-    * [On Unix](#on-unix)
-	* [On Windows](#on-windows)
-* [Benchmark](#benchmark)
-* [API support](#api-support)
-    * [Base API](#base-api)
-    * [IO API](#io-api)
-    * [Net API](#net-api)
-    * [Channel API](#channel-api)
-    * [Sync API](#sync-api)
-* [About API Hook](#about-api-hook)
-* [FAQ](#faq)
-
-<!-- vim-markdown-toc -->
-
-## About
-The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platfroms including Linux, FreeBSD, MacOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platfrom. With libfiber, you can write network application services having the high performance and large cocurrent more easily than the traditional asynchronus  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's realy amazing.
-
-## Which IO events are supported ?
-The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
+## 支持的事件引擎有哪些？
+以下为 libfiber 所支持的事件引擎：
 
 Event|Linux|BSD|Mac|Windows
 -----|----|------|---|---
@@ -39,9 +16,10 @@ Event|Linux|BSD|Mac|Windows
 <b>iocp</b>|no|no|no|yes
 <b>Win GUI message</b>|no|no|no|yes
 
-## SAMPLES
+## 示例
 
-### One server sample
+### 基于协程的网络服务器
+
 ```C
 // fiber_server.c
 
@@ -141,7 +119,7 @@ int main(void)
 }
 ```
 
-### One client sample
+### 基于协程的客户端程序
 
 ```C
 // fiber_client.c
@@ -221,15 +199,17 @@ int main(void)
 }
 ```
 
-### Windows GUI sample
-There is one Windows GUI sample with libfiber in [directory](samples/WinEchod). The screen shot is ![here](res/winecho.png)  
+### 基于协程的 Windows 界面网络程序
+在[示例目录](samples/WinEchod) 下为基于协程的 Windows 界面网络程序，程序运行截屏如![图](res/winecho.png)
 
-The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memroy collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronus API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
+该 Windows 界面程序包含`网络服务器`和`网络客户端`两个功能。在运行时，服务模块和客户端模块运行在 Windows 界面线程中，因为协程库使用了 Windows 界面消息泵，所以协程模块可以与界面上元素成为`一体`而不必跨越线程，也不必使用令人烦恼的异步套接字 API。
 
-### More SAMPLES
-You can get more samples in [samples](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples), which use many APIs in [acl project](https://github.com/acl-dev/acl/) library.
-## BUILDING
-### On Unix
+### 更多例子
+在 [示例](https://github.com/libfiber/samples/) 中有一些例子描述了如何使用 libfiber 库提供的 API 进行网络编程；另外，在 [acl工程中](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples)，有更多的示例来描述网络协程编程，当然，这些例子还大量使用了 [acl 库](https://github.com/acl-dev/acl/)中的其它库的 API。
+
+## 编程 libfiber 本协程库
+### 在 Unix 平台编译
+
 ```
 $cd libfiber
 $make
@@ -237,7 +217,7 @@ $cd samples
 $make
 ```
 
-<b>The simple Makefile shown below:</b>
+<b>下面给出了一个例子的 Makefile 内容：</b>
 
 ```
 fiber_server: fiber_server.c
@@ -247,15 +227,19 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ```
 
-### On Windows
-You can open the [fiber_vc2012.sln](fiber_vc2012.sln) or [fiber_vc2013.sln](fiber_vc2013.sln) with vc2012 or vc2013, and build the libfiber library and the [samples](samples) included.
+### 在 Windows 平台编译
+目前可以使用 vc2012 或 vc2013 分别打开 [fiber_vc2012.sln](fiber_vc2012.sln) 或 [fiber_vc2013.sln](fiber_vc2013.sln) 编译 libfiber 库。
 
-## Benchmark
-The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/acl/tree/master/golang/src/echo), and the sample written by libfiber is in [server sample directory](samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
+## 性能测试
+下面仅做了简单的 IOPS （网络 IO 性能）的测试，同时和其它协程库做了简单的对比：  
+![Benchmark](res/benchmark.png)  
+其它的网络协程库有：[libmill](https://github.com/sustrik/libmill)，golang 和 [libco](https://github.com/Tencent/libco)。其中，各个库的压测示例：
+1. 基于 libmill 和 libco 的压测用例在 [目录](benchmark) 下;
+2. 基于 Golang 的压测用例在 [目录](https://github.com/acl-dev/acl/tree/master/golang/src/echo)中;
+3. 基于 libfiber 的压测用例：[示例](samples/server);
+4. 客户端压测程序：https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2
 
-![Benchmark](res/benchmark.png)
-
-## API support  
+## API 列表  
 
 ### Base API  
 - acl_fiber_create  
@@ -348,11 +332,10 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_sem_free  
 - acl_fiber_sem_wait  
 - acl_fiber_sem_post  
-- acl_fiber_sem_num  
+- acl_fiber_sem_num
 
-## About API Hook
-On Linux/BSD/Mac, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
-The standard APIs been hooked are shown below:
+## 关于 API Hook
+在 Linux/MacOS/FreeBSD 平台上，很多与 IO 和网络相关的的系统 API 被 hook 了，因此，在编译连接时将 libfiber 加上，这样你的应用程序中仅需使用系统标准 IO API，便可以使你的网络程序自动协程化。下面是一些被 hook 的系统 API 列表：  
 - close
 - sleep
 - read
@@ -377,15 +360,4 @@ The standard APIs been hooked are shown below:
 - getaddrinfo/freeaddrinfo
 
 ## FAQ
-1. <b>Is the coroutine schedule in multi-threads?</b>  
-No. The coroutine schedule of libfiber is in one single thread. But you can start multiple threads that one one thread has one schedule process.  
-2. <b>How are the multi-cores of CPU used?</b>  
-multiple threads can be started with its own coroutine schedule, each thread can ocpupy one CPU.  
-3. <b>How does different threads mutex in coroutine schedule status?</b>  
-Even though the OS system mutex APIs, such as pthread_mutex_t's APIs can be used, the ACL_FIBER_EVENT's APIs are recommended. It's safety when the OS system mutex APIs are used in short time without recursive invocation. But it's unsafety using system mutex APIs in this case: One coroutine A1 of thread A had locked the thread-mutex-A, the coroutine A2 of thread A wanted to lock the thread-mutex-B which had been locked by one coroutine B1 of thread B, when the coroutine B2 of thread B wanted to lock the thread-mutex-A, thread deadlock happened! So, the coroutine mutex for threads and coroutines named ACL_FIBER_EVENT's APIs of libfiber were created, which can be used to make critical region between multiple coroutines in different threads(multiple continues in the same thread or not; it can also be used for different threads without coroutines).  
-4. <b>Should the mysql-driven source codes be changed when used with libfiber?</b>  
-In UNIX OS, the System IO APIs are hooked by libfiber, so nothing should be changed in mysql-driven.  
-5. <b>How to avoid make the mysqld overloaded when many coroutines started?</b>  
-The ACL_FIBER_SEM's APIs can be used to protect the mysqld being overloaded by many connections of many coroutines. These APIs can limit the connections number to the mysqld from coroutines.  
-6. <b>Does the DNS domain resolving block the coroutine schedule?</b>  
-No, because the System domain-resolving APIs such as gethostbyname(_r) and getaddrinfo are also hooked in libfiber.  
+（待续，请先参考英文版 FAQ 说明）。。。
