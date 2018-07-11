@@ -2,4 +2,5 @@
 .xmake
 build
 debug
+package
 *.a

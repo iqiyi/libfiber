@@ -21,7 +21,7 @@ static void hook_api(void)
 	__sys_select = (select_fn) dlsym(RTLD_NEXT, "select");
 	assert(__sys_select);
 #elif defined(SYS_WIN)
-	__sys_select = select;
+	__sys_select = (select_fn)select;
 #endif
 }
 

@@ -14,6 +14,11 @@
 #endif
 #include "patch.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+typedef int socklen_t;
+#define close closesocket
+#endif
+
 void socket_init(void)
 {
 #if defined(_WIN32) || defined(_WIN64)

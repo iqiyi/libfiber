@@ -22,7 +22,9 @@ static int __left_fibers  = 100;
 static int __read_data    = 1;
 static int __stack_size   = 128000;
 
-#if !defined(_WIN32) && !defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
+static DWORD __begin;
+#else
 static struct timeval __begin;
 #endif
 
@@ -84,19 +86,22 @@ static void fiber_connect(ACL_FIBER *fiber, void *ctx)
 	printf("max_fibers: %d, left: %d\r\n", __max_fibers, __left_fibers);
 
 	if (__left_fibers == 0) {
-#if !defined(_WIN32) && !defined(_WIN64)
 		double spent;
-		struct timeval end;
 
+#if defined(_WIN32) || defined(_WIN64)
+        DWORD end = GetTickCount();
+        spent = (double)(end - __begin);
+#else
+		struct timeval end;
 		gettimeofday(&end, NULL);
 		spent = stamp_sub(&end, &__begin);
+#endif
 
 		printf("fibers: %d, clients: %d, error: %d, count: %lld, "
 			"spent: %.2f ms, speed: %.2f tps\r\n", __max_fibers,
 			__total_clients, __total_error_clients,
 			__total_count, spent,
 			(__total_count * 1000) / (spent > 0 ? spent : 1));
-#endif
 	}
 }
 
@@ -179,7 +184,9 @@ int main(int argc, char *argv[])
 
 	acl_fiber_msg_stdout_enable(1);
 
-#if !defined(_WIN32) && !defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
+    __begin = GetTickCount();
+#else
 	gettimeofday(&__begin, NULL);
 #endif
 
