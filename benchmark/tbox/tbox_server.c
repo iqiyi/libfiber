@@ -79,7 +79,7 @@ static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
 
 static void usage(const char *procname)
 {
-	tb_printf("usage: %s -h[help] -s ip -p port\r\n", procname);
+    tb_printf("usage: %s -h[help] -s ip -p port\r\n", procname);
 }
 
 int main(int argc, char *argv[])
@@ -88,46 +88,46 @@ int main(int argc, char *argv[])
     if (!tb_init(tb_null, tb_null)) return -1;
 
     // parse arguments
-	char ip[128];
-	int port = 9001, ch;
-	tb_snprintf(ip, sizeof(ip), "127.0.0.1");
-	while ((ch = getopt(argc, argv, "hs:p:")) > 0) 
+    char ip[128];
+    int port = 9001, ch;
+    tb_snprintf(ip, sizeof(ip), "127.0.0.1");
+    while ((ch = getopt(argc, argv, "hs:p:")) > 0) 
     {
-		switch (ch) 
+        switch (ch) 
         {
-		case 'h':
-			usage(argv[0]);
-			return 0;
-		case 's':
-			tb_snprintf(ip, sizeof(ip), "%s", optarg);
-			break;
-		case 'p':
-			port = tb_atoi(optarg);
-			break;
-		default:
-			break;
-		}
-	}
+        case 'h':
+            usage(argv[0]);
+            return 0;
+        case 's':
+            tb_snprintf(ip, sizeof(ip), "%s", optarg);
+            break;
+        case 'p':
+            port = tb_atoi(optarg);
+            break;
+        default:
+            break;
+        }
+    }
 
     // init listen address
     tb_ipaddr_t addr;
     tb_ipaddr_set(&addr, ip, port, TB_IPADDR_FAMILY_IPV4);
 
     // init scheduler
-	tb_co_scheduler_ref_t scheduler = tb_co_scheduler_init();
+    tb_co_scheduler_ref_t scheduler = tb_co_scheduler_init();
     if (scheduler)
     {
         // start listener
-	    tb_coroutine_start(scheduler, tb_demo_coroutine_listen, &addr, 0);
+        tb_coroutine_start(scheduler, tb_demo_coroutine_listen, &addr, 0);
 
         // run scheduler
-	    tb_co_scheduler_loop(scheduler, tb_true);
+        tb_co_scheduler_loop(scheduler, tb_true);
 
         // exit scheduler
-	    tb_co_scheduler_exit(scheduler);
+        tb_co_scheduler_exit(scheduler);
     }
 
     // exit tbox
     tb_exit();
-	return 0;
+    return 0;
 }
