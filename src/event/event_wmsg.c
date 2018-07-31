@@ -349,10 +349,10 @@ static BOOL InitApplication(const char *class_name, HINSTANCE hInstance)
 
 	wcx.hIcon = LoadIcon(NULL, IDI_APPLICATION);     /* predefined app. icon */
 	wcx.hCursor = LoadCursor(NULL, IDC_ARROW);       /* predefined arrow */
-	wcx.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); /* white background brush */
+	wcx.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH); /* white background brush */
 	wcx.lpszMenuName  =  NULL;          /* name of menu resource */
 	wcx.lpszClassName = class_name;     /* name of window class */
-	wcx.hIconSm = (HICON)LoadImage(hInstance,  /* small class icon */
+	wcx.hIconSm = (HICON) LoadImage(hInstance,  /* small class icon */
 		MAKEINTRESOURCE(5),
 		IMAGE_ICON,
 		GetSystemMetrics(SM_CXSMICON),

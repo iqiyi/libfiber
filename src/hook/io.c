@@ -57,10 +57,10 @@ static void hook_api(void)
 {
 #ifdef SYS_WIN
 	__sys_close    = closesocket;
-	__sys_recv     = (recv_fn)recv;
-	__sys_recvfrom = (recvfrom_fn)recvfrom;
-	__sys_send     = (send_fn)send;
-	__sys_sendto   = (sendto_fn)sendto;
+	__sys_recv     = (recv_fn) recv;
+	__sys_recvfrom = (recvfrom_fn) recvfrom;
+	__sys_send     = (send_fn) send;
+	__sys_sendto   = (sendto_fn) sendto;
 #else
 	__sys_sleep      = (sleep_fn) dlsym(RTLD_NEXT, "sleep");
 	assert(__sys_sleep);
