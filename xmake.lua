@@ -1,3 +1,6 @@
+-- add rules
+add_rules("mode.debug", "mode.release")
+
 -- for the windows platform (msvc)
 if is_plat("windows") then 
     if is_mode("release") then
@@ -7,6 +10,8 @@ if is_plat("windows") then
     end
     add_ldflags("-nodefaultlib:\"msvcrt.lib\"")
     add_links("kernel32", "user32", "gdi32", "winspool", "comdlg32", "advapi32", "ws2_32")
+else
+    add_links("pthread", "dl")
 end
 
 -- define target: fiber
@@ -103,3 +108,27 @@ target("tbox_server")
     on_load(function (target)
         target:add(import("lib.detect.find_package")("tbox", {packagedirs = path.join(os.projectdir(), "package")}))
     end)
+
+-- Usage
+--
+-- Only compile libfiber.a
+--   
+--   $ xmake
+--
+-- Compile and run server and client
+--   
+--   $ xmake r server
+--   $ xmake r client
+--
+-- Compile and run tbox_server (Linux and macOS)
+--
+--   $ git clone https://github.com/tboox/tbox.git --depth 1
+--   $ cd tbox; xmake f --coroutine=y --demo=n -c; xmake install; cd -
+--   $ xmake r tbox_server
+--
+-- Compile and run tbox_server (Windows)
+--
+--   $ git clone https://github.com/tboox/tbox.git --depth 1
+--   $ cd tbox; xmake f --coroutine=y --demo=n -c; xmake p -o ../libfiber/pkg; cd ..
+--   $ xmake r tbox_server
+--

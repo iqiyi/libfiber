@@ -5,63 +5,6 @@
 #   include <getopt.h>
 #endif
 
-static tb_size_t tb_socket_recv_data(tb_socket_ref_t sock, tb_byte_t* data, tb_size_t size)
-{
-    // recv data
-    tb_size_t recv = 0;
-    tb_long_t wait = 0;
-    while (recv < size)
-    {
-        // recv it
-        tb_long_t real = tb_socket_recv(sock, data + recv, size - recv);
-
-        // has data?
-        if (real > 0) 
-        {
-            recv += real;
-            wait = 0;
-        }
-        // no data? wait it
-        else if (!real && !wait)
-        {
-            // wait it
-            wait = tb_socket_wait(sock, TB_SOCKET_EVENT_RECV, -1);
-            tb_check_break(wait >= 0);
-        }
-        // failed or end?
-        else break;
-    }
-    return recv;
-}
-
-static tb_size_t tb_socket_send_data(tb_socket_ref_t sock, tb_byte_t const* data, tb_size_t size)
-{
-    // send data
-    tb_size_t send = 0;
-    tb_long_t wait = 0;
-    while (send < size)
-    {
-        // send it
-        tb_long_t real = tb_socket_send(sock, data + send, size - send);
-
-        // has data?
-        if (real > 0) 
-        {
-            send += real;
-            wait = 0;
-        }
-        // no data? wait it
-        else if (!real && !wait)
-        {
-            // wait it
-            wait = tb_socket_wait(sock, TB_SOCKET_EVENT_SEND, -1);
-            tb_check_break(wait >= 0);
-        }
-        // failed or end?
-        else break;
-    }
-    return send;
-}
 
 static tb_void_t tb_demo_coroutine_client(tb_cpointer_t priv)
 {
@@ -71,26 +14,29 @@ static tb_void_t tb_demo_coroutine_client(tb_cpointer_t priv)
 
     // loop
     tb_byte_t data[8192] = {0};
+    tb_size_t size = 13;
     while (1)
     {
         // recv data
-        tb_size_t size = tb_socket_recv_data(sock, data, sizeof("hello world\r\n") - 1);
-        if (size)
+        if (tb_socket_brecv(sock, data, size))
         {
             // send data
-            if (size != tb_socket_send_data(sock, data, size))
+            if (!tb_socket_bsend(sock, data, size))
             {
                 // error
-                tb_trace_e("send error, only send %lu bytes!", size);
+                tb_trace_e("send error!");
+                break;
             }
         }
         else break;
     }
 
+    // trace
+    tb_trace_d("echo: %s", data);
+
     // exit socket
     tb_socket_exit(sock);
 }
-
 static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
 {
     // done
@@ -102,15 +48,17 @@ static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
         tb_assert_and_check_break(sock);
 
         // bind socket
-        if (!tb_socket_bind(sock, (tb_ipaddr_ref_t)priv)) break;
+        tb_ipaddr_t addr;
+        tb_ipaddr_set(&addr, tb_null, 9001, TB_IPADDR_FAMILY_IPV4);
+        if (!tb_socket_bind(sock, &addr)) break;
 
         // listen socket
         if (!tb_socket_listen(sock, 128)) break;
 
         // trace
-        tb_trace_i("listening %{ipaddr}", priv);
+        tb_trace_i("listening ..");
 
-        // wait accept events
+        // accept client sockets
         tb_socket_ref_t client = tb_null;
         while (1)
         {
