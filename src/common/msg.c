@@ -215,9 +215,9 @@ const char *last_serror(void)
 		abort();
 	}
 
-	buf = pthread_getspecific(__errbuf_key);
+	buf = (char*)pthread_getspecific(__errbuf_key);
 	if (buf == NULL) {
-		buf = malloc(__buf_size);
+		buf = (char*)malloc(__buf_size);
 		assert(pthread_setspecific(__errbuf_key, buf) == 0);
 		if (__pthread_self() == main_thread_self()) {
 			__main_buf = buf;

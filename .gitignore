@@ -1,0 +1,6 @@
+.DS_Store
+.xmake
+build
+debug
+package
+*.a
