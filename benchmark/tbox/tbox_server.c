@@ -4,7 +4,9 @@
 #else
 #   include <getopt.h>
 #endif
-
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 static tb_void_t tb_demo_coroutine_client(tb_cpointer_t priv)
 {
@@ -37,6 +39,9 @@ static tb_void_t tb_demo_coroutine_client(tb_cpointer_t priv)
     // exit socket
     tb_socket_exit(sock);
 }
+
+static int  __local_port    = 9101;
+
 static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
 {
     // done
@@ -49,14 +54,23 @@ static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
 
         // bind socket
         tb_ipaddr_t addr;
-        tb_ipaddr_set(&addr, tb_null, 9001, TB_IPADDR_FAMILY_IPV4);
-        if (!tb_socket_bind(sock, &addr)) break;
+        tb_ipaddr_set(&addr, tb_null, __local_port, TB_IPADDR_FAMILY_IPV4);
+        if (!tb_socket_bind(sock, &addr))
+        {
+            printf("bind error=%s, port=%d\r\n", strerror(errno), __local_port); 
+            break;
+	}
 
         // listen socket
-        if (!tb_socket_listen(sock, 128)) break;
+        if (!tb_socket_listen(sock, 128))
+        {
+            printf("listen error=%s, port=%d\r\n", strerror(errno), __local_port); 
+            break;
+        }
+
+        printf("listen %d ok\r\n", __local_port);
 
         // trace
-        tb_trace_i("listening ..");
 
         // accept client sockets
         tb_socket_ref_t client = tb_null;
@@ -65,6 +79,7 @@ static tb_void_t tb_demo_coroutine_listen(tb_cpointer_t priv)
             // accept and start client connection
             if ((client = tb_socket_accept(sock, tb_null)))
             {
+                printf("accept one fd=%d\r\n", client); 
                 if (!tb_coroutine_start(tb_null, tb_demo_coroutine_client, client, 0)) break;
             }
             else if (tb_socket_wait(sock, TB_SOCKET_EVENT_ACPT, -1) <= 0) break;
@@ -89,7 +104,7 @@ int main(int argc, char *argv[])
 
     // parse arguments
     char ip[128];
-    int port = 9001, ch;
+    int port = 9101, ch;
     tb_snprintf(ip, sizeof(ip), "127.0.0.1");
     while ((ch = getopt(argc, argv, "hs:p:")) > 0) 
     {
@@ -118,11 +133,14 @@ int main(int argc, char *argv[])
     if (scheduler)
     {
         // start listener
-        tb_coroutine_start(scheduler, tb_demo_coroutine_listen, &addr, 0);
+        tb_coroutine_start(scheduler, tb_demo_coroutine_listen, tb_null, 0);
+
+        tb_printf("begin run ...\r\n");
 
         // run scheduler
         tb_co_scheduler_loop(scheduler, tb_true);
 
+        tb_printf("begin exit ...\r\n");
         // exit scheduler
         tb_co_scheduler_exit(scheduler);
     }
