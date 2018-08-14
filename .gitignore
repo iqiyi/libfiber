@@ -8,3 +8,4 @@ package
 *.VC.db
 *.VC.opendb
 ipch/
+x64/

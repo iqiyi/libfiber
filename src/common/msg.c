@@ -154,7 +154,7 @@ const char *msg_strerror(int errnum, char *buffer, size_t size)
 			errnum,
 			0,
 			buffer,
-			size,
+			(DWORD)size,
 			NULL);
 	while ((L > 0) && ((buffer[L - 1] >= 0 && buffer[L - 1] <= 32) || 
 		 (buffer[L - 1] == '.')))

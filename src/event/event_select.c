@@ -221,10 +221,10 @@ static int select_checkfd(EVENT *ev UNUSED, FILE_EVENT *fe UNUSED)
 	return -1;
 }
 
-static long select_handle(EVENT *ev)
+static acl_handle_t select_handle(EVENT *ev)
 {
 	(void) ev;
-	return -1;
+	return (acl_handle_t)-1;
 }
 
 static const char *select_name(void)
