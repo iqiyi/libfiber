@@ -1,4 +1,7 @@
 
+90) 2018.8.18
+90.1) feature: add acl_fiber_set_fdlimit for user to control the max fd.
+
 89) 2018.5.18
 89.1) bugfix: 针对 poll API，去掉对 POLLERR, POLLHUP 的处理
 
