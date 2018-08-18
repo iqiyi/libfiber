@@ -464,7 +464,7 @@ static int fiber_file_del(FILE_EVENT *fe)
 #ifdef SYS_WIN
 	char key[64];
 
-	if (fe->fd == INVALID_SOCKET || fe->fd >= var_maxfd) {
+	if (fe->fd == INVALID_SOCKET || fe->fd >= (socket_t) var_maxfd) {
 		msg_error("%s(%d): invalid fd=%d",
 			__FUNCTION__, __LINE__, fe->fd);
 		return -1;
@@ -502,7 +502,7 @@ int fiber_file_close(socket_t fd, int *closed)
 	*closed = 0;
 
 	fiber_io_check();
-	if (fd == INVALID_SOCKET || fd >= var_maxfd) {
+	if (fd == INVALID_SOCKET || fd >= (socket_t) var_maxfd) {
 		msg_error("%s(%d): invalid fd=%u", __FUNCTION__, __LINE__, fd);
 		return -1;
 	}
