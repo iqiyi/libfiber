@@ -4,3 +4,8 @@ build
 debug
 package
 *.a
+.vs/
+*.VC.db
+*.VC.opendb
+ipch/
+x64/

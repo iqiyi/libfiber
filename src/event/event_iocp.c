@@ -431,10 +431,10 @@ static int iocp_checkfd(EVENT_IOCP *ev, FILE_EVENT *fe)
 	return getsocktype(fe->fd) == -1 ? -1 : 0;
 }
 
-static long iocp_handle(EVENT *ev)
+static acl_handle_t iocp_handle(EVENT *ev)
 {
 	EVENT_IOCP *ei = (EVENT_IOCP *) ev;
-	return (long) ei->h_iocp;
+	return (acl_handle_t) ei->h_iocp;
 }
 
 static const char *iocp_name(void)
