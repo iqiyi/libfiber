@@ -310,7 +310,11 @@ unsigned long __pthread_self(void)
 #elif	defined(__FreeBSD__)
 unsigned long __pthread_self(void)
 {
+#if defined(__FreeBSD__) && (__FreeBSD__ >= 9)
 	return (unsigned long) pthread_getthreadid_np();
+#else
+	return (unsigned long) pthread_self();
+#endif
 }
 #else
 #error	"unknown OS"
