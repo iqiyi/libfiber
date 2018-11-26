@@ -1,4 +1,11 @@
 
+93) 2018.11.26
+93.1) bugfix: event_iocp.c 中的 iocp_check 方法中的一处断言有问题
+-- program_code@sohu.com
+
+92) 2018.11.25
+92.1) feature: fiber_event.c 增加控制参数
+
 91) 2018.10.7
 91.1) merge: merge some changes from acl/lib_fiber for supporting IPV6.
 
