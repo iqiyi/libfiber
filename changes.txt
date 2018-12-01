@@ -1,4 +1,7 @@
 
+94) 2018.11.29
+94.1) bugfix: fixed bugs in fbase_event.c/fiber_event.c
+
 93) 2018.11.26
 93.1) bugfix: event_iocp.c 中的 iocp_check 方法中的一处断言有问题
 -- program_code@sohu.com
