@@ -178,8 +178,8 @@ int event_add_read(EVENT *ev, FILE_EVENT *fe, event_proc *proc)
 		return 0;
 	}
 
-	if (fe->fd >= ev->setsize) {
-		msg_error("fd: %d >= setsize: %d", fe->fd, ev->setsize);
+	if (fe->fd >= (socket_t) ev->setsize) {
+		msg_error("fd: %d >= setsize: %d", fe->fd, (int) ev->setsize);
 		acl_fiber_set_error(ERANGE);
 		return 0;
 	}
@@ -217,8 +217,8 @@ int event_add_write(EVENT *ev, FILE_EVENT *fe, event_proc *proc)
 		return 0;
 	}
 
-	if (fe->fd >= ev->setsize) {
-		msg_error("fd: %d >= setsize: %d", fe->fd, ev->setsize);
+	if (fe->fd >= (socket_t) ev->setsize) {
+		msg_error("fd: %d >= setsize: %d", fe->fd, (int) ev->setsize);
 		acl_fiber_set_error(ERANGE);
 		return 0;
 	}
