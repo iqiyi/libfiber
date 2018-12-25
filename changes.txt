@@ -1,4 +1,7 @@
 
+95) 2018.12.25
+95.1) bugfix: fixed bugs of acl_fiber_cond_timedwait in acl_fiber_cond.c
+
 94) 2018.11.29
 94.1) bugfix: fixed bugs in fbase_event.c/fiber_event.c
 
