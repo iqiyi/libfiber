@@ -235,7 +235,7 @@ fiber_client: fiber_client.c
 ![Benchmark](res/benchmark.png)  
 其它的网络协程库有：[libmill](https://github.com/sustrik/libmill)，golang 和 [libco](https://github.com/Tencent/libco)。其中，各个库的压测示例：
 1. 基于 libmill 和 libco 的压测用例在 [目录](benchmark) 下;
-2. 基于 Golang 的压测用例在 [目录](https://github.com/acl-dev/acl/tree/master/golang/src/echo)中;
+2. 基于 Golang 的压测用例在 [目录](https://github.com/acl-dev/master-go/tree/master/examples/echo)中;
 3. 基于 libfiber 的压测用例：[示例](samples/server);
 4. 客户端压测程序：https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2
 
