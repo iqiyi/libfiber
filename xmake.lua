@@ -1,6 +1,9 @@
 -- add rules
 add_rules("mode.debug", "mode.release")
 
+-- set xmake minimal version
+set_xmakever("2.2.6")
+
 -- for the windows platform (msvc)
 if is_plat("windows") then 
     if is_mode("release") then
@@ -8,7 +11,7 @@ if is_plat("windows") then
     elseif is_mode("debug") then
         add_cxflags("-MTd") 
     end
-    add_ldflags("-nodefaultlib:\"msvcrt.lib\"")
+    add_ldflags("-nodefaultlib:msvcrt.lib")
     add_links("kernel32", "user32", "gdi32", "winspool", "comdlg32", "advapi32", "ws2_32")
 else
     add_links("pthread", "dl")
@@ -20,21 +23,18 @@ target("fiber")
     -- set kind: static/shared
     set_kind("$(kind)")
 
-    -- add deps: acl
-    -- add_deps("acl")
-
     -- add source files
     add_files("src/**.c")
 
     -- add include directories
-    add_includedirs("src", "include")
+    add_includedirs("src")
+    add_includedirs("include", {public = true})
 
-    -- add headers
-    add_headers("include/(**.h)")
-    set_headerdir("$(buildir)/include/fiber")
+    -- add header files
+    add_headerfiles("include/(**.h)")
 
-    -- add flags
-    add_cxflags("-std=gnu99")
+    -- set languages: gnu99
+    set_languages("gnu99")
 
     -- add defines
     add_defines("USE_JMP")
@@ -114,6 +114,10 @@ target("tbox_server")
 -- Only compile libfiber.a
 --   
 --   $ xmake
+--
+-- Install library and header files
+--
+--   $ xmake install -o prefixdir
 --
 -- Compile and run server and client
 --   
