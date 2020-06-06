@@ -1,6 +1,7 @@
 #ifndef FIBER_INCLUDE_H
 #define FIBER_INCLUDE_H
 
+#include "common/ring.h"
 #include "event.h"
 
 #ifdef ACL_ARM_LINUX
@@ -85,6 +86,7 @@ void fiber_count_dec(void);
 extern int var_maxfd;
 
 void fiber_io_check(void);
+void fiber_io_clear(void);
 void fiber_wait_read(FILE_EVENT *fe);
 void fiber_wait_write(FILE_EVENT *fe);
 void fiber_io_dec(void);

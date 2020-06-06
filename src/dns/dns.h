@@ -52,9 +52,6 @@
 #include <netdb.h>		/* struct addrinfo */
 #endif
 
-#ifdef SYS_WIN
-//typedef int _Bool;
-#endif
 
 /*
  * V I S I B I L I T Y
@@ -163,12 +160,15 @@ DNS_PUBLIC int *dns_debug_p(void);
 
 #define dns_quietinit(...) \
 	DNS_PRAGMA_PUSH DNS_PRAGMA_QUIET __VA_ARGS__ DNS_PRAGMA_POP
-#elif (__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4
+#elif (__GNUC__ < 9) && ((__GNUC__ == 4 && __GNUC_MINOR__ >= 6) || __GNUC__ > 4)
 #define DNS_PRAGMA_PUSH _Pragma("GCC diagnostic push")
 #define DNS_PRAGMA_QUIET _Pragma("GCC diagnostic ignored \"-Woverride-init\"")
 #define DNS_PRAGMA_POP _Pragma("GCC diagnostic pop")
 
-/* GCC parses the _Pragma operator less elegantly than clang. */
+/*
+ * GCC parses the _Pragma operator less elegantly than clang.
+ * This only works up to GCC 9
+ */
 #define dns_quietinit(...) \
 	__extension__ ({ DNS_PRAGMA_PUSH DNS_PRAGMA_QUIET __VA_ARGS__; DNS_PRAGMA_POP })
 #else
@@ -360,37 +360,37 @@ DNS_PUBLIC dns_random_f **dns_random_p(void);
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 struct dns_header {
-		unsigned qid:16;
+	unsigned qid:16;
 
 #if (defined BYTE_ORDER && BYTE_ORDER == BIG_ENDIAN) || (defined __sun && defined _BIG_ENDIAN)
-		unsigned qr:1;
-		unsigned opcode:4;
-		unsigned aa:1;
-		unsigned tc:1;
-		unsigned rd:1;
+	unsigned qr:1;
+	unsigned opcode:4;
+	unsigned aa:1;
+	unsigned tc:1;
+	unsigned rd:1;
 
-		unsigned ra:1;
-		unsigned unused:3;
-		unsigned rcode:4;
+	unsigned ra:1;
+	unsigned unused:3;
+	unsigned rcode:4;
 #else
-		unsigned rd:1;
-		unsigned tc:1;
-		unsigned aa:1;
-		unsigned opcode:4;
-		unsigned qr:1;
+	unsigned rd:1;
+	unsigned tc:1;
+	unsigned aa:1;
+	unsigned opcode:4;
+	unsigned qr:1;
 
-		unsigned rcode:4;
-		unsigned unused:3;
-		unsigned ra:1;
+	unsigned rcode:4;
+	unsigned unused:3;
+	unsigned ra:1;
 #endif
 
-		unsigned qdcount:16;
-		unsigned ancount:16;
-		unsigned nscount:16;
-		unsigned arcount:16;
+	unsigned qdcount:16;
+	unsigned ancount:16;
+	unsigned nscount:16;
+	unsigned arcount:16;
 }; /* struct dns_header */
 
-#define dns_header(p)	(&(p)->header)
+#define DNS_HEADER(_p_)	(&(_p_)->header)
 
 
 #ifndef DNS_P_QBUFSIZ
@@ -451,7 +451,7 @@ DNS_PUBLIC enum dns_rcode dns_p_rcode(struct dns_packet *);
 
 DNS_PUBLIC unsigned dns_p_count(struct dns_packet *, enum dns_section);
 
-DNS_PUBLIC int dns_p_push(struct dns_packet *, enum dns_section, const void *, size_t, enum dns_type, enum dns_class, unsigned, const void *);
+DNS_PUBLIC int dns_p_push(struct dns_packet *, enum dns_section, void *, size_t, enum dns_type, enum dns_class, unsigned, void *);
 
 DNS_PUBLIC void dns_p_dictadd(struct dns_packet *, unsigned short);
 
@@ -485,13 +485,13 @@ DNS_PUBLIC size_t dns_d_anchor(void *, size_t, const void *, size_t);
 
 DNS_PUBLIC size_t dns_d_cleave(void *, size_t, const void *, size_t);
 
-DNS_PUBLIC size_t dns_d_comp(void *, size_t, const void *, size_t, struct dns_packet *, int *);
+DNS_PUBLIC size_t dns_d_comp(void *, size_t, void *, size_t, struct dns_packet *, int *);
 
 DNS_PUBLIC size_t dns_d_expand(void *, size_t, unsigned short, struct dns_packet *, int *);
 
 DNS_PUBLIC unsigned short dns_d_skip(unsigned short, struct dns_packet *);
 
-DNS_PUBLIC int dns_d_push(struct dns_packet *, const void *, size_t);
+DNS_PUBLIC int dns_d_push(struct dns_packet *, void *, size_t);
 
 DNS_PUBLIC size_t dns_d_cname(void *, size_t, const void *, size_t, struct dns_packet *, int *error);
 
@@ -990,7 +990,7 @@ DNS_PUBLIC struct dns_hints *dns_hints_mortal(struct dns_hints *);
 
 DNS_PUBLIC int dns_hints_insert(struct dns_hints *, const char *, const struct sockaddr *, unsigned);
 
-DNS_PUBLIC unsigned dns_hints_insert_resconf(struct dns_hints *, const char *, const struct dns_resolv_conf *, int *);
+DNS_PUBLIC unsigned dns_hints_insert_resconf(struct dns_hints *, const char *, struct dns_resolv_conf *, int *);
 
 DNS_PUBLIC struct dns_hints *dns_hints_local(struct dns_resolv_conf *, int *);
 
@@ -1257,11 +1257,5 @@ int get_read_timeout(void);
 #define DNS_PP_D11 10
 #define DNS_PP_DEC(N) DNS_PP_XPASTE(DNS_PP_D, N)
 
-#if __GNUC__
-//#pragma GCC diagnostic pop // add by zsx, 2017-12-20
-DNS_PRAGMA_POP  // add by zsx, 2017.12.30
-#endif
-
+#endif  /* SYS_UNIX */
 #endif /* DNS_H */
-
-#endif

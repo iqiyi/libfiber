@@ -54,8 +54,8 @@ static void epoll_free(EVENT *ev)
 	EVENT_EPOLL *ep = (EVENT_EPOLL *) ev;
 
 	close(ep->epfd);
-	free(ep->events);
-	free(ep);
+	mem_free(ep->events);
+	mem_free(ep);
 }
 
 static int epoll_add_read(EVENT_EPOLL *ep, FILE_EVENT *fe)
@@ -205,12 +205,14 @@ static int epoll_event_wait(EVENT *ev, int timeout)
 
 	n = __sys_epoll_wait(ep->epfd, ep->events, ep->size, timeout);
 
-	if (n == 0) {
-		return n;
-	} else if (n < 0) {
-		msg_error("%s(%d): epoll_wait error %s",
-			__FUNCTION__, __LINE__, last_serror());
-		return n;
+	if (n < 0) {
+		if (acl_fiber_last_error() == FIBER_EINTR) {
+			return 0;
+		}
+		msg_fatal("%s: epoll_wait error %s",
+			__FUNCTION__, last_serror());
+	} else if (n == 0) {
+		return 0;
 	}
 
 	for (i = 0; i < n; i++) {
@@ -258,14 +260,14 @@ static const char *epoll_name(void)
 
 EVENT *event_epoll_create(int size)
 {
-	EVENT_EPOLL *ep = (EVENT_EPOLL *) calloc(1, sizeof(EVENT_EPOLL));
+	EVENT_EPOLL *ep = (EVENT_EPOLL *) mem_calloc(1, sizeof(EVENT_EPOLL));
 
 	if (__sys_epoll_create == NULL) {
 		hook_init();
 	}
 
 	ep->events = (struct epoll_event *)
-		malloc(sizeof(struct epoll_event) * size);
+		mem_malloc(sizeof(struct epoll_event) * size);
 	ep->size   = size;
 
 	ep->epfd = __sys_epoll_create(1024);
