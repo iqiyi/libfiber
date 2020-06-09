@@ -330,6 +330,12 @@ FIBER_API void acl_fiber_set_error(int errnum);
  */
 FIBER_API int acl_fiber_set_fdlimit(int limit);
 
+#if !defined(_WIN32) || !defined(_WIN64)
+FIBER_API int acl_fiber_gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif
+
+FIBER_API void acl_fiber_memstat(void);
+
 /****************************************************************************/
 
 #ifdef __cplusplus

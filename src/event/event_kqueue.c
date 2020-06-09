@@ -50,9 +50,9 @@ static void kqueue_free(EVENT *ev)
 	EVENT_KQUEUE *ek = (EVENT_KQUEUE *) ev;
 
 	close(ek->kqfd);
-	free(ek->changes);
-	free(ek->events);
-	free(ek);
+	mem_free(ek->changes);
+	mem_free(ek->events);
+	mem_free(ek);
 }
 
 static int kqueue_fflush(EVENT_KQUEUE *ek)
@@ -66,7 +66,7 @@ static int kqueue_fflush(EVENT_KQUEUE *ek)
 
 	ts.tv_sec  = 0;
 	ts.tv_nsec = 0;
-	if (kevent(ek->kqfd, ek->changes, ek->nchanges, NULL, 0, &ts) == -1) {
+	if (__sys_kevent(ek->kqfd, ek->changes, ek->nchanges, NULL, 0, &ts) == -1) {
 		msg_error("%s(%d): kevent error %s, kqfd=%d",
 			__FUNCTION__, __LINE__, last_serror(), ek->kqfd);
 		return -1;
@@ -169,9 +169,12 @@ static int kqueue_wait(EVENT *ev, int timeout)
 	ek->nchanges = 0;
 
 	if (n == -1) {
-		msg_error("%s(%d): kqueue error %s", __FUNCTION__, __LINE__,
-			last_serror());
-		return -1;
+		if (acl_fiber_last_error() == FIBER_EINTR) {
+			return 0;
+		}
+		msg_fatal("%s: kqueue error %s", __FUNCTION__, last_serror());
+	} else if (n == 0) {
+		return 0;
 	}
 
 	for (i = 0; i < n; i++) {
@@ -209,20 +212,21 @@ static const char *kqueue_name(void)
 
 EVENT *event_kqueue_create(int size)
 {
-	EVENT_KQUEUE *ek = (EVENT_KQUEUE *) calloc(1, sizeof(EVENT_KQUEUE));
+	EVENT_KQUEUE *ek = (EVENT_KQUEUE *) mem_calloc(1, sizeof(EVENT_KQUEUE));
 
 	if (__sys_kqueue == NULL) {
 		hook_init();
 	}
 
-	if (size <= 0 || size > 1024)
+	if (size <= 0 || size > 1024) {
 		size = 1024;
-	ek->changes  = (struct kevent *) malloc(sizeof(struct kevent) * size);
+	}
+	ek->changes  = (struct kevent *) mem_malloc(sizeof(struct kevent) * size);
 	ek->setsize  = size;
 	ek->nchanges = 0;
 
 	ek->nevents  = 100;
-	ek->events   = (struct kevent *) malloc(sizeof(struct kevent) * ek->nevents);
+	ek->events   = (struct kevent *) mem_malloc(sizeof(struct kevent) * ek->nevents);
 
 	ek->kqfd     = __sys_kqueue();
 	assert(ek->kqfd >= 0);

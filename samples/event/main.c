@@ -42,7 +42,7 @@ static void usage(const char* procname)
 int main(int argc, char *argv[])
 {
 	int  ch, i;
-	ACL_FIBER_EVENT *event = acl_fiber_event_create();
+	ACL_FIBER_EVENT *event = acl_fiber_event_create(FIBER_FLAG_USE_MUTEX);
 #define MAX_THREADS	100
 	pthread_t threads[MAX_THREADS];
 

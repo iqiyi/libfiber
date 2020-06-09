@@ -45,7 +45,7 @@ static void hook_init(void)
 
 static EPOLL_EVENT *epfd_alloc(void)
 {
-	EPOLL_EVENT *ee = calloc(1, sizeof(EPOLL_EVENT));
+	EPOLL_EVENT *ee = mem_calloc(1, sizeof(EPOLL_EVENT));
 	int  maxfd = open_limit(0);
 
 	if (maxfd <= 0) {
@@ -54,7 +54,7 @@ static EPOLL_EVENT *epfd_alloc(void)
 	}
 
 	++maxfd;
-	ee->fds  = (EPOLL_CTX **) malloc(maxfd * sizeof(EPOLL_CTX *));
+	ee->fds  = (EPOLL_CTX **) mem_malloc(maxfd * sizeof(EPOLL_CTX *));
 	ee->nfds = maxfd;
 
 	return ee;
@@ -84,7 +84,7 @@ static void thread_free(void *ctx fiber_unused)
 
 		for (j = 0; j < ee->nfds; j++) {
 			if (ee->fds[j] != NULL) {
-				free(ee->fds[j]);
+				mem_free(ee->fds[j]);
 			}
 		}
 
@@ -92,8 +92,8 @@ static void thread_free(void *ctx fiber_unused)
 			fiber_save_errno(acl_fiber_last_error());
 		}
 
-		free(ee->fds);
-		free(ee);
+		mem_free(ee->fds);
+		mem_free(ee);
 	}
 
 	array_free(__epfds, NULL);
@@ -200,12 +200,12 @@ int epoll_event_close(int epfd)
 
 	for (i = 0; i < ee->nfds; i++) {
 		if (ee->fds[i] != NULL) {
-			free(ee->fds[i]);
+			mem_free(ee->fds[i]);
 		}
 	}
 
-	free(ee->fds);
-	free(ee);
+	mem_free(ee->fds);
+	mem_free(ee);
 	array_delete(__epfds, pos, NULL);
 
 	return __sys_close(epfd);
@@ -263,14 +263,18 @@ static void read_callback(EVENT *ev fiber_unused, FILE_EVENT *fe)
 	EPOLL_EVENT *ee = epx->ee;
 
 	assert(ee);
-	assert(ee->nready < ee->maxevents);
 	assert(epx->mask & EVENT_READ);
+
+	if (ee->nready >= ee->maxevents) {
+		return;
+	}
 
 	ee->events[ee->nready].events |= EPOLLIN;
 	memcpy(&ee->events[ee->nready].data, &ee->fds[epx->fd]->data,
 		sizeof(ee->fds[epx->fd]->data));
-	if (!(ee->events[ee->nready].events & EPOLLOUT))
+	if (!(ee->events[ee->nready].events & EPOLLOUT)) {
 		ee->nready++;
+	}
 	SET_READABLE(fe);
 }
 
@@ -280,14 +284,17 @@ static void write_callback(EVENT *ev fiber_unused, FILE_EVENT *fe)
 	EPOLL_EVENT *ee = epx->ee;
 
 	assert(ee);
-	assert(ee->nready < ee->maxevents);
 	assert(epx->mask & EVENT_WRITE);
+	if (ee->nready >= ee->maxevents) {
+		return;
+	}
 
 	ee->events[ee->nready].events |= EPOLLOUT;
 	memcpy(&ee->events[ee->nready].data, &ee->fds[epx->fd]->data,
 		sizeof(ee->fds[epx->fd]->data));
-	if (!(ee->events[ee->nready].events & EPOLLIN))
+	if (!(ee->events[ee->nready].events & EPOLLIN)) {
 		ee->nready++;
+	}
 	SET_WRITABLE(fe);
 }
 
@@ -295,8 +302,7 @@ static void epoll_ctl_add(EVENT *ev, EPOLL_EVENT *ee,
 	struct epoll_event *event, int fd, int op)
 {
 	if (ee->fds[fd] == NULL) {
-		ee->fds[fd] = (EPOLL_CTX *)
-			malloc(sizeof(EPOLL_CTX));
+		ee->fds[fd] = (EPOLL_CTX *) mem_malloc(sizeof(EPOLL_CTX));
 	}
 
 	ee->fds[fd]->fd      = fd;
@@ -321,10 +327,12 @@ static void epoll_ctl_add(EVENT *ev, EPOLL_EVENT *ee,
 
 static void epoll_ctl_del(EVENT *ev, EPOLL_EVENT *ee, int fd)
 {
-	if (ee->fds[fd]->mask & EVENT_READ)
+	if (ee->fds[fd]->mask & EVENT_READ) {
 		event_del_read(ev, ee->fds[fd]->fe);
-	if (ee->fds[fd]->mask & EVENT_WRITE)
+	}
+	if (ee->fds[fd]->mask & EVENT_WRITE) {
 		event_del_write(ev, ee->fds[fd]->fe);
+	}
 
 	ee->fds[fd]->fd      = -1;
 	ee->fds[fd]->op      = 0;
@@ -334,7 +342,7 @@ static void epoll_ctl_del(EVENT *ev, EPOLL_EVENT *ee, int fd)
 	ee->fds[fd]->fe      = NULL;
 	memset(&ee->fds[fd]->data, 0, sizeof(ee->fds[fd]->data));
 
-	free(ee->fds[fd]);
+	mem_free(ee->fds[fd]);
 	ee->fds[fd] = NULL;
 }
 
