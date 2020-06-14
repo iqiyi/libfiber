@@ -228,7 +228,7 @@ fiber_client: fiber_client.c
 ```
 
 ### 在 Windows 平台编译
-目前可以使用 vc2012/vc2013/vc2015 分别打开 [fiber_vc2012.sln](fiber_vc2012.sln) /[fiber_vc2013.sln](fiber_vc2013.sln)/[fiber_vc2015.sln](fiber_vc2015.sln) 编译 libfiber 库。
+目前可以使用 vc2012/vc2013/vc2015 分别打开 [fiber_vc2012.sln](c/fiber_vc2012.sln) /[fiber_vc2013.sln](c/fiber_vc2013.sln)/[fiber_vc2015.sln](c/fiber_vc2015.sln) 编译 libfiber 库。
 
 ## 性能测试
 下面仅做了简单的 IOPS （网络 IO 性能）的测试，同时和其它协程库做了简单的对比：  
