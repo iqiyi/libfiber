@@ -205,7 +205,7 @@ int main(void)
 该 Windows 界面程序包含`网络服务器`和`网络客户端`两个功能。在运行时，服务模块和客户端模块运行在 Windows 界面线程中，因为协程库使用了 Windows 界面消息泵，所以协程模块可以与界面上元素成为`一体`而不必跨越线程，也不必使用令人烦恼的异步套接字 API。
 
 ### 更多例子
-在 [示例](https://github.com/libfiber/samples/) 中有一些例子描述了如何使用 libfiber 库提供的 API 进行网络编程；另外，在 [acl工程中](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples)，有更多的示例来描述网络协程编程，当然，这些例子还大量使用了 [acl 库](https://github.com/acl-dev/acl/)中的其它库的 API。
+在 [示例](samples/) 中有一些例子描述了如何使用 libfiber 库提供的 API 进行网络编程；另外，在 [acl工程中](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples)，有更多的示例来描述网络协程编程，当然，这些例子还大量使用了 [acl 库](https://github.com/acl-dev/acl/)中的其它库的 API。
 
 ## 编程 libfiber 本协程库
 ### 在 Unix 平台编译
