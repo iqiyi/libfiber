@@ -5,32 +5,34 @@
 
 #include "util.h"
 
-double stamp_sub(const struct timeval& from, const struct timeval& sub)
+double stamp_sub(const struct timeval *from, const struct timeval *sub)
 {
 	struct timeval res;
 
-	memcpy(&res, &from, sizeof(struct timeval));
+	memcpy(&res, from, sizeof(struct timeval));
 
-	res.tv_usec -= sub.tv_usec;
+	res.tv_usec -= sub->tv_usec;
 	if (res.tv_usec < 0) {
 		--res.tv_sec;
 		res.tv_usec += 1000000;
 	}
 
-	res.tv_sec -= sub.tv_sec;
+	res.tv_sec -= sub->tv_sec;
 	return res.tv_sec * 1000.0 + res.tv_usec / 1000.0;
 }
 
 double compute_speed(long long n, double cost)
 {
+	double speed;
+
 	if (cost <= 0) { // xxxx ?
 		cost = 0.001;
 	}
-	double speed = (n * 1000) / cost;
+	speed = (n * 1000) / cost;
 	return speed;
 }
 
-void show_speed(const struct timeval& begin, const struct timeval& end,
+void show_speed(const struct timeval *begin, const struct timeval *end,
 	long long n)
 {
 	double cost = stamp_sub(end, begin);
