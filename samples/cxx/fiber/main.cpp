@@ -88,6 +88,7 @@ int main(int argc, char* argv[]) {
 	schedule_two();
 
 	printf("\r\n");
+	printf("schedule benchmark\r\n");
 	schedule_bench(nfiber, nloop);
 	return 0;
 }

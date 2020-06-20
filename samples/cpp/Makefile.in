@@ -4,9 +4,7 @@ CFLAGS = -c -g -W \
 -Wall \
 -Wcast-qual \
 -Wcast-align \
--Waggregate-return \
 -Wno-long-long \
--Wmissing-prototypes \
 -Wpointer-arith \
 -Werror \
 -Wshadow \

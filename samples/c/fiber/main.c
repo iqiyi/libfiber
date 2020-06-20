@@ -61,6 +61,7 @@ static void fiber2(ACL_FIBER *fb, void *ctx) {
 static void schedule_bench(int nfiber, int nloop) {
 	struct timeval begin, end;
 	struct FIBER_CTX fc;
+	int i;
 
 	fc.nloop = nloop;
 	fc.count = 0;
@@ -68,7 +69,7 @@ static void schedule_bench(int nfiber, int nloop) {
 	acl_fiber_schedule_init(0);
 	gettimeofday(&begin, NULL);
 
-	for (int i = 0; i < nfiber; i++) {
+	for (i = 0; i < nfiber; i++) {
 		acl_fiber_create(fiber2, &fc, FIBER_STACK_SIZE);
 	}
 
