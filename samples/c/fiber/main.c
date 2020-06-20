@@ -17,7 +17,8 @@ static void fiber1(ACL_FIBER *fb, void *ctx) {
 }
 
 static void schedule_one(void) {
-	for (int i = 0; i < 10; i++) {
+	int i;
+	for (i = 0; i < 10; i++) {
 		int *ctx = malloc(sizeof(int));
 		*ctx = i;
 		acl_fiber_create(fiber1, ctx, FIBER_STACK_SIZE);
@@ -27,9 +28,11 @@ static void schedule_one(void) {
 }
 
 static void schedule_two(void) {
+	int i;
+
 	acl_fiber_schedule_init(1);
 
-	for (int i = 0; i < 10; i++) {
+	for (i = 0; i < 10; i++) {
 		int *ctx = malloc(sizeof(int));
 		*ctx = i;
 		acl_fiber_create(fiber1, ctx, FIBER_STACK_SIZE);
@@ -43,9 +46,10 @@ struct FIBER_CTX {
 
 static void fiber2(ACL_FIBER *fb, void *ctx) {
 	struct FIBER_CTX *fc = (struct FIBER_CTX *) ctx;
+	int i;
 	(void) fb;
 
-	for (int i = 0; i < fc->nloop; i++) {
+	for (i = 0; i < fc->nloop; i++) {
 		if (i < 5) {
 			printf("fiber-%d, i=%d\r\n", acl_fiber_self(), i);
 		}
