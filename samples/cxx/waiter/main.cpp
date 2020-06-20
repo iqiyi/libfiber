@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include <iostream>
-#include <sstream>
-
 #include "fiber/libfiber.hpp"
 #include "fiber/go_fiber.hpp"
 
