@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <string>
 
 #include "fiber/libfiber.hpp"
 #include "fiber/go_fiber.hpp"
@@ -49,7 +50,6 @@ static void fiber_listen(SOCKET lfd) {
 	}
 
 	socket_close(lfd);
-	acl::fiber::schedule_stop();
 }
 
 static void usage(const char* procname) {
