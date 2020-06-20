@@ -96,7 +96,7 @@ ifneq ($(SYSPATH),)
 endif
 ###########################################################
 
-FIBER_PATH = ../../c
+FIBER_PATH = ../../../c
 FIBER_INC  = $(FIBER_PATH)/include
 FIBER_LIB  = $(FIBER_PATH)
 
