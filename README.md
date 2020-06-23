@@ -7,8 +7,11 @@
 * [About](#about)
 * [Which IO events are supported?](#which-io-events-are-supported-)
 * [SAMPLES](#samples)
-    * [One server sample](#one-server-sample)
-    * [One client sample](#one-client-sample)
+    * [One server sample with C API](#one-server-sample-with-c-api)
+    * [One client sample with C API](#one-client-sample-with-c-api)
+	* [Create one fiber with standard C++ API](#create-one-fiber-with-standard-c-api)
+	* [Create one fiber with C++1x API](#create-one-fiber-with-c1x-api)
+	* [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
 	* [Windows GUI sample](#windows-gui-sample)
 	* [More SAMPLES](#more-samples)
 * [BUILDING](#building)
@@ -43,7 +46,7 @@ Event|Linux|BSD|Mac|Windows
 
 ## SAMPLES
 
-### One server sample
+### One server sample with C API
 ```C
 // fiber_server.c
 
@@ -143,7 +146,7 @@ int main(void)
 }
 ```
 
-### One client sample
+### One client sample with C API
 
 ```C
 // fiber_client.c
@@ -219,6 +222,89 @@ int main(void)
 	socket_end();
 #endif
 
+	return 0;
+}
+```
+
+### Create one fiber with standard C++ API
+You can create one coroutine with standard C++ API in libfiber:
+```C
+#include <stdio.h>
+#include "fiber/libfiber.hpp"
+
+class myfiber : public acl::fiber {
+public:
+	myfiber(void) {}
+
+private:
+	~myfiber(void) {}
+
+protected:
+	// @override from acl::fiber
+	void run(void) {
+		printf("hello world!\r\n");
+		delete this;
+	}
+};
+
+int main(void) {
+	for (int i = 0; i < 10; i++) {
+		acl::fiber* fb = new myfiber();
+		fb->start();
+	}
+
+	acl::fiber::schedule();
+	return 0;
+}
+```
+
+### Create one fiber with C++1x API
+You can also create one coroutine with c++11 API in libfiber:
+```C
+#include <stdio.h>
+#include "fiber/libfiber.hpp"
+#include "fiber/go_fiber.hpp"
+
+static void fiber_routine(int i) {
+	printf("hi, i=%d, curr fiber=%d\r\n", i, acl::fiber::self());
+}
+
+int main(void) {
+	for (int i = 0; i < 10; i++) {
+		go[=] {
+			fiber_routine(i);
+		};
+	}
+
+	acl::fiber::schedule();
+	return 0;
+}
+```
+
+### Wait for the result from a thread
+```C
+#include <stdio.h>
+#include <unistd.h>
+#include "fiber/go_fiber.hpp"
+
+static void fiber_routine(int i) {
+	go_wait[&] {	// running in another thread
+		i += 100;
+		usleep(10000);
+	};
+
+	printf("i is %d\r\n", i);
+}
+
+int main(void) {
+	// create ten fibers
+	for (int i = 0; i < 10; i++) {
+		go[=] {
+			fiber_routine(i);
+		};
+	}
+
+	acl::fiber::schedule();
 	return 0;
 }
 ```
