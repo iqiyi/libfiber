@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <getopt.h>
-#include "fiber/libfiber.hpp"
+
 #include "fiber/go_fiber.hpp"
 
 #include "../util.h"

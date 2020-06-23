@@ -5,7 +5,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "fiber/libfiber.hpp"
 #include "fiber/go_fiber.hpp"
 
 #include "../patch.h"
