@@ -266,7 +266,7 @@ You can also create one coroutine with c++11 API in libfiber:
 #include "fiber/go_fiber.hpp"
 
 static void fiber_routine(int i) {
-	printf("hi, i=%d, curr fiber=%d\r\n", i, acl::fiber::self());
+	printf("hi, i=%d, curr fiber=%u\r\n", i, acl::fiber::self());
 }
 
 int main(void) {
