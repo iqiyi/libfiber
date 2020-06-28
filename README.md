@@ -310,7 +310,7 @@ int main(void) {
 ```
 
 ### Windows GUI sample
-There is one Windows GUI sample with libfiber in [directory](samples/WinEchod). The screen shot is ![here](res/winecho.png)  
+There is one Windows GUI sample with libfiber in [directory](samples/c/WinEchod). The screen shot is ![here](res/winecho.png)  
 
 The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memroy collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronus API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
 
