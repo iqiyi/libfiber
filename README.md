@@ -9,8 +9,8 @@
 * [SAMPLES](#samples)
     * [One server sample with C API](#one-server-sample-with-c-api)
     * [One client sample with C API](#one-client-sample-with-c-api)
-	* [Create one fiber with standard C++ API](#create-one-fiber-with-standard-c-api)
-	* [Create one fiber with C++1x API](#create-one-fiber-with-c1x-api)
+	* [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
+	* [Create fiber with C++1x API](#create-fiber-with-c1x-api)
 	* [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
 	* [Windows GUI sample](#windows-gui-sample)
 	* [More SAMPLES](#more-samples)
@@ -226,7 +226,7 @@ int main(void)
 }
 ```
 
-### Create one fiber with standard C++ API
+### Create fiber with standard C++ API
 You can create one coroutine with standard C++ API in libfiber:
 ```C
 #include <stdio.h>
@@ -258,7 +258,7 @@ int main(void) {
 }
 ```
 
-### Create one fiber with C++1x API
+### Create fiber with C++1x API
 You can also create one coroutine with c++11 API in libfiber:
 ```C
 #include <stdio.h>
@@ -306,6 +306,62 @@ int main(void) {
 
 	acl::fiber::schedule();
 	return 0;
+}
+```
+
+### Http server supporting http url route
+One http server written with libfiber and http module of [acl](https://github.com/acl-dev/acl) supports http handler route which is in [http server](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples-c%2B%2B1x/httpd).
+
+```C
+#include <acl-lib/acl_cpp/lib_acl.hpp>          // must before http_server.hpp
+#include <acl-lib/fiber/http_server.hpp>
+
+static char *var_cfg_debug_msg;
+static acl::master_str_tbl var_conf_str_tab[] = {
+        { "debug_msg", "test_msg", &var_cfg_debug_msg },
+        { 0, 0, 0 }
+};
+
+static int  var_cfg_io_timeout;
+static acl::master_int_tbl var_conf_int_tab[] = {
+        { "io_timeout", 120, &var_cfg_io_timeout, 0, 0 },
+        { 0, 0 , 0 , 0, 0 }
+};
+
+int main(void) {
+        acl::acl_cpp_init();
+        acl::http_server server;
+
+        // set the configure variables
+        server.set_cfg_int(var_conf_int_tab)
+                .set_cfg_str(var_conf_str_tab);
+
+        // set http handler route
+        server.Get("/", [](acl::HttpRequest&, acl::HttpResponse& res) {
+                acl::string buf("hello world1!\r\n");
+                res.setContentLength(buf.size());
+                return res.write(buf.c_str(), buf.size());
+        }).Post("/ok", [](acl::HttpRequest& req, acl::HttpResponse& res) {
+                acl::string buf;
+                req.getBody(buf);
+                res.setContentLength(buf.size());
+                return res.write(buf.c_str(), buf.size());
+        }).Get("/json", [&](acl::HttpRequest&, acl::HttpResponse& res) {
+                acl::json json;
+                acl::json_node& root = json.get_root();
+                root.add_number("code", 200)
+                        .add_text("status", "+ok")
+                        .add_child("data",
+                                json.create_node()
+                                        .add_text("name", "value")
+                                        .add_bool("success", true)
+                                        .add_number("number", 200));
+                return res.write(json);
+        });
+
+        // start the server in alone mode
+        server.run_alone("0.0.0.0|8194, 127.0.0.1|8195", "./httpd.cf");
+        return 0;
 }
 ```
 
