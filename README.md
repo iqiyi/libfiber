@@ -12,6 +12,7 @@
 	* [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
 	* [Create fiber with C++1x API](#create-fiber-with-c1x-api)
 	* [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
+	* [Http server supporting http url route](#http-server-supporting-http-url-route)
 	* [Windows GUI sample](#windows-gui-sample)
 	* [More SAMPLES](#more-samples)
 * [BUILDING](#building)
