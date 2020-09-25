@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.8)
 
 #message(${PROJECT_SOURCE_DIR})
 
+enable_language(C ASM)
+
 if (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	message(FATAL_ERROR "Please into another dir to build!")
 endif()
@@ -66,11 +68,19 @@ set(sources
 	${src}/event
 	${src}/hook
 	${src}/dns
+	${src}/fiber
 )
 
 foreach(iter ${sources})
 	aux_source_directory(${iter} lib_src)
+	message(STATUS ">>add dir "${iter})
 endforeach()
+
+list(APPEND lib_src ${src}/fiber/boost/make_gas.S
+	${src}/fiber/boost/jump_gas.S)
+
+message(STATUS ${lib_src})
+
 
 if(NOT CMAKE_SYSTEM_NAME MATCHES "ANDROID")
 	set(lib_output_path ${PROJECT_BINARY_DIR}/lib)

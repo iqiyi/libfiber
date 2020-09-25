@@ -11,17 +11,18 @@ CFLAGS = -c -g -W \
 -std=gnu99 \
 -fPIC \
 -Wall \
--Waggregate-return \
 -Wpointer-arith \
 -Wshadow \
 -D_REENTRANT \
 -D_POSIX_PTHREAD_SEMANTICS \
 -D_USE_FAST_MACRO \
 -Wno-long-long \
--DUSE_JMP \
 -Wmissing-prototypes \
 -Wcast-qual \
+-DUSE_BOOST_JMP \
+#-DUSE_JMP_DEF \
 #-DUSE_VALGRIND \
+#-Waggregate-return \
 #-I/usr/local/include
 #-DUSE_PRINTF_MACRO
 #-Wno-clobbered
@@ -60,9 +61,9 @@ ifeq ($(findstring gcc, $(CC)), gcc)
 	GCC_MINOR:=$(shell echo "$(GCC_VERSION)" | cut -d'.' -f2)
 	GCC_SUB:=$(shell echo "$(GCC_VERSION)" | cut -d'.' -f3)
 	GCC_VER:=$(shell [ $(GCC_MAJOR) -gt 4 -o \( $(GCC_MAJOR) -eq 4 -a $(GCC_MINOR) -gt 4 \) ] && echo true)
-	ifeq ($(GCC_VER), true)
-		CFLAGS += -Wno-implicit-fallthrough
-	endif
+#	ifeq ($(GCC_VER), true)
+#		CFLAGS += -Wno-implicit-fallthrough
+#	endif
 endif
 
 ifeq ($(findstring clang, $(CC)), clang)
@@ -143,7 +144,8 @@ SRC = $(wildcard $(SRC_PATH_SRC)/*.c) \
       $(wildcard $(SRC_PATH_SRC)/event/*.c) \
       $(wildcard $(SRC_PATH_SRC)/hook/*.c)
 
-OBJ = $(patsubst %.c, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC)))
+ASM_OBJ=$(OBJ_PATH_DST)/setjmp.o $(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
+OBJ = $(patsubst %.c, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC))) $(ASM_OBJ)
 
 ###########################################################
 
@@ -202,6 +204,12 @@ $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/common/%.c
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/dns/%.c
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/fiber/%.c
+	$(COMPILE) $< -o $@
+$(OBJ_PATH_DST)/setjmp.o: $(SRC_PATH_SRC)/fiber/exp/setjmp.S
+	$(COMPILE) $< -o $@
+$(OBJ_PATH_DST)/make_gas.o: $(SRC_PATH_SRC)/fiber/boost/make_gas.S
+	$(COMPILE) $< -o $@
+$(OBJ_PATH_DST)/jump_gas.o: $(SRC_PATH_SRC)/fiber/boost/jump_gas.S
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/event/%.c
 	$(COMPILE) $< -o $@
