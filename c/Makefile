@@ -19,8 +19,8 @@ CFLAGS = -c -g -W \
 -Wno-long-long \
 -Wmissing-prototypes \
 -Wcast-qual \
--DUSE_BOOST_JMP \
-#-DUSE_JMP_DEF \
+-DUSE_JMP_DEF \
+#-DUSE_BOOST_JMP \
 #-DUSE_VALGRIND \
 #-Waggregate-return \
 #-I/usr/local/include
@@ -144,7 +144,8 @@ SRC = $(wildcard $(SRC_PATH_SRC)/*.c) \
       $(wildcard $(SRC_PATH_SRC)/event/*.c) \
       $(wildcard $(SRC_PATH_SRC)/hook/*.c)
 
-ASM_OBJ=$(OBJ_PATH_DST)/setjmp.o $(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
+#ASM_OBJ=$(OBJ_PATH_DST)/setjmp.o $(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
+ASM_OBJ=$(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
 OBJ = $(patsubst %.c, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC))) $(ASM_OBJ)
 
 ###########################################################
@@ -205,8 +206,8 @@ $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/dns/%.c
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/fiber/%.c
 	$(COMPILE) $< -o $@
-$(OBJ_PATH_DST)/setjmp.o: $(SRC_PATH_SRC)/fiber/exp/setjmp.S
-	$(COMPILE) $< -o $@
+#$(OBJ_PATH_DST)/setjmp.o: $(SRC_PATH_SRC)/fiber/exp/setjmp.S
+#	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/make_gas.o: $(SRC_PATH_SRC)/fiber/boost/make_gas.S
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/jump_gas.o: $(SRC_PATH_SRC)/fiber/boost/jump_gas.S
