@@ -29,6 +29,9 @@ add_definitions(
 	"-DACL_PREPARE_COMPILE"
 	"-Wno-invalid-source-encoding"
 	"-Wstrict-prototypes"
+	"-Wno-deprecated-declarations"
+#	"-DUSE_JMP_DEF"
+	"-DUSE_BOOST_JMP"
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "")
