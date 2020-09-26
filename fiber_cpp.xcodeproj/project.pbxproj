@@ -1,0 +1,377 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		707539D2251E472E005B6E56 /* fiber_event.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539C8251E472E005B6E56 /* fiber_event.hpp */; };
+		707539D3251E472E005B6E56 /* fiber_lock.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539C9251E472E005B6E56 /* fiber_lock.hpp */; };
+		707539D4251E472E005B6E56 /* fiber_tbox.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CA251E472E005B6E56 /* fiber_tbox.hpp */; };
+		707539D5251E472E005B6E56 /* go_fiber.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CB251E472E005B6E56 /* go_fiber.hpp */; };
+		707539D6251E472E005B6E56 /* channel.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CC251E472E005B6E56 /* channel.hpp */; };
+		707539D7251E472E005B6E56 /* libfiber.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CD251E472E005B6E56 /* libfiber.hpp */; };
+		707539D8251E472E005B6E56 /* fiber_cpp_define.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CE251E472E005B6E56 /* fiber_cpp_define.hpp */; };
+		707539D9251E472E005B6E56 /* fiber_cond.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539CF251E472E005B6E56 /* fiber_cond.hpp */; };
+		707539DA251E472E005B6E56 /* fiber.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539D0251E472E005B6E56 /* fiber.hpp */; };
+		707539DB251E472E005B6E56 /* fiber_sem.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539D1251E472E005B6E56 /* fiber_sem.hpp */; };
+		707539E4251E473E005B6E56 /* fiber_lock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539DC251E473E005B6E56 /* fiber_lock.cpp */; };
+		707539E5251E473E005B6E56 /* fiber_event.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539DD251E473E005B6E56 /* fiber_event.cpp */; };
+		707539E6251E473E005B6E56 /* fiber_sem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539DE251E473E005B6E56 /* fiber_sem.cpp */; };
+		707539E7251E473E005B6E56 /* fiber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539DF251E473E005B6E56 /* fiber.cpp */; };
+		707539E8251E473E005B6E56 /* channel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539E0251E473E005B6E56 /* channel.cpp */; };
+		707539E9251E473E005B6E56 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539E1251E473E005B6E56 /* stdafx.cpp */; };
+		707539EA251E473E005B6E56 /* stdafx.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539E2251E473E005B6E56 /* stdafx.hpp */; };
+		707539EB251E473E005B6E56 /* fiber_cond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539E3251E473E005B6E56 /* fiber_cond.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		070F35E320902D9800672EDC /* libfiber_cpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfiber_cpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		707539C8251E472E005B6E56 /* fiber_event.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_event.hpp; path = cpp/include/fiber/fiber_event.hpp; sourceTree = SOURCE_ROOT; };
+		707539C9251E472E005B6E56 /* fiber_lock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_lock.hpp; path = cpp/include/fiber/fiber_lock.hpp; sourceTree = SOURCE_ROOT; };
+		707539CA251E472E005B6E56 /* fiber_tbox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_tbox.hpp; path = cpp/include/fiber/fiber_tbox.hpp; sourceTree = SOURCE_ROOT; };
+		707539CB251E472E005B6E56 /* go_fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = go_fiber.hpp; path = cpp/include/fiber/go_fiber.hpp; sourceTree = SOURCE_ROOT; };
+		707539CC251E472E005B6E56 /* channel.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = channel.hpp; path = cpp/include/fiber/channel.hpp; sourceTree = SOURCE_ROOT; };
+		707539CD251E472E005B6E56 /* libfiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = libfiber.hpp; path = cpp/include/fiber/libfiber.hpp; sourceTree = SOURCE_ROOT; };
+		707539CE251E472E005B6E56 /* fiber_cpp_define.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_cpp_define.hpp; path = cpp/include/fiber/fiber_cpp_define.hpp; sourceTree = SOURCE_ROOT; };
+		707539CF251E472E005B6E56 /* fiber_cond.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_cond.hpp; path = cpp/include/fiber/fiber_cond.hpp; sourceTree = SOURCE_ROOT; };
+		707539D0251E472E005B6E56 /* fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber.hpp; path = cpp/include/fiber/fiber.hpp; sourceTree = SOURCE_ROOT; };
+		707539D1251E472E005B6E56 /* fiber_sem.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = fiber_sem.hpp; path = cpp/include/fiber/fiber_sem.hpp; sourceTree = SOURCE_ROOT; };
+		707539DC251E473E005B6E56 /* fiber_lock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_lock.cpp; path = cpp/src/fiber_lock.cpp; sourceTree = "<group>"; };
+		707539DD251E473E005B6E56 /* fiber_event.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_event.cpp; path = cpp/src/fiber_event.cpp; sourceTree = "<group>"; };
+		707539DE251E473E005B6E56 /* fiber_sem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_sem.cpp; path = cpp/src/fiber_sem.cpp; sourceTree = "<group>"; };
+		707539DF251E473E005B6E56 /* fiber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber.cpp; path = cpp/src/fiber.cpp; sourceTree = "<group>"; };
+		707539E0251E473E005B6E56 /* channel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = channel.cpp; path = cpp/src/channel.cpp; sourceTree = "<group>"; };
+		707539E1251E473E005B6E56 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stdafx.cpp; path = cpp/src/stdafx.cpp; sourceTree = "<group>"; };
+		707539E2251E473E005B6E56 /* stdafx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stdafx.hpp; path = cpp/src/stdafx.hpp; sourceTree = "<group>"; };
+		707539E3251E473E005B6E56 /* fiber_cond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_cond.cpp; path = cpp/src/fiber_cond.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		070F35E020902D9800672EDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		070F35DA20902D9800672EDC = {
+			isa = PBXGroup;
+			children = (
+				070F35F220902DB100672EDC /* src */,
+				070F35F120902DA700672EDC /* include */,
+				070F35E420902D9800672EDC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		070F35E420902D9800672EDC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				070F35E320902D9800672EDC /* libfiber_cpp.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		070F35F120902DA700672EDC /* include */ = {
+			isa = PBXGroup;
+			children = (
+				070F35F320902DDC00672EDC /* fiber */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
+		070F35F220902DB100672EDC /* src */ = {
+			isa = PBXGroup;
+			children = (
+				707539E0251E473E005B6E56 /* channel.cpp */,
+				707539E3251E473E005B6E56 /* fiber_cond.cpp */,
+				707539DD251E473E005B6E56 /* fiber_event.cpp */,
+				707539DC251E473E005B6E56 /* fiber_lock.cpp */,
+				707539DE251E473E005B6E56 /* fiber_sem.cpp */,
+				707539DF251E473E005B6E56 /* fiber.cpp */,
+				707539E1251E473E005B6E56 /* stdafx.cpp */,
+				707539E2251E473E005B6E56 /* stdafx.hpp */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		070F35F320902DDC00672EDC /* fiber */ = {
+			isa = PBXGroup;
+			children = (
+				707539CC251E472E005B6E56 /* channel.hpp */,
+				707539CF251E472E005B6E56 /* fiber_cond.hpp */,
+				707539CE251E472E005B6E56 /* fiber_cpp_define.hpp */,
+				707539C8251E472E005B6E56 /* fiber_event.hpp */,
+				707539C9251E472E005B6E56 /* fiber_lock.hpp */,
+				707539D1251E472E005B6E56 /* fiber_sem.hpp */,
+				707539CA251E472E005B6E56 /* fiber_tbox.hpp */,
+				707539D0251E472E005B6E56 /* fiber.hpp */,
+				707539CB251E472E005B6E56 /* go_fiber.hpp */,
+				707539CD251E472E005B6E56 /* libfiber.hpp */,
+			);
+			name = fiber;
+			path = ../lib_fiber/cpp/include/fiber;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		070F35E120902D9800672EDC /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				707539D4251E472E005B6E56 /* fiber_tbox.hpp in Headers */,
+				707539D2251E472E005B6E56 /* fiber_event.hpp in Headers */,
+				707539D8251E472E005B6E56 /* fiber_cpp_define.hpp in Headers */,
+				707539D9251E472E005B6E56 /* fiber_cond.hpp in Headers */,
+				707539EA251E473E005B6E56 /* stdafx.hpp in Headers */,
+				707539DA251E472E005B6E56 /* fiber.hpp in Headers */,
+				707539D3251E472E005B6E56 /* fiber_lock.hpp in Headers */,
+				707539D6251E472E005B6E56 /* channel.hpp in Headers */,
+				707539D7251E472E005B6E56 /* libfiber.hpp in Headers */,
+				707539D5251E472E005B6E56 /* go_fiber.hpp in Headers */,
+				707539DB251E472E005B6E56 /* fiber_sem.hpp in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		070F35E220902D9800672EDC /* fiber_cpp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 070F35EE20902D9800672EDC /* Build configuration list for PBXNativeTarget "fiber_cpp" */;
+			buildPhases = (
+				070F35DF20902D9800672EDC /* Sources */,
+				070F35E020902D9800672EDC /* Frameworks */,
+				070F35E120902D9800672EDC /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = fiber_cpp;
+			productName = fiber_cpp;
+			productReference = 070F35E320902D9800672EDC /* libfiber_cpp.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		070F35DB20902D9800672EDC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1030;
+				ORGANIZATIONNAME = zsx;
+				TargetAttributes = {
+					070F35E220902D9800672EDC = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
+			};
+			buildConfigurationList = 070F35DE20902D9800672EDC /* Build configuration list for PBXProject "fiber_cpp" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 070F35DA20902D9800672EDC;
+			productRefGroup = 070F35E420902D9800672EDC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				070F35E220902D9800672EDC /* fiber_cpp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		070F35DF20902D9800672EDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				707539EB251E473E005B6E56 /* fiber_cond.cpp in Sources */,
+				707539E6251E473E005B6E56 /* fiber_sem.cpp in Sources */,
+				707539E7251E473E005B6E56 /* fiber.cpp in Sources */,
+				707539E8251E473E005B6E56 /* channel.cpp in Sources */,
+				707539E5251E473E005B6E56 /* fiber_event.cpp in Sources */,
+				707539E4251E473E005B6E56 /* fiber_lock.cpp in Sources */,
+				707539E9251E473E005B6E56 /* stdafx.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		070F35EC20902D9800672EDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					cpp/include,
+					c/include,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				VALID_ARCHS = "arm64 arm64e armv7 armv7s i386 x86_64";
+			};
+			name = Debug;
+		};
+		070F35ED20902D9800672EDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					cpp/include,
+					c/include,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALID_ARCHS = "arm64 arm64e armv7 armv7s i386 x86_64";
+			};
+			name = Release;
+		};
+		070F35EF20902D9800672EDC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				VALID_ARCHS = "$(inherited)";
+			};
+			name = Debug;
+		};
+		070F35F020902D9800672EDC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_CPP_RTTI = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				VALID_ARCHS = "$(inherited)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		070F35DE20902D9800672EDC /* Build configuration list for PBXProject "fiber_cpp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070F35EC20902D9800672EDC /* Debug */,
+				070F35ED20902D9800672EDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		070F35EE20902D9800672EDC /* Build configuration list for PBXNativeTarget "fiber_cpp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				070F35EF20902D9800672EDC /* Debug */,
+				070F35F020902D9800672EDC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 070F35DB20902D9800672EDC /* Project object */;
+}

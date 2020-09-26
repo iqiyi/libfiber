@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:samples/xcode/fiber_server/fiber_server.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:fiber_cpp.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:fiber.xcodeproj">
+   </FileRef>
+</Workspace>
