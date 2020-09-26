@@ -197,7 +197,7 @@ static void fiber_unix_init(ACL_FIBER *fiber, size_t size)
 #endif
 
 #ifdef USE_VALGRIND
-	/* avoding the valgrind's warning */
+	/* avoid the valgrind warning */
 # if	defined(USE_BOOST_JMP)
 	fb->vid = VALGRIND_STACK_REGISTER(fb->buff, fb->stack);
 # else
@@ -227,7 +227,7 @@ ACL_FIBER *fiber_unix_origin(void)
 {
 	FIBER_UNIX *fb = (FIBER_UNIX *) mem_calloc(1, sizeof(*fb));
 
-#if	USE_BOOST_JMP
+#ifdef	USE_BOOST_JMP
 	fb->size           = 32 * 1024;
 	fb->buff           = (char *) stack_alloc(fb->size);
 	fb->fiber.init_fn  = fiber_unix_init;
