@@ -9,15 +9,16 @@
 * [SAMPLES](#samples)
     * [One server sample with C API](#one-server-sample-with-c-api)
     * [One client sample with C API](#one-client-sample-with-c-api)
-	* [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
-	* [Create fiber with C++1x API](#create-fiber-with-c1x-api)
-	* [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
-	* [Http server supporting http url route](#http-server-supporting-http-url-route)
-	* [Windows GUI sample](#windows-gui-sample)
-	* [More SAMPLES](#more-samples)
+    * [Resolve domain address in coroutine](#resolve-domain-address-in-coroutine)
+    * [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
+    * [Create fiber with C++1x API](#create-fiber-with-c1x-api)
+    * [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
+    * [Http server supporting http url route](#http-server-supporting-http-url-route)
+    * [Windows GUI sample](#windows-gui-sample)
+    * [More SAMPLES](#more-samples)
 * [BUILDING](#building)
     * [On Unix](#on-unix)
-	* [On Windows](#on-windows)
+    * [On Windows](#on-windows)
 * [Benchmark](#benchmark)
 * [API support](#api-support)
     * [Base API](#base-api)
@@ -223,6 +224,50 @@ int main(void)
 	socket_end();
 #endif
 
+	return 0;
+}
+```
+
+### Resolve domain address in coroutine
+The rfc1035 for DNS has been implement in libfiber, so you can call gethostbyname or getaddrinfo to get the givent domain's IP addresses in coroutine.
+```C
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netdb.h>
+#include "fiber/lib_fiber.h"
+
+static void lookup(ACL_FIBER *fiber, void *ctx) {
+	const char *name = (const char *) ctx;
+	struct addrinfo hints, *res0;
+	int ret;
+
+	(void*) fiber; // avoid compile warning
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+
+	ret = getaddrinfo(name, "80", &hints, &res0);
+	free(name);
+
+	if (ret != 0) {
+		printf("getaddrinfo error %s\r\n", gai_strerror(ret));
+	} else {
+		printf("getaddrinfo ok\r\n");
+		freeaddrinfo(res0);
+	}
+}
+
+int main(void) {
+	char *name1 = strdup("www.iqiyi.com");
+	char *name2 = strdup("www.baidu.com");
+
+	acl_fiber_create(lookup, name1, 128000);
+	acl_fiber_create(lookup, name2, 128000);
+
+	acl_fiber_schedule();
 	return 0;
 }
 ```
