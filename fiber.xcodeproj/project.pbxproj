@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		703BA809254DB0E000C8F36E /* rfc1035.c in Sources */ = {isa = PBXBuildFile; fileRef = 703BA805254DB0E000C8F36E /* rfc1035.c */; };
+		703BA80A254DB0E000C8F36E /* resolver.c in Sources */ = {isa = PBXBuildFile; fileRef = 703BA806254DB0E000C8F36E /* resolver.c */; };
+		703BA80B254DB0E000C8F36E /* resolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 703BA807254DB0E000C8F36E /* resolver.h */; };
+		703BA80C254DB0E000C8F36E /* rfc1035.h in Headers */ = {isa = PBXBuildFile; fileRef = 703BA808254DB0E000C8F36E /* rfc1035.h */; };
 		70753928251E04A0005B6E56 /* iostuff.h in Headers */ = {isa = PBXBuildFile; fileRef = 70753906251E049E005B6E56 /* iostuff.h */; };
 		70753929251E04A0005B6E56 /* fifo.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753907251E049E005B6E56 /* fifo.c */; };
 		7075392A251E04A0005B6E56 /* atomic.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753908251E049E005B6E56 /* atomic.c */; };
@@ -55,7 +59,6 @@
 		70753968251E0515005B6E56 /* getaddrinfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 7075395F251E0515005B6E56 /* getaddrinfo.c */; };
 		70753969251E0515005B6E56 /* epoll.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753960251E0515005B6E56 /* epoll.c */; };
 		7075396A251E0515005B6E56 /* gethostbyname.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753961251E0515005B6E56 /* gethostbyname.c */; };
-		7075396B251E0515005B6E56 /* dns_init.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753962251E0515005B6E56 /* dns_init.c */; };
 		7075396C251E0515005B6E56 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753963251E0515005B6E56 /* io.c */; };
 		7075396D251E0515005B6E56 /* poll.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753964251E0515005B6E56 /* poll.c */; };
 		7075396E251E0515005B6E56 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753965251E0515005B6E56 /* socket.c */; };
@@ -78,9 +81,7 @@
 		70753990251E0533005B6E56 /* event_select.h in Headers */ = {isa = PBXBuildFile; fileRef = 70753984251E0533005B6E56 /* event_select.h */; };
 		70753991251E0533005B6E56 /* event_iocp.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753985251E0533005B6E56 /* event_iocp.c */; };
 		70753998251E053F005B6E56 /* valid_hostname.h in Headers */ = {isa = PBXBuildFile; fileRef = 70753992251E053E005B6E56 /* valid_hostname.h */; };
-		70753999251E053F005B6E56 /* dns.h in Headers */ = {isa = PBXBuildFile; fileRef = 70753993251E053F005B6E56 /* dns.h */; };
 		7075399A251E053F005B6E56 /* sane_inet.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753994251E053F005B6E56 /* sane_inet.c */; };
-		7075399B251E053F005B6E56 /* dns.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753995251E053F005B6E56 /* dns.c */; };
 		7075399C251E053F005B6E56 /* valid_hostname.c in Sources */ = {isa = PBXBuildFile; fileRef = 70753996251E053F005B6E56 /* valid_hostname.c */; };
 		7075399D251E053F005B6E56 /* sane_inet.h in Headers */ = {isa = PBXBuildFile; fileRef = 70753997251E053F005B6E56 /* sane_inet.h */; };
 		707539AE251E0568005B6E56 /* common.h in Headers */ = {isa = PBXBuildFile; fileRef = 7075399E251E0567005B6E56 /* common.h */; };
@@ -105,6 +106,10 @@
 
 /* Begin PBXFileReference section */
 		070F35202090217900672EDC /* libfiber.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfiber.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		703BA805254DB0E000C8F36E /* rfc1035.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rfc1035.c; path = c/src/dns/rfc1035.c; sourceTree = SOURCE_ROOT; };
+		703BA806254DB0E000C8F36E /* resolver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resolver.c; path = c/src/dns/resolver.c; sourceTree = SOURCE_ROOT; };
+		703BA807254DB0E000C8F36E /* resolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resolver.h; path = c/src/dns/resolver.h; sourceTree = SOURCE_ROOT; };
+		703BA808254DB0E000C8F36E /* rfc1035.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rfc1035.h; path = c/src/dns/rfc1035.h; sourceTree = SOURCE_ROOT; };
 		70753906251E049E005B6E56 /* iostuff.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iostuff.h; path = c/src/common/iostuff.h; sourceTree = SOURCE_ROOT; };
 		70753907251E049E005B6E56 /* fifo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fifo.c; path = c/src/common/fifo.c; sourceTree = SOURCE_ROOT; };
 		70753908251E049E005B6E56 /* atomic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = atomic.c; path = c/src/common/atomic.c; sourceTree = SOURCE_ROOT; };
@@ -153,7 +158,6 @@
 		7075395F251E0515005B6E56 /* getaddrinfo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = getaddrinfo.c; path = c/src/hook/getaddrinfo.c; sourceTree = SOURCE_ROOT; };
 		70753960251E0515005B6E56 /* epoll.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = epoll.c; path = c/src/hook/epoll.c; sourceTree = SOURCE_ROOT; };
 		70753961251E0515005B6E56 /* gethostbyname.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = gethostbyname.c; path = c/src/hook/gethostbyname.c; sourceTree = SOURCE_ROOT; };
-		70753962251E0515005B6E56 /* dns_init.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dns_init.c; path = c/src/hook/dns_init.c; sourceTree = SOURCE_ROOT; };
 		70753963251E0515005B6E56 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = c/src/hook/io.c; sourceTree = SOURCE_ROOT; };
 		70753964251E0515005B6E56 /* poll.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = poll.c; path = c/src/hook/poll.c; sourceTree = SOURCE_ROOT; };
 		70753965251E0515005B6E56 /* socket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = socket.c; path = c/src/hook/socket.c; sourceTree = SOURCE_ROOT; };
@@ -176,9 +180,7 @@
 		70753984251E0533005B6E56 /* event_select.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = event_select.h; path = c/src/event/event_select.h; sourceTree = SOURCE_ROOT; };
 		70753985251E0533005B6E56 /* event_iocp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = event_iocp.c; path = c/src/event/event_iocp.c; sourceTree = SOURCE_ROOT; };
 		70753992251E053E005B6E56 /* valid_hostname.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = valid_hostname.h; path = c/src/dns/valid_hostname.h; sourceTree = SOURCE_ROOT; };
-		70753993251E053F005B6E56 /* dns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dns.h; path = c/src/dns/dns.h; sourceTree = SOURCE_ROOT; };
 		70753994251E053F005B6E56 /* sane_inet.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sane_inet.c; path = c/src/dns/sane_inet.c; sourceTree = SOURCE_ROOT; };
-		70753995251E053F005B6E56 /* dns.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dns.c; path = c/src/dns/dns.c; sourceTree = SOURCE_ROOT; };
 		70753996251E053F005B6E56 /* valid_hostname.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = valid_hostname.c; path = c/src/dns/valid_hostname.c; sourceTree = SOURCE_ROOT; };
 		70753997251E053F005B6E56 /* sane_inet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sane_inet.h; path = c/src/dns/sane_inet.h; sourceTree = SOURCE_ROOT; };
 		7075399E251E0567005B6E56 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = c/src/common.h; sourceTree = "<group>"; };
@@ -310,8 +312,10 @@
 		070F35612090225C00672EDC /* dns */ = {
 			isa = PBXGroup;
 			children = (
-				70753995251E053F005B6E56 /* dns.c */,
-				70753993251E053F005B6E56 /* dns.h */,
+				703BA806254DB0E000C8F36E /* resolver.c */,
+				703BA807254DB0E000C8F36E /* resolver.h */,
+				703BA805254DB0E000C8F36E /* rfc1035.c */,
+				703BA808254DB0E000C8F36E /* rfc1035.h */,
 				70753994251E053F005B6E56 /* sane_inet.c */,
 				70753997251E053F005B6E56 /* sane_inet.h */,
 				70753996251E053F005B6E56 /* valid_hostname.c */,
@@ -358,7 +362,6 @@
 		070F35812090225C00672EDC /* hook */ = {
 			isa = PBXGroup;
 			children = (
-				70753962251E0515005B6E56 /* dns_init.c */,
 				70753960251E0515005B6E56 /* epoll.c */,
 				7075395F251E0515005B6E56 /* getaddrinfo.c */,
 				70753961251E0515005B6E56 /* gethostbyname.c */,
@@ -409,6 +412,7 @@
 				70753938251E04A0005B6E56 /* sane_socket.h in Headers */,
 				7075392C251E04A0005B6E56 /* strops.h in Headers */,
 				707539B8251E0568005B6E56 /* event.h in Headers */,
+				703BA80B254DB0E000C8F36E /* resolver.h in Headers */,
 				70753947251E04A0005B6E56 /* array.h in Headers */,
 				70753959251E0505005B6E56 /* fiber_sem.h in Headers */,
 				70753977251E0522005B6E56 /* unix_jmp.h in Headers */,
@@ -419,6 +423,7 @@
 				7075398E251E0533005B6E56 /* event_kqueue.h in Headers */,
 				7075395C251E0505005B6E56 /* fiber_channel.h in Headers */,
 				70753945251E04A0005B6E56 /* htable.h in Headers */,
+				703BA80C254DB0E000C8F36E /* rfc1035.h in Headers */,
 				70753957251E0505005B6E56 /* fiber_cond.h in Headers */,
 				7075398A251E0533005B6E56 /* event_epoll.h in Headers */,
 				7075392F251E04A0005B6E56 /* init.h in Headers */,
@@ -445,7 +450,6 @@
 				70753988251E0533005B6E56 /* event_poll.h in Headers */,
 				7075393A251E04A0005B6E56 /* iterator.h in Headers */,
 				70753933251E04A0005B6E56 /* ring.h in Headers */,
-				70753999251E053F005B6E56 /* dns.h in Headers */,
 				70753928251E04A0005B6E56 /* iostuff.h in Headers */,
 				7075393D251E04A0005B6E56 /* gettimeofday.h in Headers */,
 			);
@@ -524,6 +528,8 @@
 				70753929251E04A0005B6E56 /* fifo.c in Sources */,
 				7075393F251E04A0005B6E56 /* init.c in Sources */,
 				707539BC251E0568005B6E56 /* fbase_event.c in Sources */,
+				703BA809254DB0E000C8F36E /* rfc1035.c in Sources */,
+				703BA80A254DB0E000C8F36E /* resolver.c in Sources */,
 				707539BB251E0568005B6E56 /* fiber_event.c in Sources */,
 				70753969251E0515005B6E56 /* epoll.c in Sources */,
 				7075396D251E0515005B6E56 /* poll.c in Sources */,
@@ -540,12 +546,10 @@
 				70753944251E04A0005B6E56 /* open_limit.c in Sources */,
 				7075396F251E0515005B6E56 /* select.c in Sources */,
 				7075396C251E0515005B6E56 /* io.c in Sources */,
-				7075399B251E053F005B6E56 /* dns.c in Sources */,
 				70753946251E04A0005B6E56 /* strops.c in Sources */,
 				7075393C251E04A0005B6E56 /* htable.c in Sources */,
 				7075398D251E0533005B6E56 /* event_kqueue.c in Sources */,
 				707539BA251E0568005B6E56 /* stdafx.c in Sources */,
-				7075396B251E0515005B6E56 /* dns_init.c in Sources */,
 				7075393B251E04A0005B6E56 /* tcp_nodelay.c in Sources */,
 				70753991251E0533005B6E56 /* event_iocp.c in Sources */,
 				707539AF251E0568005B6E56 /* file_event.c in Sources */,
