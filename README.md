@@ -238,15 +238,15 @@ The rfc1035 for DNS has been implement in libfiber, so you can call gethostbynam
 #include "fiber/lib_fiber.h"
 
 static void lookup(ACL_FIBER *fiber, void *ctx) {
-	const char *name = (const char *) ctx;
+	char *name = (char *) ctx;
 	struct addrinfo hints, *res0;
 	int ret;
 
-	(void*) fiber; // avoid compile warning
+	(void) fiber; // avoid compiler warning
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
 
 	ret = getaddrinfo(name, "80", &hints, &res0);
