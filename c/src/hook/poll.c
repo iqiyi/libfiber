@@ -3,35 +3,9 @@
 
 #include "event.h"
 #include "fiber.h"
+#include "hook.h"
 
 #ifdef HAS_POLL
-
-#ifdef SYS_WIN
-typedef int (WINAPI *poll_fn)(struct pollfd *, nfds_t, int);
-#else
-typedef int (*poll_fn)(struct pollfd *, nfds_t, int);
-#endif
-
-static poll_fn __sys_poll = NULL;
-
-static void hook_api(void)
-{
-#ifdef SYS_WIN
-	__sys_poll = WSAPoll;
-#else
-	__sys_poll = (poll_fn) dlsym(RTLD_NEXT, "poll");
-	assert(__sys_poll);
-#endif
-}
-
-static pthread_once_t __once_control = PTHREAD_ONCE_INIT;
-
-static void hook_init(void)
-{
-	if (pthread_once(&__once_control, hook_api) != 0) {
-		abort();
-	}
-}
 
 /****************************************************************************/
 
@@ -151,13 +125,14 @@ int WINAPI acl_fiber_poll(struct pollfd *fds, nfds_t nfds, int timeout)
 	long long begin, now;
 	POLL_EVENT pe;
 	EVENT *ev;
+	int old_timeout;
 
-	if (__sys_poll == NULL) {
-		hook_init();
+	if (sys_poll == NULL) {
+		hook_once();
 	}
 
 	if (!var_hook_sys_api) {
-		return __sys_poll ? __sys_poll(fds, nfds, timeout) : -1;
+		return sys_poll ? (*sys_poll)(fds, nfds, timeout) : -1;
 	}
 
 	ev        = fiber_io_event();
@@ -167,6 +142,7 @@ int WINAPI acl_fiber_poll(struct pollfd *fds, nfds_t nfds, int timeout)
 	pe.proc   = poll_callback;
 	pe.nready = 0;
 
+	old_timeout = ev->timeout;
 	poll_event_set(ev, &pe, timeout);
 	SET_TIME(begin);
 	ev->waiter++;
@@ -177,6 +153,7 @@ int WINAPI acl_fiber_poll(struct pollfd *fds, nfds_t nfds, int timeout)
 
 		fiber_io_inc();
 		acl_fiber_switch();
+		ev->timeout = old_timeout;
 
 		if (acl_fiber_killed(pe.fiber)) {
 			ring_detach(&pe.me);

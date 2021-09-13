@@ -1,7 +1,6 @@
 #include "stdafx.hpp"
-#include <stdio.h>
-#include <stdlib.h>
 #include "fiber/fiber.hpp"
+#include "winapi_hook.hpp"
 
 namespace acl {
 
@@ -10,9 +9,8 @@ fiber::fiber(bool running /* = false */)
 	if (running) {
 		f_ = acl_fiber_running();
 		if (f_ == NULL) {
-			printf("%s(%d), %s: current fiber not running!\r\n",
+			acl_msg_fatal("%s(%d), %s: current fiber not running!",
 				__FILE__, __LINE__, __FUNCTION__);
-			abort();
 		}
 	} else {
 		f_ = NULL;
@@ -104,19 +102,54 @@ ACL_FIBER *fiber::get_fiber(void) const
 	return f_;
 }
 
+void fiber::acl_io_hook(void)
+{
+	acl_set_accept(acl_fiber_accept);
+	acl_set_connect(acl_fiber_connect);
+	acl_set_recv(acl_fiber_recv);
+	acl_set_send(acl_fiber_send);
+	acl_set_poll(acl_fiber_poll);
+	acl_set_select(acl_fiber_select);
+	acl_set_close_socket(acl_fiber_close);
+}
+
+#if !defined(_WIN32) && !defined(_WIN64)
+#include <poll.h>
+#endif
+
+void fiber::acl_io_unlock(void)
+{
+	acl_set_accept(accept);
+	acl_set_connect(connect);
+	acl_set_recv((acl_recv_fn) recv);
+	acl_set_send((acl_send_fn) send);
+#if defined(_WIN32) || defined(_WIN64)
+	acl_set_poll(WSAPoll);
+	acl_set_close_socket(closesocket);
+#else
+	acl_set_poll(poll);
+	acl_set_close_socket(close);
+#endif
+	acl_set_select(select);
+}
+
+#include "winapi_hook.hpp"
+
+bool fiber::winapi_hook(void) {
+	return ::winapi_hook();
+}
+
 void fiber::run(void)
 {
-	printf("%s(%d), %s: base function be called\r\n",
+	acl_msg_fatal("%s(%d), %s: base function be called",
 		__FILE__, __LINE__, __FUNCTION__);
-	abort();
 }
 
 void fiber::start(size_t stack_size /* = 64000 */)
 {
 	if (f_ != NULL) {
-		printf("%s(%d), %s: fiber-%u, already running!\r\n",
+		acl_msg_fatal("%s(%d), %s: fiber-%u, already running!",
 			__FILE__, __LINE__, __FUNCTION__, self());
-		abort();
 	}
 	acl_fiber_create(fiber_callback, this, stack_size);
 }
@@ -144,6 +177,7 @@ bool fiber::killed(void) const
 	if (f_ != NULL) {
 		return acl_fiber_killed(f_) != 0;
 	}
+	acl_msg_error("%s(%d), %s: f_ NULL", __FILE__, __LINE__, __FUNCTION__);
 	return true;
 }
 
@@ -182,6 +216,9 @@ void fiber::init(fiber_event_t type, bool schedule_auto /* = false */)
 
 void fiber::schedule(void)
 {
+	if (!winapi_hook()) {
+		perror("hook API for windows error");
+	}
 	acl_fiber_schedule();
 }
 
@@ -205,6 +242,9 @@ void fiber::schedule_with(fiber_event_t type)
 		break;
 	}
 
+	if (!winapi_hook()) {
+		perror("hook API for windows error");
+	}
 	acl_fiber_schedule_with(etype);
 }
 

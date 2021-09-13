@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-FIBER_API socket_t acl_fiber_socket(int domain, int type, int protocol);
-FIBER_API int acl_fiber_listen(socket_t, int backlog);
-
 #if defined(_WIN32) || defined(_WIN64)
+
+FIBER_API socket_t WINAPI acl_fiber_socket(int domain, int type, int protocol);
+FIBER_API int WINAPI acl_fiber_listen(socket_t, int backlog);
 
 FIBER_API int WINAPI acl_fiber_close(socket_t fd);
 FIBER_API socket_t WINAPI acl_fiber_accept(
@@ -33,8 +33,31 @@ FIBER_API int WINAPI acl_fiber_select(int nfds, fd_set *readfds,
 FIBER_API int WINAPI acl_fiber_poll(struct pollfd *fds,
 	unsigned long nfds, int timeout);
 
+FIBER_API int WINAPI acl_fiber_WSARecv(socket_t sockfd,
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesRecvd,
+	LPDWORD lpFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+FIBER_API socket_t WSAAPI acl_fiber_WSAAccept(
+    SOCKET s,
+    struct sockaddr FAR * addr,
+    LPINT addrlen,
+    LPCONDITIONPROC lpfnCondition,
+    DWORD_PTR dwCallbackData);
+
+FIBER_API struct hostent * WINAPI acl_fiber_gethostbyname(const char *name);
+FIBER_API int WINAPI acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
+	char *buf, size_t buflen, struct hostent **result, int *h_errnop);
+FIBER_API int WINAPI acl_fiber_getaddrinfo(const char *node, const char *service,
+	const struct addrinfo* hints, struct addrinfo **res);
+FIBER_API void WINAPI acl_fiber_freeaddrinfo(struct addrinfo *res);
+
 #else
 
+FIBER_API socket_t acl_fiber_socket(int domain, int type, int protocol);
+FIBER_API int acl_fiber_listen(socket_t, int backlog);
 FIBER_API int acl_fiber_close(socket_t fd);
 FIBER_API socket_t acl_fiber_accept(socket_t , struct sockaddr *, socklen_t *);
 FIBER_API int acl_fiber_connect(socket_t , const struct sockaddr *, socklen_t );

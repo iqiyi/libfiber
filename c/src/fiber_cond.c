@@ -1,10 +1,9 @@
 #include "stdafx.h"
 #include "common.h"
 
-#ifdef SYS_UNIX
-
 #include "fiber/libfiber.h"
 #include "fiber/fiber_cond.h"
+#include "common/pthread_patch.h"
 #include "fiber.h"
 
 struct ACL_FIBER_COND {
@@ -16,7 +15,9 @@ struct ACL_FIBER_COND {
 
 ACL_FIBER_COND *acl_fiber_cond_create(unsigned flag fiber_unused)
 {
+#ifdef SYS_UNIX
 	pthread_mutexattr_t attr;
+#endif
 	ACL_FIBER_COND *cond = (ACL_FIBER_COND *)
 		mem_calloc(1, sizeof(ACL_FIBER_COND));
 
@@ -25,10 +26,14 @@ ACL_FIBER_COND *acl_fiber_cond_create(unsigned flag fiber_unused)
 	atomic_set(cond->atomic, &cond->value);
 	atomic_int64_set(cond->atomic, 0);
 
+#ifdef SYS_UNIX
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&cond->mutex, &attr);
 	pthread_mutexattr_destroy(&attr);
+#else
+	pthread_mutex_init(&cond->mutex, NULL);
+#endif
 
 	return cond;
 }
@@ -60,21 +65,21 @@ static void __ll_unlock(ACL_FIBER_COND *cond)
 	}
 }
 
-#define FBASE_DETACH_FREE do {             \
-	__ll_lock(cond);                   \
-	ring_detach(&fbase->event_waiter); \
-	__ll_unlock(cond);                 \
-	fbase_event_close(fbase);          \
-	if (fbase->flag & FBASE_F_BASE) {  \
-		fbase_free(fbase);         \
-	}                                  \
+#define FBASE_DETACH_FREE do {         \
+    __ll_lock(cond);                   \
+    ring_detach(&fbase->event_waiter); \
+    __ll_unlock(cond);                 \
+    fbase_event_close(fbase);          \
+    if (fbase->flag & FBASE_F_BASE) {  \
+        fbase_free(fbase);             \
+    }                                  \
 } while (0)
 
-#define FBASE_FREE do {                    \
-	fbase_event_close(fbase);          \
-	if (fbase->flag & FBASE_F_BASE) {  \
-		fbase_free(fbase);         \
-	}                                  \
+#define FBASE_FREE do {                \
+    fbase_event_close(fbase);          \
+    if (fbase->flag & FBASE_F_BASE) {  \
+        fbase_free(fbase);             \
+    }                                  \
 } while (0)
 
 int acl_fiber_cond_wait(ACL_FIBER_COND *cond, ACL_FIBER_EVENT *event)
@@ -206,4 +211,3 @@ int acl_fiber_cond_signal(ACL_FIBER_COND *cond)
 	return 0;
 }
 
-#endif // SYS_UNIX

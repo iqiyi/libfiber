@@ -194,7 +194,7 @@ static void fiber_init(void)
 
 	__called++;
 
-#ifdef ACL_ARM_LINUX
+#ifdef ANDROID
 	__sys_errno   = (errno_fn) dlsym(RTLD_NEXT, "__errno");
 #else
 	__sys_errno   = (errno_fn) dlsym(RTLD_NEXT, "__errno_location");
@@ -206,7 +206,7 @@ static void fiber_init(void)
 }
 
 /* see /usr/include/bits/errno.h for __errno_location */
-#ifdef ACL_ARM_LINUX
+#ifdef ANDROID
 volatile int*   __errno(void)
 #else
 int *__errno_location(void)
@@ -408,17 +408,42 @@ ACL_FIBER *acl_fiber_running(void)
 	return __thread_fiber->running;
 }
 
-void acl_fiber_kill(ACL_FIBER *fiber)
-{
-	acl_fiber_signal(fiber, SIGTERM);
-}
-
 int acl_fiber_killed(ACL_FIBER *fiber)
 {
 	if (!fiber) {
 		fiber = acl_fiber_running();
 	}
 	return fiber && (fiber->flag & FIBER_F_KILLED);
+}
+
+int acl_fiber_signaled(ACL_FIBER *fiber)
+{
+	if (!fiber) {
+		fiber = acl_fiber_running();
+	}
+	return fiber && (fiber->flag & FIBER_F_SIGNALED);
+}
+
+int acl_fiber_closed(ACL_FIBER *fiber)
+{
+	if (!fiber) {
+		fiber = acl_fiber_running();
+	}
+	return fiber && (fiber->flag & FIBER_F_CLOSED);
+}
+
+int acl_fiber_canceled(ACL_FIBER *fiber)
+{
+	if (!fiber) {
+		fiber = acl_fiber_running();
+	}
+	return fiber && (fiber->flag & FIBER_F_CANCELED);
+}
+
+void acl_fiber_kill(ACL_FIBER *fiber)
+{
+	fiber->errnum = ECANCELED;
+	acl_fiber_signal(fiber, SIGTERM);
 }
 
 void acl_fiber_signal(ACL_FIBER *fiber, int signum)
@@ -442,8 +467,9 @@ void acl_fiber_signal(ACL_FIBER *fiber, int signum)
 #else
 	if (signum == SIGKILL || signum == SIGTERM || signum == SIGQUIT) {
 #endif
-		fiber->errnum = ECANCELED;
-		fiber->flag |= FIBER_F_KILLED;
+		fiber->flag |= FIBER_F_KILLED | FIBER_F_SIGNALED;
+	} else {
+		fiber->flag |= FIBER_F_SIGNALED;
 	}
 
 	fiber->signum = signum;
@@ -511,10 +537,10 @@ int acl_fiber_yield(void)
 	// when switched overflows, it will be set to 0, then n saved last
 	// switched's value will larger than switched, so we need to use
 	// abs function to avoiding this problem
-#if defined(__APPLE__) || defined(SYS_WIN)
+#if defined(__APPLE__) || defined(SYS_WIN) || defined(ANDROID)
 	return (int) (__thread_fiber->switched - n - 1);
 #else
-	return abs(__thread_fiber->switched - n - 1);
+	return (int) abs(__thread_fiber->switched - n - 1);
 #endif
 }
 

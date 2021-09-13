@@ -3,35 +3,7 @@
 #include "dns/resolver.h"
 #include "common.h"
 #include "fiber.h"
-
-#ifdef SYS_UNIX
-
-typedef int (*getaddrinfo_fn)(const char *node, const char *service,
-	const struct addrinfo* hints, struct addrinfo **res);
-typedef void (*freeaddrinfo_fn)(struct addrinfo *res);
-
-static getaddrinfo_fn  __sys_getaddrinfo  = NULL;
-static freeaddrinfo_fn __sys_freeaddrinfo = NULL;
-
-static void hook_api(void)
-{
-	__sys_getaddrinfo = (getaddrinfo_fn) dlsym(RTLD_NEXT, "getaddrinfo");
-	assert(__sys_getaddrinfo);
-
-	__sys_freeaddrinfo = (freeaddrinfo_fn) dlsym(RTLD_NEXT, "freeaddrinfo");
-	assert(__sys_freeaddrinfo);
-}
-
-static pthread_once_t __once_control = PTHREAD_ONCE_INIT;
-
-static void hook_init(void)
-{
-	if (pthread_once(&__once_control, hook_api) != 0) {
-		abort();
-	}
-}
-
-/****************************************************************************/
+#include "hook.h"
 
 static struct addrinfo *create_addrinfo(const char *ip, short port,
 	int iptype, int socktype, int flags)
@@ -133,13 +105,13 @@ static struct addrinfo *check_local(const char *node, const char *service,
 	return NULL;
 }
 
-int acl_fiber_getaddrinfo(const char *node, const char *service,
+int WINAPI acl_fiber_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo* hints, struct addrinfo **res)
 {
 	struct addrinfo hints_tmp;
 
-	if (__sys_getaddrinfo == NULL) {
-		hook_init();
+	if (sys_getaddrinfo == NULL) {
+		hook_once();
 	}
 
 #ifndef	EAI_NODATA
@@ -150,7 +122,7 @@ int acl_fiber_getaddrinfo(const char *node, const char *service,
 # endif
 #endif
 	if (!var_hook_sys_api) {
-		return __sys_getaddrinfo ? __sys_getaddrinfo
+		return sys_getaddrinfo ? (*sys_getaddrinfo)
 			(node, service, hints, res) : EAI_NODATA;
 	}
 
@@ -188,21 +160,23 @@ int acl_fiber_getaddrinfo(const char *node, const char *service,
 	return 0;
 }
 
-void acl_fiber_freeaddrinfo(struct addrinfo *res)
+void WINAPI acl_fiber_freeaddrinfo(struct addrinfo *res)
 {
-	if (__sys_freeaddrinfo == NULL) {
-		hook_init();
+	if (sys_freeaddrinfo == NULL) {
+		hook_once();
 	}
 
 	if (!var_hook_sys_api) {
-		if (__sys_freeaddrinfo) {
-			__sys_freeaddrinfo(res);
+		if (sys_freeaddrinfo) {
+			(*sys_freeaddrinfo)(res);
 		}
 		return;
 	}
 
 	resolver_freeaddrinfo(res);
 }
+
+#ifdef SYS_UNIX
 
 int getaddrinfo(const char *node, const char *service,
 	const struct addrinfo* hints, struct addrinfo **res)
