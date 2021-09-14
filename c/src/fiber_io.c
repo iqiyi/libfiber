@@ -25,15 +25,17 @@ static __thread FIBER_TLS *__thread_fiber = NULL;
 
 static void fiber_io_loop(ACL_FIBER *fiber, void *ctx);
 
-#define MAXFD		1024
+#define MAXFD		10240
 #define STACK_SIZE	819200
 
 int var_maxfd = MAXFD;
 
 void acl_fiber_schedule_stop(void)
 {
-	fiber_io_check();
-	__thread_fiber->io_stop = 1;
+	if (__thread_fiber != NULL) {
+		fiber_io_check();
+		__thread_fiber->io_stop = 1;
+	}
 }
 
 #define RING_TO_FIBER(r) \
@@ -96,9 +98,8 @@ void fiber_io_check(void)
 {
 	if (__thread_fiber != NULL) {
 		if (__thread_fiber->ev_fiber == NULL) {
-			__thread_fiber->ev_fiber  = acl_fiber_create(
-				fiber_io_loop, __thread_fiber->event,
-				STACK_SIZE);
+			__thread_fiber->ev_fiber  = acl_fiber_create(fiber_io_loop,
+				__thread_fiber->event, STACK_SIZE);
 			__thread_fiber->io_count  = 0;
 			__thread_fiber->nsleeping = 0;
 			__thread_fiber->io_stop   = 0;
@@ -386,8 +387,11 @@ void fiber_wait_read(FILE_EVENT *fe)
 
 	fe->fiber = acl_fiber_running();
 	// when return 0 just let it go continue
-	if (!event_add_read(__thread_fiber->event, fe, read_callback))
+	if (!event_add_read(__thread_fiber->event, fe, read_callback)) {
 		return;
+	}
+
+	fe->fiber->status = FIBER_STATUS_WAIT_READ;
 	__thread_fiber->io_count++;
 	acl_fiber_switch();
 }
@@ -404,15 +408,18 @@ void fiber_wait_write(FILE_EVENT *fe)
 	fiber_io_check();
 
 	fe->fiber = acl_fiber_running();
-	if (!event_add_write(__thread_fiber->event, fe, write_callback))
+	if (!event_add_write(__thread_fiber->event, fe, write_callback)) {
 		return;
+	}
+
+	fe->fiber->status = FIBER_STATUS_WAIT_WRITE;
 	__thread_fiber->io_count++;
 	acl_fiber_switch();
 }
 
 /****************************************************************************/
 
-static FILE_EVENT *fiber_file_get(socket_t fd)
+FILE_EVENT *fiber_file_get(socket_t fd)
 {
 #ifdef SYS_WIN
 	char key[64];
@@ -425,8 +432,7 @@ static FILE_EVENT *fiber_file_get(socket_t fd)
 #else
 	fiber_io_check();
 	if (fd == INVALID_SOCKET || fd >= var_maxfd) {
-		msg_error("%s(%d): invalid fd=%d",
-			__FUNCTION__, __LINE__, fd);
+		msg_error("%s(%d): invalid fd=%d", __FUNCTION__, __LINE__, fd);
 		return NULL;
 	}
 
@@ -445,13 +451,11 @@ static void fiber_file_set(FILE_EVENT *fe)
 	htable_enter(__thread_fiber->events, key, fe);
 #else
 	if (fe->fd == INVALID_SOCKET || fe->fd >= (socket_t) var_maxfd) {
-		msg_fatal("%s(%d): invalid fd=%d",
-			__FUNCTION__, __LINE__, fe->fd);
+		msg_fatal("%s(%d): invalid fd=%d", __FUNCTION__, __LINE__, fe->fd);
 	}
 
 	if (__thread_fiber->events[fe->fd] != NULL) {
-		msg_fatal("%s(%d): exist fd=%d",
-			__FUNCTION__, __LINE__, fe->fd);
+		msg_fatal("%s(%d): exist fd=%d", __FUNCTION__, __LINE__, fe->fd);
 	}
 
 	__thread_fiber->events[fe->fd] = fe;
@@ -530,6 +534,13 @@ int fiber_file_close(socket_t fd, int *closed)
 		*closed = event->close_sock(event, fe);
 	}
 
-	file_event_free(fe);
+	if (fe->fiber == acl_fiber_running()) {
+		file_event_free(fe);
+	} else {
+		fe->fiber->errnum = ECANCELED;
+		fe->fiber->flag  |= FIBER_F_CLOSED;
+		ring_detach(&fe->fiber->me);
+		acl_fiber_ready(fe->fiber);
+	}
 	return 1;
 }

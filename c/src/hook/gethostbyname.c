@@ -3,63 +3,33 @@
 #include "fiber.h"
 #include "hook.h"
 
-#ifdef SYS_UNIX
-
-typedef struct hostent *(*gethostbyname_fn)(const char *);
-static gethostbyname_fn __sys_gethostbyname = NULL;
-
-#ifndef __APPLE__
-typedef int (*gethostbyname_r_fn)(const char *, struct hostent *, char *,
-	size_t, struct hostent **, int *);
-
-static gethostbyname_r_fn __sys_gethostbyname_r = NULL;
-#endif
-
-
-static void hook_api(void)
-{
-	__sys_gethostbyname = (gethostbyname_fn) dlsym(RTLD_NEXT,
-			"gethostbyname");
-	assert(__sys_gethostbyname);
-
-#ifndef __APPLE__
-	__sys_gethostbyname_r = (gethostbyname_r_fn) dlsym(RTLD_NEXT,
-			"gethostbyname_r");
-	assert(__sys_gethostbyname_r);
-#endif
-}
-
-static pthread_once_t __once_control = PTHREAD_ONCE_INIT;
-
-static void hook_init(void)
-{
-	if (pthread_once(&__once_control, hook_api) != 0) {
-		abort();
-	}
-}
-
-/****************************************************************************/
-
 static void free_fn(void *ctx)
 {
 	mem_free(ctx);
 }
 
-struct hostent *acl_fiber_gethostbyname(const char *name)
+struct hostent * WINAPI acl_fiber_gethostbyname(const char *name)
 {
 	struct hostent *result;
 	static __thread struct hostent res;
 #define BUF_LEN	4096
 	static __thread char buf[BUF_LEN];
 
+	int    errnum, ret;
 	char  *fiber_buf;
 	static struct hostent *fiber_res;
 	static __thread int  __fiber_buf_key;
 	static __thread int  __fiber_res_key;
 
 	if (!var_hook_sys_api) {
-		return acl_fiber_gethostbyname_r(name, &res, buf, BUF_LEN,
-				&result, &h_errno) == 0 ? result : NULL;
+		ret = acl_fiber_gethostbyname_r(name, &res, buf, BUF_LEN,
+						&result, &errnum);
+#ifdef SYS_WIN
+		WSASetLastError(errnum);
+#else
+		h_errno = errnum;
+#endif
+		return ret == 0 ? result : NULL;
 	}
 
 	fiber_buf = (char *) acl_fiber_get_specific(__fiber_buf_key);
@@ -76,8 +46,16 @@ struct hostent *acl_fiber_gethostbyname(const char *name)
 	}
 	assert(fiber_res);
 
-	return acl_fiber_gethostbyname_r(name, fiber_res, fiber_buf, BUF_LEN,
-			&result, &h_errno) == 0 ? result : NULL;
+	ret = acl_fiber_gethostbyname_r(name, fiber_res, fiber_buf, BUF_LEN,
+			&result, &errnum);
+
+#ifdef SYS_WIN
+	WSASetLastError(errnum);
+#else
+	h_errno = errnum;
+#endif
+
+	return ret == 0 ? result : NULL;
 }
 
 static struct addrinfo *get_addrinfo(const char *name)
@@ -156,23 +134,27 @@ static int save_result(const char *name, struct hostent *ent,
 	return (int) i;
 }
 
-int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
+int WINAPI acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 	char *buf, size_t buflen, struct hostent **result, int *h_errnop)
 {
 	size_t ncopied = 0, len, n;
 	struct addrinfo *res;
 
-#ifdef __APPLE__
-	if (__sys_gethostbyname == NULL) {
+	if (h_errnop) {
+		*h_errnop = 0;
+	}
+
+#if defined(__APPLE__) || defined(SYS_WIN)
+	if (sys_gethostbyname == NULL) {
 #else
-	if (__sys_gethostbyname_r == NULL) {
+	if (sys_gethostbyname_r == NULL) {
 #endif
-		hook_init();
+		hook_once();
 	}
 
 	if (!var_hook_sys_api) {
-#ifdef __APPLE__
-		*result = __sys_gethostbyname(name);
+#if defined(__APPLE__) || defined(SYS_WIN)
+		*result = (*sys_gethostbyname)(name);
 		if (result == NULL) {
 			if (h_errnop) {
 				*h_errnop = h_errno;
@@ -181,7 +163,7 @@ int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 		}
 		return 0;
 #else
-		return __sys_gethostbyname_r ? __sys_gethostbyname_r
+		return sys_gethostbyname_r ? (*sys_gethostbyname_r)
 			(name, ent, buf, buflen, result, h_errnop) : -1;
 #endif
 	}
@@ -247,6 +229,7 @@ int acl_fiber_gethostbyname_r(const char *name, struct hostent *ent,
 	return -1;
 }
 
+#ifdef SYS_UNIX
 
 struct hostent *gethostbyname(const char *name)
 {

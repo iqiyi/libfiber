@@ -5,6 +5,8 @@
 
 #ifndef SYS_UNIX
 #include "common/pthread_patch.h"
+#elif defined(SYS_WIN)
+#pragma comment(lib, "Iphlpapi.lib")
 #endif
 
 #include "common/msg.h"
@@ -78,6 +80,8 @@ static void resolver_end(void)
 # define EQ(x, y) !strcasecmp((x), (y))
 #endif
 
+#ifdef SYS_UNIX
+
 static void load_reolv_conf(const char *file, resolv_conf *conf)
 {
 	FILE *fp = fopen(file, "r");
@@ -112,6 +116,41 @@ static void load_reolv_conf(const char *file, resolv_conf *conf)
 
 	fclose(fp);
 }
+
+#elif defined(SYS_WIN)
+
+#include <IPTypes.h>
+#include <iphlpapi.h>
+
+static void add_nameservers(resolv_conf *conf)
+{
+	FIXED_INFO *info;
+	IP_ADDR_STRING *addr;
+	unsigned long len = 0;
+	DWORD ret = GetNetworkParams(NULL, &len);
+	if (ret != ERROR_BUFFER_OVERFLOW) {
+		msg_error("GetNetworkParams error=%d", ret);
+		return;
+	}
+
+	info = (FIXED_INFO*) malloc(len);
+	ret = GetNetworkParams(info, &len);
+	if (ret != NO_ERROR) {
+		msg_error("GetNetworkParams error=%d", ret);
+		free(info);
+		return;
+	}
+
+	addr = &info->DnsServerList;
+	while (addr) {
+		argv_add(conf->nameservers, addr->IpAddress.String, NULL);
+		addr = addr->Next;
+	}
+
+	free(info);
+}
+
+#endif /* SYS_WIN */
 
 static void host_add(HTABLE *hosts, const char *line)
 {
@@ -304,10 +343,13 @@ unsigned short get_service_port(const char *name)
 
 static void resolver_init(void)
 {
+#ifdef SYS_UNIX
 	const char *resolv_default   = "/etc/resolv.conf";
+	const char *resolv_file = __resolv_file ? __resolv_file : resolv_default;
+#endif
+
 	const char *hosts_default    = "/etc/hosts";
 	const char *services_default = "/etc/services";
-	const char *resolv_file = __resolv_file ? __resolv_file : resolv_default;
 	const char *hosts_file = __hosts_file ? __hosts_file : hosts_default;
 	const char *services_file = __services_file ? __services_file : services_default;
 
@@ -318,7 +360,12 @@ static void resolver_init(void)
 
 	atexit(resolver_end);
 
+#ifdef SYS_UNIX
 	load_reolv_conf(resolv_file, __resolv);
+#elif defined(SYS_WIN)
+	add_nameservers(__resolv);
+#endif
+
 	load_hosts_conf(hosts_file, __hosts);
 	load_services_conf(services_file, __services);
 }
@@ -358,8 +405,14 @@ static int udp_request(const char *ip, unsigned short port,
 	addr.sin_port        = htons(port);
 	addr.sin_addr.s_addr = inet_addr(ip);
 
+#if defined(_WIN32) || defined(_WIN64)
+	ret = acl_fiber_sendto(sock, data, (int) dlen, 0, (struct sockaddr *) &addr,
+		     (socklen_t) sizeof(addr));
+#else
 	ret = acl_fiber_sendto(sock, data, dlen, 0, (struct sockaddr *) &addr,
 		     (socklen_t) sizeof(addr));
+#endif
+
 	if (ret < 0) {
 		msg_error("%s(%d): send error %s",
 			__FUNCTION__ , __LINE__, last_serror());
@@ -375,8 +428,15 @@ static int udp_request(const char *ip, unsigned short port,
 	}
 
 	len = (socklen_t) sizeof(from_addr);
+
+#if defined(_WIN32) || defined(_WIN64)
+	ret = acl_fiber_recvfrom(sock, buf, (int) size, 0,
+		(struct sockaddr*) &from_addr, &len);
+#else
 	ret = acl_fiber_recvfrom(sock, buf, size, 0,
 		(struct sockaddr*) &from_addr, &len);
+#endif
+
 	acl_fiber_close(sock);
 	if (ret <= 0) {
 		msg_error("%s(%d): read error %s",

@@ -68,6 +68,7 @@ include_directories(
 	${master_include}
 	${acl_cpp_include}
 	${fiber_include}
+	${fiber_path}/src
 )
 
 set(sources ${src})

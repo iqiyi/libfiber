@@ -3,70 +3,20 @@
 
 #include "event.h"
 #include "fiber.h"
+#include "hook.h"
 
-#ifdef SYS_WIN
-typedef socket_t (WINAPI *socket_fn)(int, int, int);
-typedef int (WINAPI *listen_fn)(socket_t, int);
-typedef socket_t (WINAPI *accept_fn)(socket_t, struct sockaddr *, socklen_t *);
-typedef int (WINAPI *connect_fn)(socket_t, const struct sockaddr *, socklen_t);
-#else
-typedef socket_t (*socket_fn)(int, int, int);
-typedef int (*listen_fn)(socket_t, int);
-typedef socket_t (*accept_fn)(socket_t, struct sockaddr *, socklen_t *);
-typedef int (*connect_fn)(socket_t, const struct sockaddr *, socklen_t);
-#endif
-
-static socket_fn  __sys_socket  = NULL;
-static listen_fn  __sys_listen  = NULL;
-static accept_fn  __sys_accept  = NULL;
-static connect_fn __sys_connect = NULL;
-
-static void hook_api(void)
-{
-#ifdef SYS_UNIX
-	__sys_socket     = (socket_fn) dlsym(RTLD_NEXT, "socket");
-	assert(__sys_socket);
-
-	__sys_listen     = (listen_fn) dlsym(RTLD_NEXT, "listen");
-	assert(__sys_listen);
-
-	__sys_accept     = (accept_fn) dlsym(RTLD_NEXT, "accept");
-	assert(__sys_accept);
-
-	__sys_connect    = (connect_fn) dlsym(RTLD_NEXT, "connect");
-	assert(__sys_connect);
-#elif defined(SYS_WIN)
-	__sys_socket  = socket;
-	__sys_listen  = listen;
-	__sys_accept  = accept;
-	__sys_connect = connect;
-#endif
-}
-
-static pthread_once_t __once_control = PTHREAD_ONCE_INIT;
-
-static void hook_init(void)
-{
-	if (pthread_once(&__once_control, hook_api) != 0) {
-		abort();
-	}
-}
-
-/***************************************************************************/
-
-socket_t acl_fiber_socket(int domain, int type, int protocol)
+socket_t WINAPI acl_fiber_socket(int domain, int type, int protocol)
 {
 	socket_t sockfd;
 
-	if (__sys_socket == NULL) {
-		hook_init();
+	if (sys_socket == NULL) {
+		hook_once();
+		if (sys_socket == NULL) {
+			return -1;
+		}
 	} 
 
-	if (__sys_socket == NULL) {
-		return -1;
-	}
-
-	sockfd = __sys_socket(domain, type, protocol);
+	sockfd = (*sys_socket)(domain, type, protocol);
 
 	if (!var_hook_sys_api) {
 		return sockfd;
@@ -81,18 +31,22 @@ socket_t acl_fiber_socket(int domain, int type, int protocol)
 	return sockfd;
 }
 
-int acl_fiber_listen(socket_t sockfd, int backlog)
+int WINAPI acl_fiber_listen(socket_t sockfd, int backlog)
 {
-	if (__sys_listen == NULL) {
-		hook_init();
+	if (sys_listen == NULL) {
+		hook_once();
+		if (sys_listen == NULL) {
+			msg_error("%s: sys_listen NULL", __FUNCTION__);
+			return -1;
+		}
 	}
 
 	if (!var_hook_sys_api) {
-		return __sys_listen ? __sys_listen(sockfd, backlog) : -1;
+		return sys_listen ? (*sys_listen)(sockfd, backlog) : -1;
 	}
 
 	non_blocking(sockfd, NON_BLOCKING);
-	if (__sys_listen(sockfd, backlog) == 0) {
+	if ((*sys_listen)(sockfd, backlog) == 0) {
 		return 0;
 	}
 
@@ -100,10 +54,16 @@ int acl_fiber_listen(socket_t sockfd, int backlog)
 	return -1;
 }
 
-#if FIBER_EAGAIN == FIBER_EWOULDBLOCK
-# define error_again(x) ((x) == FIBER_EAGAIN)
-#else
-# define error_again(x) ((x) == FIBER_EAGAIN || (x) == FIBER_EWOULDBLOCK)
+#ifdef SYS_WIN
+socket_t WSAAPI acl_fiber_WSAAccept(
+    socket_t s,
+    struct sockaddr FAR * addr,
+    LPINT addrlen,
+    LPCONDITIONPROC lpfnCondition,
+    DWORD_PTR dwCallbackData)
+{
+	return acl_fiber_accept(s, addr, addrlen);
+}
 #endif
 
 #define FAST_ACCEPT
@@ -120,20 +80,44 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 		return -1;
 	}
 
-	if (__sys_accept == NULL) {
-		hook_init();
+#ifdef SYS_WSA_API
+	if (sys_WSAAccept == NULL) {
+		hook_once();
+		if (sys_WSAAccept == NULL) {
+			msg_error("%s: sys_accept NULL", __FUNCTION__);
+			return -1;
+		}
 	}
+#else
+	if (sys_accept == NULL) {
+		hook_once();
+		if (sys_accept == NULL) {
+			msg_error("%s: sys_accept NULL", __FUNCTION__);
+			return -1;
+		}
+	}
+#endif
 
 	if (!var_hook_sys_api) {
-		return __sys_accept ?
-			__sys_accept(sockfd, addr, addrlen) : INVALID_SOCKET;
+#ifdef SYS_WSA_API
+		return sys_WSAAccept ?
+			(*sys_WSAAccept)(sockfd, addr, addrlen, 0, 0) : INVALID_SOCKET;
+#else
+		return sys_accept ?
+			(*sys_accept)(sockfd, addr, addrlen) : INVALID_SOCKET;
+#endif
 	}
 
 #ifdef	FAST_ACCEPT
 
 	non_blocking(sockfd, NON_BLOCKING);
 
-	clifd = __sys_accept(sockfd, addr, addrlen);
+#ifdef SYS_WSA_API
+	clifd = (*sys_WSAAccept)(sockfd, addr, addrlen, 0, 0);
+#else
+	clifd = (*sys_accept)(sockfd, addr, addrlen);
+#endif
+
 	if (clifd != INVALID_SOCKET) {
 		non_blocking(clifd, NON_BLOCKING);
 		tcp_nodelay(clifd, 1);
@@ -142,11 +126,7 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 
 	//fiber_save_errno();
 	err = acl_fiber_last_error();
-#if FIBER_EAGAIN == FIBER_EWOULDBLOCK
-	if (err != FIBER_EAGAIN) {
-#else
-	if (err != FIBER_EAGAIN && err != FIBER_EWOULDBLOCK) {
-#endif
+	if (!error_again(err)) {
 		return INVALID_SOCKET;
 	}
 
@@ -181,7 +161,12 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			return clifd;
 		}
 #endif
-		clifd = __sys_accept(sockfd, addr, addrlen);
+
+#ifdef SYS_WSA_API
+		clifd = (*sys_WSAAccept)(sockfd, addr, addrlen, 0, 0);
+#else
+		clifd = (*sys_accept)(sockfd, addr, addrlen);
+#endif
 
 		if (clifd != INVALID_SOCKET) {
 			non_blocking(clifd, NON_BLOCKING);
@@ -223,7 +208,7 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			return clifd;
 		}
 #endif
-		clifd = __sys_accept(sockfd, addr, addrlen);
+		clifd = (*sys_accept)(sockfd, addr, addrlen);
 
 		if (clifd != INVALID_SOCKET) {
 			non_blocking(clifd, NON_BLOCKING);
@@ -249,16 +234,21 @@ int WINAPI acl_fiber_connect(socket_t sockfd, const struct sockaddr *addr,
 	FILE_EVENT *fe;
 	time_t begin, end;
 
-	if (__sys_connect == NULL)
-		hook_init();
+	if (sys_connect == NULL) {
+		hook_once();
+		if (sys_connect == NULL) {
+			msg_error("%s: sys_connect NULL", __FUNCTION__);
+			return -1;
+		}
+	}
 
 	if (!var_hook_sys_api) {
-		return __sys_connect ? __sys_connect(sockfd, addr, addrlen) : -1;
+		return sys_connect ? (*sys_connect)(sockfd, addr, addrlen) : -1;
 	}
 
 	non_blocking(sockfd, NON_BLOCKING);
 
-	ret = __sys_connect(sockfd, addr, addrlen);
+	ret = (*sys_connect)(sockfd, addr, addrlen);
 	if (ret >= 0) {
 		tcp_nodelay(sockfd, 1);
 		return ret;
@@ -267,12 +257,7 @@ int WINAPI acl_fiber_connect(socket_t sockfd, const struct sockaddr *addr,
 	err = acl_fiber_last_error();
 	fiber_save_errno(err);
 
-#if FIBER_EAGAIN == FIBER_EWOULDBLOCK
-	if (err != FIBER_EINPROGRESS && err != FIBER_EAGAIN) {
-#else
-	if (err != FIBER_EINPROGRESS && err != FIBER_EAGAIN
-		&& err != FIBER_EWOULDBLOCK) {
-#endif
+	if (err != FIBER_EINPROGRESS && !error_again(err)) {
 		if (err == FIBER_ECONNREFUSED) {
 			msg_error("%s(%d), %s: connect ECONNREFUSED",
 				__FILE__, __LINE__, __FUNCTION__);
@@ -381,6 +366,86 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	return acl_fiber_connect(sockfd, addr, addrlen);
+}
+
+typedef struct TIMEOUT_CTX {
+	ACL_FIBER *fiber;
+	int        sockfd;
+	unsigned   id;
+} TIMEOUT_CTX;
+
+static void fiber_timeout(ACL_FIBER *fiber UNUSED, void *ctx)
+{
+	TIMEOUT_CTX *tc = (TIMEOUT_CTX*) ctx;
+	FILE_EVENT *fe = fiber_file_get(tc->sockfd);
+
+	// we must check the fiber carefully here.
+	if (fe == NULL || tc->fiber != fe->fiber
+		|| tc->fiber->id != fe->fiber->id) {
+
+		mem_free(ctx);
+		return;
+	}
+
+	// we can kill the fiber only if the fiber is waiting
+	// for readable ore writable of IO process.
+	if (fe->fiber->status == FIBER_STATUS_WAIT_READ
+		|| fe->fiber->status == FIBER_STATUS_WAIT_WRITE) {
+
+		tc->fiber->errnum = FIBER_EAGAIN;
+		acl_fiber_signal(tc->fiber, SIGINT);
+	}
+
+	mem_free(ctx);
+}
+
+int setsockopt(int sockfd, int level, int optname,
+	const void *optval, socklen_t optlen)
+{
+	size_t val;
+	TIMEOUT_CTX *ctx;
+
+	if (sys_setsockopt == NULL) {
+		hook_once();
+	}
+
+	if (!var_hook_sys_api || (optname != SO_RCVTIMEO
+				&& optname != SO_SNDTIMEO)) {
+		return sys_setsockopt ? (*sys_setsockopt)(sockfd, level,
+			optname, optval, optlen) : -1;
+	}
+
+	if (sys_setsockopt == NULL) {
+		msg_error("sys_setsockopt null");
+		return -1;
+	}
+
+	switch (optlen) {
+	case 0:
+		msg_error("optlen is 0");
+		return -1;
+	case 1:
+		val = *((const char*) optval);
+		break;
+	case 2:
+		val = *((const short*) optval);
+		break;
+	case 4:
+		val = *((const int*) optval);
+		break;
+	case 8:
+		val = *((const long long*) optval);
+		break;
+	default:
+		msg_error("invalid optlen=%d", (int) optlen);
+		return -1;
+	}
+
+	ctx = (TIMEOUT_CTX*) mem_malloc(sizeof(TIMEOUT_CTX));
+	ctx->fiber  = acl_fiber_running();
+	ctx->sockfd = sockfd;
+	acl_fiber_create_timer((unsigned) val * 1000, 64000, fiber_timeout, ctx);
+	return 0;
 }
 
 #endif

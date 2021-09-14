@@ -12,7 +12,17 @@ typedef intptr_t acl_handle_t;
 # include <winsock2.h>
 
 /* typedef intptr_t ssize_t; */
+# ifndef	HAS_SSIZE_T
+#  define	HAS_SSIZE_T
+/* typedef intptr_t ssize_t; */
+#  if defined(_WIN64)
+typedef __int64 ssize_t;
+#  elif defined(_WIN32)
+typedef int ssize_t;
+#  else
 typedef long ssize_t;
+#  endif
+# endif
 typedef SOCKET socket_t;
 typedef int socklen_t;
 
@@ -72,7 +82,7 @@ typedef int socket_t;
 # ifndef FIBER_API
 #  define FIBER_API
 # endif
-#elif defined(FIBER_DLL) || defined(_WINDLL)
+#elif defined(FIBER_DLL) // || defined(_WINDLL)
 # if defined(FIBER_EXPORTS) || defined(fiber_EXPORTS)
 #  ifndef FIBER_API
 #   define FIBER_API __declspec(dllexport)

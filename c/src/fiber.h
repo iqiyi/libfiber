@@ -4,16 +4,20 @@
 #include "common/ring.h"
 #include "event.h"
 
-#ifdef ACL_ARM_LINUX
+/*
+#ifdef ANDROID
 extern int getcontext(ucontext_t *ucp);
 extern int setcontext(const ucontext_t *ucp);
 extern int swapcontext(struct ucontext *old_ctx, struct ucontext *new_ctx);
 extern void makecontext(ucontext_t *ucp, void (*func)(), int argc, ...);
 #endif
+*/
 
 typedef enum {
 	FIBER_STATUS_READY,
 	FIBER_STATUS_RUNNING,
+	FIBER_STATUS_WAIT_READ,
+	FIBER_STATUS_WAIT_WRITE,
 	FIBER_STATUS_EXITING,
 } fiber_status_t;
 
@@ -27,8 +31,8 @@ typedef struct FIBER_BASE {
 #define FBASE_F_FIBER	(1 << 1)
 	unsigned flag;
 
-	int      event_in;
-	int      event_out;
+	socket_t event_in;
+	socket_t event_out;
 	RING     event_waiter;
 } FIBER_BASE;
 
@@ -49,6 +53,9 @@ struct ACL_FIBER {
 
 #define FIBER_F_SAVE_ERRNO	(unsigned) 1 << 0
 #define	FIBER_F_KILLED		(unsigned) 1 << 1
+#define	FIBER_F_CLOSED		(unsigned) 1 << 2
+#define	FIBER_F_SIGNALED	(unsigned) 1 << 3
+#define	FIBER_F_CANCELED	(FIBER_F_KILLED | FIBER_F_CLOSED | FIBER_F_SIGNALED)
 
 	FIBER_LOCAL  **locals;
 	int            nlocal;
@@ -94,6 +101,7 @@ void fiber_io_inc(void);
 EVENT *fiber_io_event(void);
 
 FILE_EVENT *fiber_file_open(socket_t fd);
+FILE_EVENT *fiber_file_get(socket_t fd);
 int fiber_file_close(socket_t fd, int *closed);
 
 /* in hook/epoll.c */

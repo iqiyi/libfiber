@@ -41,7 +41,7 @@ EVENT *event_create(int size)
 		break;
 	case FIBER_EVENT_WMSG:
 #ifdef	HAS_WMSG
-		ev = event_wmsg_create(1024);
+		ev = event_wmsg_create(size);
 #else
 		msg_fatal("%s(%d): not support!", __FUNCTION__, __LINE__);
 #endif
@@ -59,6 +59,7 @@ EVENT *event_create(int size)
 		break;
 	}
 
+	assert(ev);
 	ring_init(&ev->events);
 	ev->timeout = -1;
 	ev->setsize = size;
@@ -405,7 +406,7 @@ int event_process(EVENT *ev, int timeout)
 	/* limit the event wait time just for fiber schedule exiting
 	 * quickly when no tasks left
 	 */
-	if (timeout > 1000 || timeout <= 0) {
+	if (timeout > 1000 || timeout < 0) {
 		timeout = 100;
 	}
 
