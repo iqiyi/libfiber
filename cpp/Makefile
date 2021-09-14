@@ -27,7 +27,7 @@ CFLAGS = -c -g -W \
 # -Wcast-align
 #-Wcast-qual
 #just for freebsd's iconv.h
-CFLAGS += -I/usr/local/include -I../../lib_acl/src/master
+CFLAGS += -I/usr/local/include -I../../lib_acl/src/master -I../c/src
 
 shared_ldflags = -lacl_cpp -lprotocol -lacl -lz -lpthread
 
@@ -126,7 +126,7 @@ CFLAGS += -I./src -I../c/include  -I./include -I../../lib_acl/include -I../../li
 
 #Project's objs
 
-SRC = $(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
+SRC = $(wildcard src/*.cpp) #$(wildcard src/*/*.cpp)
 OBJ = $(patsubst %.cpp, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC)))
 
 ###########################################################

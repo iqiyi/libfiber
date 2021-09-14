@@ -1,7 +1,7 @@
 #include "stdafx.hpp"
 #include "fiber/fiber.hpp"
 #include "winapi_hook.hpp"
-#include "../../c/src/common/msg.h"
+#include "common/msg.h"  // in c/src/common/msg.h
 
 namespace acl {
 
