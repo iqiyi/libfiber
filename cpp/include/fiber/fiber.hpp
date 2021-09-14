@@ -189,15 +189,10 @@ public:
 	static void hook_api(bool on);
 
 	/**
-	 * 显式调用本函数使 acl 基础库的 IO 过程协程化，在 UNIX 平台下不必显式
-	 * 调用本函数，因为内部会自动 HOOK IO API
+	 * Windows 平台下可以显式地调用此函数 Hook 一些与网络协程相关的系统 API
+	 * @return {bool}
 	 */
-	static void acl_io_hook(void);
-
-	/**
-	 * 调用本函数取消 acl基础库中的 IO 协程化
-	 */
-	static void acl_io_unlock(void);
+	static bool winapi_hook(void);
 
 	/**
 	 * 获得当前系统级错误号
@@ -226,6 +221,7 @@ public:
 	 */
 	static void fiber_create(void (*fn)(ACL_FIBER*, void*),
 			void* ctx, size_t size);
+
 protected:
 	/**
 	 * 虚函数，子类须实现本函数，当通过调用 start 方法启动协程后，本

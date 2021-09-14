@@ -7,6 +7,7 @@
 typedef unsigned long nfds_t;
 #include "../../c/src/hook/hook.h"
 #include "../../c/src/common/pthread_patch.h"
+#include "../../c/src/common/msg.h"
 
 socket_fn     __socket     = socket;
 listen_fn     __listen     = listen;
@@ -30,7 +31,7 @@ gethostbyname_fn __gethostbyname = gethostbyname;
 #define HOOK_API(from, to, action) do { \
 	LONG ret = DetourAttach(&from, to); \
 	if (ret != 0) { \
-		logger("DetourAttach %s failed %s", #from, acl::last_serror()); \
+		msg_error("DetourAttach %s failed %s", #from, last_serror()); \
 		return; \
 	} else { \
 		action(&from); \

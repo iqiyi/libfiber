@@ -42,12 +42,6 @@
     <ClCompile Include="src\fiber_sem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\fiber_server.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\master_fiber.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\detours\creatwth.cpp">
       <Filter>源文件\detours</Filter>
     </ClCompile>
@@ -95,17 +89,8 @@
     <ClInclude Include="include\fiber\fiber_tbox.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\fiber\lib_fiber.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="include\fiber\master_fiber.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\fiber\libfiber.hpp">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="src\fiber_server.hpp">
-      <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="src\detours\detours.h">
       <Filter>源文件\detours</Filter>
