@@ -14,5 +14,6 @@
 
 #include "framework.h"
 #include "fiber/libfiber.hpp"
+#include "fiber/go_fiber.hpp"
 
 #endif //PCH_H

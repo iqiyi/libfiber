@@ -49,6 +49,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+            if (msg.message == WM_QUIT) {
+                break;
+            }
         }
     }
 
@@ -130,17 +133,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    acl::fiber::init(acl::FIBER_EVENT_T_WMSG, true);
    acl::fiber::winapi_hook();
 
-   if (InitSocket()) {
-       fiber_server = new CFiberServer();
-       const char* addr = "127.0.0.1";
-       int port = 8088;
-       if (fiber_server->BindAndListen(port, addr)) {
-           fiber_server->start();
-       } else {
-           delete fiber_server;
-           fiber_server = NULL;
-       }
-   }
+   InitSocket();
 
    return TRUE;
 }
@@ -159,34 +152,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
     case WM_COMMAND:
-    {
-        int wmId = LOWORD(wParam);
-        // 分析菜单选择:
-        switch (wmId) {
-        case IDM_ABOUT:
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-            break;
-        case IDM_EXIT:
-            if (fiber_server) {
-                fiber_server->kill();
-                fiber_server = NULL;
+        {
+            int wmId = LOWORD(wParam);
+            // 分析菜单选择:
+            switch (wmId) {
+            case IDM_ABOUT:
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                break;
+            case IDM_EXIT:
+#if 0
+                go[=]{
+                    if (fiber_server) {
+                        fiber_server->kill();
+                        fiber_server = NULL;
+                    }
+                };
+#endif
+                DestroyWindow(hWnd);
+                break;
+            case IDM_START_LISTENER:
+                {
+                    fiber_server = new CFiberServer();
+                    const char* addr = "127.0.0.1";
+                    int port = 8088;
+                    if (fiber_server->BindAndListen(port, addr)) {
+                        fiber_server->start();
+                    } else {
+                        delete fiber_server;
+                        fiber_server = NULL;
+                    }
+                }
+                break;
+            case IDM_STOP_LISTENER:
+                if (fiber_server) {
+                    fiber_server->kill();
+                    fiber_server = NULL;
+                }
+                break;
+            default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
             }
-            DestroyWindow(hWnd);
-            break;
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-    }
-    break;
+        break;
     case WM_PAINT:
-    {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hWnd, &ps);
-        // TODO: 在此处添加使用 hdc 的任何绘图代码...
-        EndPaint(hWnd, &ps);
-    }
-    break;
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
+            // TODO: 在此处添加使用 hdc 的任何绘图代码...
+            EndPaint(hWnd, &ps);
+        }
+        break;
     case WM_DESTROY:
+//        acl::fiber::schedule_stop();
         PostQuitMessage(0);
         break;
     default:

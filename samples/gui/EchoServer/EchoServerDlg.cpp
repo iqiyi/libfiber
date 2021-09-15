@@ -260,14 +260,12 @@ void CEchoServerDlg::OnBnClickedConnect()
 	m_ioProgress.SetPos(0);
 
 	for (int i = 0; i < m_fiberCount; i++) {
-#if 1
 		go[=] {
 			CFiberConnect fb(*this, ipAddr, m_port, m_ioCount);
 			if (!fb.Start()) {
 				OnFiberConnectDone();
 			}
 		};
-#endif
 	}
 }
 
