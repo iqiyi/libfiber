@@ -25,6 +25,8 @@ Global
 		DebugDll|x86 = DebugDll|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		ReleaseDll|x64 = ReleaseDll|x64
+		ReleaseDll|x86 = ReleaseDll|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{AD99B75A-40BF-46DC-844B-23417FDC8690}.Debug|x64.ActiveCfg = Debug|x64
@@ -39,6 +41,10 @@ Global
 		{AD99B75A-40BF-46DC-844B-23417FDC8690}.Release|x64.Build.0 = Release|x64
 		{AD99B75A-40BF-46DC-844B-23417FDC8690}.Release|x86.ActiveCfg = Release|Win32
 		{AD99B75A-40BF-46DC-844B-23417FDC8690}.Release|x86.Build.0 = Release|Win32
+		{AD99B75A-40BF-46DC-844B-23417FDC8690}.ReleaseDll|x64.ActiveCfg = ReleaseDll|x64
+		{AD99B75A-40BF-46DC-844B-23417FDC8690}.ReleaseDll|x64.Build.0 = ReleaseDll|x64
+		{AD99B75A-40BF-46DC-844B-23417FDC8690}.ReleaseDll|x86.ActiveCfg = ReleaseDll|Win32
+		{AD99B75A-40BF-46DC-844B-23417FDC8690}.ReleaseDll|x86.Build.0 = ReleaseDll|Win32
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Debug|x64.ActiveCfg = Debug|x64
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Debug|x64.Build.0 = Debug|x64
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Debug|x86.ActiveCfg = Debug|Win32
@@ -51,6 +57,10 @@ Global
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Release|x64.Build.0 = Release|x64
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Release|x86.ActiveCfg = Release|Win32
 		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.Release|x86.Build.0 = Release|Win32
+		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.ReleaseDll|x64.ActiveCfg = ReleaseDll|x64
+		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.ReleaseDll|x64.Build.0 = ReleaseDll|x64
+		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.ReleaseDll|x86.ActiveCfg = ReleaseDll|Win32
+		{F2479E2C-7267-436C-A1F1-A63B39E7CB30}.ReleaseDll|x86.Build.0 = ReleaseDll|Win32
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Debug|x64.ActiveCfg = Debug|x64
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Debug|x64.Build.0 = Debug|x64
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Debug|x86.ActiveCfg = Debug|Win32
@@ -63,6 +73,10 @@ Global
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Release|x64.Build.0 = Release|x64
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Release|x86.ActiveCfg = Release|Win32
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.Release|x86.Build.0 = Release|Win32
+		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x64.ActiveCfg = ReleaseDll|x64
+		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x64.Build.0 = ReleaseDll|x64
+		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x86.ActiveCfg = ReleaseDll|Win32
+		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x86.Build.0 = ReleaseDll|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

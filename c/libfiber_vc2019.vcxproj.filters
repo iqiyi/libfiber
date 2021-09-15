@@ -156,6 +156,9 @@
     <ClInclude Include="src\event\event_iocp.h">
       <Filter>源文件\event</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.c">
@@ -311,5 +314,10 @@
     <ClCompile Include="src\hook\hook.c">
       <Filter>源文件\hook</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="libfiber.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
