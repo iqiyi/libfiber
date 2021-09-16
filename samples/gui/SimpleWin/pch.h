@@ -11,6 +11,7 @@
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #include <string>
+#include <vector>
 
 #include "framework.h"
 #include "fiber/libfiber.hpp"

@@ -217,6 +217,7 @@ static int wmsg_wait(EVENT *ev, int timeout)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 		if (msg.message == WM_QUIT) {
+			PostQuitMessage(0);
 			break;
 		}
 	}

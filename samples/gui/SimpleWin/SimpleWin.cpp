@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "framework.h"
 #include "FiberServer.h"
+#include "FiberConnect.h"
 #include "SimpleWin.h"
 
 #define MAX_LOADSTRING 100
@@ -13,6 +14,9 @@ HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 CFiberServer* fiber_server = NULL;              // 监听协程对象
+FILE* dos_handle = NULL;                        // DOS 窗口句柄
+const char* server_addr = "127.0.0.1";
+int server_port = 8088;
 
 // 此代码模块中包含的函数的前向声明:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -128,6 +132,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   HMENU hMenu = GetMenu(hWnd);
+   EnableMenuItem(hMenu, IDM_STOP_LISTENER, MF_DISABLED);
+   EnableMenuItem(hMenu, IDM_OPEN_DOS, MF_ENABLED);
+   EnableMenuItem(hMenu, IDM_CLOSE_DOS, MF_DISABLED);
+
    // 设置协程调度的事件引擎，同时将协程调度设为自动启动模式，不能在进程初始化时启动
    // 协程调试器，必须在界面消息引擎正常运行后才启动协程调度器！
    acl::fiber::init(acl::FIBER_EVENT_T_WMSG, true);
@@ -136,6 +145,70 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    InitSocket();
 
    return TRUE;
+}
+
+static bool GetHostByname(const char* name, std::vector<std::string>* addrs)
+{
+    printf("\r\n");
+    printf(">>>call gethostbyname, name=%s, thread=%d\r\n", name, GetCurrentThreadId());
+    struct hostent* ent = gethostbyname(name);
+    if (ent == NULL) {
+        printf("gethostbyname error, name=%s, thread=%d\r\n", name, GetCurrentThreadId());
+        return false;
+    }
+
+    for (int i = 0; ent->h_addr_list[i]; i++) {
+        char* addr = ent->h_addr_list[i];
+        char  ip[64];
+        const char* ptr = inet_ntop(ent->h_addrtype, addr, ip, sizeof(ip));
+        if (ptr) {
+            addrs->push_back(ptr);
+        }
+        else {
+            printf(">>>inet_ntop error\r\n");
+        }
+    }
+
+    return true;
+}
+
+static void GetAddrInfo(const std::string& name)
+{
+    struct addrinfo* res0, * res;
+    int ret = getaddrinfo(name.c_str(), NULL, NULL, &res0);
+    if (ret != 0) {
+        printf("getaddrinfo error=%d, %s, domain=%s\r\n",
+            ret, gai_strerrorA(ret), name.c_str());
+        if (res0) {
+            freeaddrinfo(res0);
+        }
+        return;
+    }
+
+    printf("\r\n");
+    printf("getaddrinfo: domain=%s, thread=%d\r\n", name.c_str(), GetCurrentThreadId());
+    for (res = res0; res; res = res->ai_next) {
+        const void* addr;
+        char ip[64];
+        if (res->ai_family == AF_INET) {
+            const struct sockaddr_in* in =
+                (const struct sockaddr_in*)res->ai_addr;
+            addr = (const void*)&in->sin_addr;
+        } else if (res->ai_family == AF_INET6) {
+            const struct sockaddr_in6* in =
+                (const struct sockaddr_in6*)res->ai_addr;
+            addr = (const void*)&in->sin6_addr;
+        } else {
+            printf("Unknown ai_family=%d\r\n", res->ai_family);
+            continue;
+        }
+
+        if (inet_ntop(res->ai_family, addr, ip, sizeof(ip)) != NULL) {
+            printf(">>ip=%s\r\n", ip);
+        } else {
+            printf(">>inet_ntop error\r\n");
+        }
+    }
 }
 
 //
@@ -160,22 +233,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
-#if 0
-                go[=]{
-                    if (fiber_server) {
-                        fiber_server->kill();
-                        fiber_server = NULL;
-                    }
-                };
-#endif
                 DestroyWindow(hWnd);
                 break;
             case IDM_START_LISTENER:
                 {
                     fiber_server = new CFiberServer();
-                    const char* addr = "127.0.0.1";
-                    int port = 8088;
-                    if (fiber_server->BindAndListen(port, addr)) {
+                    if (fiber_server->BindAndListen(server_port, server_addr)) {
+                        HMENU hMenu = GetMenu(hWnd);
+                        EnableMenuItem(hMenu, IDM_START_LISTENER, MF_DISABLED);
+                        EnableMenuItem(hMenu, IDM_STOP_LISTENER, MF_ENABLED);
+                        printf(">>>Start fiber to listen on %s:%d, thread=%d\r\n",
+                            server_addr, server_port, GetCurrentThreadId());
                         fiber_server->start();
                     } else {
                         delete fiber_server;
@@ -184,9 +252,72 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 break;
             case IDM_STOP_LISTENER:
-                if (fiber_server) {
-                    fiber_server->kill();
-                    fiber_server = NULL;
+                {
+                    if (fiber_server) {
+                        fiber_server->kill();
+                        fiber_server = NULL;
+                        printf(">>>Listener fiber stopped!\r\n");
+                    }
+                    HMENU hMenu = GetMenu(hWnd);
+                    EnableMenuItem(hMenu, IDM_START_LISTENER, MF_ENABLED);
+                    EnableMenuItem(hMenu, IDM_STOP_LISTENER, MF_DISABLED);
+                }
+                break;
+            case IDM_START_CONNECT:
+                for (int i = 0; i < 10; i++) {
+                    go[=] {
+                        CFiberConnect client(server_addr, server_port, 10000);
+                        client.Start();
+                    };
+                }
+                break;
+            case IDM_RESOLVE_THREAD:
+                go[=]{
+                    const std::string name = "www.google.com";
+                    std::vector<std::string> addrs;
+                    go_wait[&] {
+                        if (!GetHostByname(name.c_str(), &addrs)) {
+                            printf(">>>resolve DNS error, name=%s\r\n", name.c_str());
+                        }
+                    };
+
+                    printf(">>>resolve done: name=%s, result count=%zd, thread=%d\r\n",
+                        name.c_str(), addrs.size(), GetCurrentThreadId());
+
+                    for (std::vector<std::string>::const_iterator cit = addrs.begin();
+                         cit != addrs.end(); ++cit) {
+                        printf(">>>ip=%s\r\n", (*cit).c_str());
+                    }
+                };
+                break;
+            case IDM_RESOLVE_FIBER:
+                {
+                    std::string name = "www.google.com";
+                    go[=]{
+                        GetAddrInfo(name);
+                    };
+                }
+                break;
+            case IDM_OPEN_DOS:
+                if (dos_handle == NULL) {
+                    AllocConsole();
+                    dos_handle = _wfreopen(_T("CONOUT$"), _T("w+t"), stdout);
+                    if (dos_handle != NULL) {
+                        HMENU hMenu = GetMenu(hWnd);
+                        EnableMenuItem(hMenu, IDM_OPEN_DOS, MF_DISABLED);
+                        EnableMenuItem(hMenu, IDM_CLOSE_DOS, MF_ENABLED);
+                        printf("DOS opened, current thread=%d!\r\n", GetCurrentThreadId());
+                    }
+                }
+                break;
+            case IDM_CLOSE_DOS:
+                if (dos_handle) {
+                    fclose(dos_handle);
+                    dos_handle = NULL;
+                    FreeConsole();
+                    HMENU hMenu = GetMenu(hWnd);
+                    EnableMenuItem(hMenu, IDM_OPEN_DOS, MF_ENABLED);
+                    EnableMenuItem(hMenu, IDM_CLOSE_DOS, MF_DISABLED);
                 }
                 break;
             default:
@@ -203,7 +334,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-//        acl::fiber::schedule_stop();
+        acl::fiber::schedule_stop();
         PostQuitMessage(0);
         break;
     default:
