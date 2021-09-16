@@ -25,6 +25,8 @@
 		707539E9251E473E005B6E56 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539E1251E473E005B6E56 /* stdafx.cpp */; };
 		707539EA251E473E005B6E56 /* stdafx.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 707539E2251E473E005B6E56 /* stdafx.hpp */; };
 		707539EB251E473E005B6E56 /* fiber_cond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 707539E3251E473E005B6E56 /* fiber_cond.cpp */; };
+		70E41F5D26F32AA90068042B /* winapi_hook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70E41F5B26F32AA90068042B /* winapi_hook.cpp */; };
+		70E41F5E26F32AA90068042B /* winapi_hook.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 70E41F5C26F32AA90068042B /* winapi_hook.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +49,8 @@
 		707539E1251E473E005B6E56 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stdafx.cpp; path = cpp/src/stdafx.cpp; sourceTree = "<group>"; };
 		707539E2251E473E005B6E56 /* stdafx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stdafx.hpp; path = cpp/src/stdafx.hpp; sourceTree = "<group>"; };
 		707539E3251E473E005B6E56 /* fiber_cond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_cond.cpp; path = cpp/src/fiber_cond.cpp; sourceTree = "<group>"; };
+		70E41F5B26F32AA90068042B /* winapi_hook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = winapi_hook.cpp; path = cpp/src/winapi_hook.cpp; sourceTree = "<group>"; };
+		70E41F5C26F32AA90068042B /* winapi_hook.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = winapi_hook.hpp; path = cpp/src/winapi_hook.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +92,8 @@
 		070F35F220902DB100672EDC /* src */ = {
 			isa = PBXGroup;
 			children = (
+				70E41F5B26F32AA90068042B /* winapi_hook.cpp */,
+				70E41F5C26F32AA90068042B /* winapi_hook.hpp */,
 				707539E0251E473E005B6E56 /* channel.cpp */,
 				707539E3251E473E005B6E56 /* fiber_cond.cpp */,
 				707539DD251E473E005B6E56 /* fiber_event.cpp */,
@@ -134,6 +140,7 @@
 				707539D3251E472E005B6E56 /* fiber_lock.hpp in Headers */,
 				707539D6251E472E005B6E56 /* channel.hpp in Headers */,
 				707539D7251E472E005B6E56 /* libfiber.hpp in Headers */,
+				70E41F5E26F32AA90068042B /* winapi_hook.hpp in Headers */,
 				707539D5251E472E005B6E56 /* go_fiber.hpp in Headers */,
 				707539DB251E472E005B6E56 /* fiber_sem.hpp in Headers */,
 			);
@@ -196,6 +203,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				70E41F5D26F32AA90068042B /* winapi_hook.cpp in Sources */,
 				707539EB251E473E005B6E56 /* fiber_cond.cpp in Sources */,
 				707539E6251E473E005B6E56 /* fiber_sem.cpp in Sources */,
 				707539E7251E473E005B6E56 /* fiber.cpp in Sources */,
@@ -258,6 +266,7 @@
 				HEADER_SEARCH_PATHS = (
 					cpp/include,
 					c/include,
+					c/src,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -311,6 +320,7 @@
 				HEADER_SEARCH_PATHS = (
 					cpp/include,
 					c/include,
+					c/src,
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
