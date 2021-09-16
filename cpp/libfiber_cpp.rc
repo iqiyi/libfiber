@@ -60,19 +60,19 @@ VS_VERSION_INFO VERSIONINFO
  FILEFLAGS 0x0L
 #endif
  FILEOS 0x40004L
- FILETYPE 0x7L
+ FILETYPE 0x2L
  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "080404b0"
         BEGIN
-            VALUE "CompanyName", "libfiber"
+            VALUE "CompanyName", "iQiYi"
             VALUE "FileDescription", "libfiber"
             VALUE "FileVersion", "1.0.0.0"
-            VALUE "InternalName", "libfiber.lib"
+            VALUE "InternalName", "libfiber.dll"
             VALUE "LegalCopyright", "Copyright (C) 2021"
-            VALUE "OriginalFilename", "libfiber.lib"
+            VALUE "OriginalFilename", "libfiber.dll"
             VALUE "ProductName", "libfiber"
             VALUE "ProductVersion", "1.0.0.0"
         END

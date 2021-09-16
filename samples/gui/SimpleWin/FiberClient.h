@@ -1,5 +1,7 @@
 #pragma once
 
+#include <WinSock2.h>
+
 class CFiberClient : public acl::fiber
 {
 public:
@@ -14,4 +16,3 @@ protected:
 private:
 	SOCKET m_sock;
 };
-

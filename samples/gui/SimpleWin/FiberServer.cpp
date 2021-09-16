@@ -15,7 +15,7 @@ CFiberServer::~CFiberServer(void)
 	}
 }
 
-bool CFiberServer::BindAndListen(UINT port, const CString& addr)
+bool CFiberServer::BindAndListen(int port, const std::string& addr)
 {
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) {
@@ -25,12 +25,12 @@ bool CFiberServer::BindAndListen(UINT port, const CString& addr)
 	struct sockaddr_in in;
 	in.sin_family = AF_INET;
 	in.sin_port = htons(port);
-	if (inet_pton(AF_INET, addr.GetString(), &in.sin_addr) == -1) {
+	if (inet_pton(AF_INET, addr.c_str(), &in.sin_addr) == -1) {
 		closesocket(sock);
 		return false;
 	}
 
-	if (bind(sock, (const sockaddr*) &in, sizeof(in)) == -1) {
+	if (bind(sock, (const sockaddr*)&in, sizeof(in)) == -1) {
 		closesocket(sock);
 		return false;
 	}

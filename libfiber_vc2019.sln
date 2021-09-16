@@ -17,6 +17,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EchoServer", "samples\gui\E
 		{AD99B75A-40BF-46DC-844B-23417FDC8690} = {AD99B75A-40BF-46DC-844B-23417FDC8690}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleWin", "samples\gui\SimpleWin\SimpleWin.vcxproj", "{4D524F5F-31D7-42AB-915B-312CB67B0C18}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F2479E2C-7267-436C-A1F1-A63B39E7CB30} = {F2479E2C-7267-436C-A1F1-A63B39E7CB30}
+		{AD99B75A-40BF-46DC-844B-23417FDC8690} = {AD99B75A-40BF-46DC-844B-23417FDC8690}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -77,6 +83,22 @@ Global
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x64.Build.0 = ReleaseDll|x64
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x86.ActiveCfg = ReleaseDll|Win32
 		{30A882E6-CF13-494F-9132-CE15E040B9DE}.ReleaseDll|x86.Build.0 = ReleaseDll|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Debug|x64.ActiveCfg = Debug|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Debug|x64.Build.0 = Debug|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Debug|x86.ActiveCfg = Debug|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Debug|x86.Build.0 = Debug|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.DebugDll|x64.ActiveCfg = DebugDll|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.DebugDll|x64.Build.0 = DebugDll|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.DebugDll|x86.ActiveCfg = DebugDll|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.DebugDll|x86.Build.0 = DebugDll|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Release|x64.ActiveCfg = Release|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Release|x64.Build.0 = Release|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Release|x86.ActiveCfg = Release|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.Release|x86.Build.0 = Release|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.ReleaseDll|x64.ActiveCfg = ReleaseDll|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.ReleaseDll|x64.Build.0 = ReleaseDll|x64
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.ReleaseDll|x86.ActiveCfg = ReleaseDll|Win32
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18}.ReleaseDll|x86.Build.0 = ReleaseDll|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,6 +106,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{51EDF5A8-A3D8-4F15-8F95-967517095375} = {39C3E6F9-1EF8-48F1-A291-427BA9748E35}
 		{30A882E6-CF13-494F-9132-CE15E040B9DE} = {51EDF5A8-A3D8-4F15-8F95-967517095375}
+		{4D524F5F-31D7-42AB-915B-312CB67B0C18} = {51EDF5A8-A3D8-4F15-8F95-967517095375}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {67168FAE-ABC7-4274-B30F-1F2FF0F69602}
