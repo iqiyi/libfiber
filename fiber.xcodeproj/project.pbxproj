@@ -102,6 +102,7 @@
 		707539BD251E0568005B6E56 /* define.h in Headers */ = {isa = PBXBuildFile; fileRef = 707539AD251E0568005B6E56 /* define.h */; };
 		707539C0251E05DA005B6E56 /* jump_gas.S in Sources */ = {isa = PBXBuildFile; fileRef = 707539BE251E05DA005B6E56 /* jump_gas.S */; };
 		707539C1251E05DA005B6E56 /* make_gas.S in Sources */ = {isa = PBXBuildFile; fileRef = 707539BF251E05DA005B6E56 /* make_gas.S */; };
+		70E41F6126F32AF90068042B /* hook.c in Sources */ = {isa = PBXBuildFile; fileRef = 70E41F6026F32AF90068042B /* hook.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -201,6 +202,7 @@
 		707539AD251E0568005B6E56 /* define.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = define.h; path = c/src/define.h; sourceTree = "<group>"; };
 		707539BE251E05DA005B6E56 /* jump_gas.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; name = jump_gas.S; path = c/src/fiber/boost/jump_gas.S; sourceTree = SOURCE_ROOT; };
 		707539BF251E05DA005B6E56 /* make_gas.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; name = make_gas.S; path = c/src/fiber/boost/make_gas.S; sourceTree = SOURCE_ROOT; };
+		70E41F6026F32AF90068042B /* hook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hook.c; path = c/src/hook/hook.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -362,6 +364,7 @@
 		070F35812090225C00672EDC /* hook */ = {
 			isa = PBXGroup;
 			children = (
+				70E41F6026F32AF90068042B /* hook.c */,
 				70753960251E0515005B6E56 /* epoll.c */,
 				7075395F251E0515005B6E56 /* getaddrinfo.c */,
 				70753961251E0515005B6E56 /* gethostbyname.c */,
@@ -512,6 +515,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				70E41F6126F32AF90068042B /* hook.c in Sources */,
 				70753931251E04A0005B6E56 /* socketpair.c in Sources */,
 				70753948251E04A0005B6E56 /* array.c in Sources */,
 				70753968251E0515005B6E56 /* getaddrinfo.c in Sources */,
