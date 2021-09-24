@@ -94,53 +94,60 @@ static int check(socket_t listener, socket_t client, socket_t result[2])
 
 static int check(socket_t listener, socket_t client, socket_t result[2])
 {
-    int ret;
+	int ret;
 	struct timeval tv;
-    fd_set rmask, wmask, xmask;
+	fd_set rmask, wmask, xmask;
 
 	while (result[0] == INVALID_SOCKET || result[1] ==INVALID_SOCKET) {
-        FD_ZERO(&rmask);
-        FD_ZERO(&wmask);
-        FD_ZERO(&xmask);
+		FD_ZERO(&rmask);
+		FD_ZERO(&wmask);
+		FD_ZERO(&xmask);
 		tv.tv_usec = 10;
 		tv.tv_sec  = 0;
 
-        if (result[1] == INVALID_SOCKET) {
-            FD_SET(listener, &rmask);
-            FD_SET(listener, &xmask);
-        }
+		if (result[1] == INVALID_SOCKET) {
+			FD_SET(listener, &rmask);
+			FD_SET(listener, &xmask);
+		}
 
-        if (result[0] == INVALID_SOCKET) {
-            FD_SET(client, &wmask);
-            FD_SET(client, &xmask);
-        }
+		if (result[0] == INVALID_SOCKET) {
+			FD_SET(client, &wmask);
+			FD_SET(client, &xmask);
+		}
 
-        ret = select(2, &rmask, &wmask, &xmask, NULL);
-        if (ret <= 0) {
-            msg_error("select error: %s, ret=%d", last_serror(), ret);
-            return -1;
-        }
+		ret = select(2, &rmask, &wmask, &xmask, NULL);
 
-        if (FD_ISSET(listener, &xmask)) {
-            msg_error("listener exception");
-            return -1;
-        }
+		if (ret == 0) {
+			msg_error("select timeout: %s", last_serror());
+			return -1;
+		} else if (ret < 0) {
+			if (acl_fiber_last_error() == FIBER_EINTR) {
+				continue;
+			}
+			msg_error("select error: %s", last_serror());
+			return -1;
+		}
 
-        if (FD_ISSET(client, &xmask)) {
-            msg_error("client exception");
-            return -1;
-        }
+		if (FD_ISSET(listener, &xmask)) {
+			msg_error("listener exception");
+			return -1;
+		}
 
-        if (FD_ISSET(listener, &rmask)) {
-            result[1] = accept(listener, NULL, 0);
-        }
+		if (FD_ISSET(client, &xmask)) {
+			msg_error("client exception");
+			return -1;
+		}
 
-        if (FD_ISSET(client, &wmask)) {
-            result[0] = client;
-        }
-    }
+		if (FD_ISSET(listener, &rmask)) {
+			result[1] = accept(listener, NULL, 0);
+		}
 
-    return 0;
+		if (FD_ISSET(client, &wmask)) {
+			result[0] = client;
+		}
+	}
+
+	return 0;
 }
 
 #endif /* HAS_POLL */
