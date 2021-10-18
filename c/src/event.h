@@ -65,13 +65,19 @@ struct FILE_EVENT {
 #define	STATUS_CONNECTING	(unsigned) (1 << 0)
 #define	STATUS_READABLE		(unsigned) (1 << 1)
 #define	STATUS_WRITABLE		(unsigned) (1 << 2)
+#define	STATUS_POLLING		(unsigned) (1 << 3)
 
 #define	SET_READABLE(x) ((x)->status |= STATUS_READABLE)
 #define	SET_WRITABLE(x)	((x)->status |= STATUS_WRITABLE)
+#define	SET_POLLING(x)	((x)->status |= STATUS_POLLING)
+
 #define	CLR_READABLE(x)	((x)->status &= ~STATUS_READABLE)
 #define	CLR_WRITABLE(x)	((x)->status &= ~STATUS_WRITABLE)
+#define	CLR_POLLING(x)	((x)->status &= ~STATUS_POLLING)
+
 #define	IS_READABLE(x)	((x)->status & STATUS_READABLE)
 #define	IS_WRITABLE(x)	((x)->status & STATUS_WRITABLE)
+#define	IS_POLLING(x)	((x)->status & STATUS_POLLING)
 
 	unsigned type;
 #define	TYPE_NONE		0
@@ -99,16 +105,17 @@ struct FILE_EVENT {
 	EPOLL_CTX    *epx;
 #endif
 
-	char *buf;
-	int   size;
-	int   len;
 #ifdef HAS_IOCP
+	char         *buff;
+	int           size;
+	int           len;
 	HANDLE        h_iocp;
 	IOCP_EVENT   *reader;
 	IOCP_EVENT   *writer;
+	IOCP_EVENT   *poller_read;
+	IOCP_EVENT   *poller_write;
 	socket_t      iocp_sock;
 	struct sockaddr_in peer_addr;
-
 #endif
 };
 
