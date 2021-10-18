@@ -11,9 +11,22 @@
 
 #define TO_APPL ring_to_appl
 
+/**
+ * The callback is set by poll_event_set() when user calls acl_fiber_poll().
+ * The callback will be called when the fd included by FILE_EVENT is ready,
+ * and POLLIN flag will be set in the specified FILE_EVENT that will be used
+ * by the application called acl_fiber_poll().
+ */
 static void read_callback(EVENT *ev, FILE_EVENT *fe)
 {
 	POLLFD *pfd = fe->pfd;
+
+	/* In iocp mode on windows, the pfd maybe be set NULL when more overlapped
+	 * events happened by IO or poll events.
+	 */
+	if (pfd == NULL) {
+		return;
+	}
 
 	assert(pfd->pfd->events & POLLIN);
 
@@ -30,9 +43,16 @@ static void read_callback(EVENT *ev, FILE_EVENT *fe)
 	pfd->pe->nready++;
 }
 
+/**
+ * Similiar to read_callback except that the POLLOUT flag will be set in it.
+ */
 static void write_callback(EVENT *ev, FILE_EVENT *fe)
 {
 	POLLFD *pfd = fe->pfd;
+
+	if (pfd == NULL) {
+		return;
+	}
 
 	assert(pfd->pfd->events & POLLOUT);
 
@@ -50,6 +70,10 @@ static void write_callback(EVENT *ev, FILE_EVENT *fe)
 	pfd->pe->nready++;
 }
 
+/**
+ * Set all fds' callbacks in POLL_EVENT, thease callbacks will be called
+ * by event_wait() of different event engines for different OS platforms.
+ */
 static void poll_event_set(EVENT *ev, POLL_EVENT *pe, int timeout)
 {
 	int i;
@@ -84,6 +108,8 @@ static void poll_event_clean(EVENT *ev, POLL_EVENT *pe)
 		if (pfd->fe == NULL)
 			continue;
 
+		CLR_POLLING(pfd->fe);
+
 		if (pfd->pfd->events & POLLIN) {
 			event_del_read(ev, pfd->fe);
 		}
@@ -95,6 +121,11 @@ static void poll_event_clean(EVENT *ev, POLL_EVENT *pe)
 	}
 }
 
+/**
+ * This callback will be called from event_process_poll() in event.c and the
+ * fiber blocked after calling acl_fiber_switch() in acl_fiber_poll() will
+ * wakeup and continue to run.
+ */
 static void poll_callback(EVENT *ev fiber_unused, POLL_EVENT *pe)
 {
 	fiber_io_dec();
@@ -107,9 +138,14 @@ static POLLFD *pollfd_alloc(POLL_EVENT *pe, struct pollfd *fds, nfds_t nfds)
 	nfds_t  i;
 
 	for (i = 0; i < nfds; i++) {
-		pfds[i].fe  = fiber_file_open(fds[i].fd);
-		pfds[i].pe  = pe;
-		pfds[i].pfd = &fds[i];
+		pfds[i].fe       = fiber_file_open(fds[i].fd);
+#ifdef HAS_IOCP
+		pfds[i].fe->buff = NULL;
+		pfds[i].fe->size = 0;
+#endif
+		pfds[i].pe       = pe;
+		pfds[i].pfd      = &fds[i];
+		SET_POLLING(pfds[i].fe);
 	}
 
 	return pfds;

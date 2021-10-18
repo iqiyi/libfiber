@@ -229,7 +229,7 @@ int sane_socketpair(int domain, int type, int protocol, socket_t result[2])
 
 /* sane_socketpair - sanitize socketpair() error returns */
 
-int sane_socketpair(int domain, int type, int protocol, int result[2])
+int sane_socketpair(int domain, int type, int protocol, socket_t result[2])
 {
 	static int socketpair_ok_errors[] = {
 		EINTR,
@@ -244,8 +244,9 @@ int sane_socketpair(int domain, int type, int protocol, int result[2])
 	 */
 	while ((ret = socketpair(domain, type, protocol, result)) < 0) {
 		for (count = 0; /* void */ ; count++) {
-			if ((err = socketpair_ok_errors[count]) == 0)
+			if ((err = socketpair_ok_errors[count]) == 0) {
 				return ret;
+			}
 			if (acl_fiber_last_error() == err) {
 				msg_warn("socketpair: %s (trying again)",
 					last_serror());
