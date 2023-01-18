@@ -68,7 +68,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	char buf[8192];
 
 	while (1) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 		int ret = acl_fiber_recv(*pfd, buf, sizeof(buf), 0);
 #else
 		int ret = recv(*pfd, buf, sizeof(buf), 0);
@@ -81,7 +81,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 			}
 			break;
 		}
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 		if (acl_fiber_send(*pfd, buf, ret, 0) < 0) {
 #else
 		if (send(*pfd, buf, ret, 0) < 0) {
@@ -130,7 +130,7 @@ int main(void)
 {
 	int event_mode = FIBER_EVENT_KERNEL;
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	socket_init();
 #endif
 
@@ -140,7 +140,7 @@ int main(void)
 	// start the fiber schedule process
 	acl_fiber_schedule_with(event_mode);
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	socket_end();
 #endif
 
@@ -177,7 +177,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 	}
 
 	for (i = 0; i < 1024; i++) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 		if (acl_fiber_send(cfd, s, strlen(s), 0) <= 0) {
 #else
 		if (send(cfd, s, strlen(s), 0) <= 0) {
@@ -186,7 +186,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 			break;
 		}
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 		ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0);
 #else
 		ret = recv(cfd, buf, sizeof(buf), 0);
@@ -196,7 +196,7 @@ static void fiber_client(ACL_FIBER *fb, void *ctx)
 		}
 	}
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	acl_fiber_close(cfd);
 #else
 	close(cfd);
@@ -210,7 +210,7 @@ int main(void)
 
 	int i;
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	socket_init();
 #endif
 
@@ -220,7 +220,7 @@ int main(void)
 
 	acl_fiber_schedule_with(event_mode);
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	socket_end();
 #endif
 
