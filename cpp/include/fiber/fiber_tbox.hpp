@@ -35,10 +35,8 @@ namespace acl {
  * }
  */
 
-// The base box<T> defined in acl_cpp/stdlib/box.hpp, so you must include
-// box.hpp first before including fiber_tbox.hpp
 template<typename T>
-class fiber_tbox : public box<T> {
+class fiber_tbox {
 public:
 	/**
 	 * 构造方法
