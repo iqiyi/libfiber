@@ -9,7 +9,7 @@ struct ACL_FIBER_EVENT {
 	ATOMIC       *atomic;
 	long long     value;
 	RING          waiters;
-	unsigned long tid;
+	long          tid;
 	unsigned int  flag;
 
 	union {
@@ -86,7 +86,7 @@ void acl_fiber_event_free(ACL_FIBER_EVENT *event)
 	mem_free(event);
 }
 
-static inline void __ll_lock(ACL_FIBER_EVENT *event)
+static void __ll_lock(ACL_FIBER_EVENT *event)
 {
 	int n;
 
@@ -99,7 +99,7 @@ static inline void __ll_lock(ACL_FIBER_EVENT *event)
 	}
 }
 
-static inline void __ll_unlock(ACL_FIBER_EVENT *event)
+static void __ll_unlock(ACL_FIBER_EVENT *event)
 {
 	int n;
 
@@ -127,14 +127,22 @@ int acl_fiber_event_wait(ACL_FIBER_EVENT *event)
 	if (LIKELY(atomic_int64_cas(event->atomic, 0, 1) == 0)) {
 #endif
 		__ll_lock(event);
-		event->owner = fiber ? &fiber->base : NULL;
-		event->tid   = __pthread_self();
+		event->owner = fiber ? fiber->base : NULL;
+		event->tid   = thread_self();
 		__ll_unlock(event);
 		return 0;
 	}
 
 	// FIBER_BASE obj will be created if is not in fiber scheduled
-	fbase = fiber ? &fiber->base : fbase_alloc();
+
+	if (!fiber) {
+		fbase = fbase_alloc(FBASE_F_BASE);
+	} else if (fiber->base) {
+		fbase = fiber->base;
+	} else {
+		fiber->base = fbase = fbase_alloc(FBASE_F_FIBER);
+	}
+
 	fbase_event_open(fbase);
 
 	wakeup = 0;
@@ -150,7 +158,7 @@ int acl_fiber_event_wait(ACL_FIBER_EVENT *event)
 			}
 
 			event->owner = fbase;
-			event->tid   = __pthread_self();
+			event->tid   = thread_self();
 			__ll_unlock(event);
 			break;
 		}
@@ -203,8 +211,8 @@ int acl_fiber_event_trywait(ACL_FIBER_EVENT *event)
 	if (atomic_int64_cas(event->atomic, 0, 1) == 0) {
 		ACL_FIBER *fiber = acl_fiber_running();
 		__ll_lock(event);
-		event->owner     = fiber ? &fiber->base : NULL;
-		event->tid       = __pthread_self();
+		event->owner     = fiber ? fiber->base : NULL;
+		event->tid       = thread_self();
 		__ll_unlock(event);
 		return 0;
 	}
@@ -214,7 +222,7 @@ int acl_fiber_event_trywait(ACL_FIBER_EVENT *event)
 int acl_fiber_event_notify(ACL_FIBER_EVENT *event)
 {
 	ACL_FIBER  *curr  = acl_fiber_running();
-	FIBER_BASE *owner = curr ? &curr->base : NULL, *waiter;
+	FIBER_BASE *owner = curr ? curr->base : NULL, *waiter;
 	RING       *head;
 
 	if (UNLIKELY(event->owner != owner)) {
@@ -222,11 +230,11 @@ int acl_fiber_event_notify(ACL_FIBER_EVENT *event)
 			__FILE__, __LINE__, __FUNCTION__, owner, event->owner);
 		return -1;
 	} else if (UNLIKELY(event->owner == NULL
-		&& event->tid != __pthread_self())) {
+		&& event->tid != thread_self())) {
 
 		event_ferror(event, "%s(%d), %s: tid(%lu) isn't owner(%lu)",
 			__FILE__, __LINE__, __FUNCTION__,
-			event->tid, __pthread_self());
+			event->tid, thread_self());
 		return -1;
 	}
 

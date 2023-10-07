@@ -262,6 +262,7 @@ static void alt_exec(FIBER_ALT *a)
 static int channel_alt(FIBER_ALT a[])
 {
 	int i, j, ncan, n, canblock;
+	EVENT *ev;
 	ACL_CHANNEL *c;
 	ACL_FIBER *t;
 
@@ -336,7 +337,10 @@ static int channel_alt(FIBER_ALT a[])
 			alt_queue(&a[i]);
 	}
 
+	ev = fiber_io_event();
+	WAITER_INC(ev);  // Just for avoiding fiber_io_loop to exit
 	acl_fiber_switch();
+	WAITER_DEC(ev);
 
 	if (acl_fiber_killed(t))
 		return -1;
