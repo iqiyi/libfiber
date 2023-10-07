@@ -2,7 +2,7 @@
 #include "fiber_cpp_define.hpp"
 #include <list>
 #include <stdlib.h>
-#include "fiber_event.hpp"
+#include "fiber_mutex.hpp"
 #include "fiber_cond.hpp"
 
 namespace acl {
@@ -13,8 +13,7 @@ namespace acl {
  *
  * 示例：
  *
- * class myobj
- * {
+ * class myobj {
  * public:
  *     myobj(void) {}
  *     ~myobj(void) {}
@@ -24,23 +23,22 @@ namespace acl {
  *
  * acl::fiber_tbox<myobj> fiber_tbox;
  *
- * void thread_producer(void)
- * {
+ * void thread_producer(void) {
  *     myobj* o = new myobj;
  *     fiber_tbox.push(o);
  * }
  *
- * void thread_consumer(void)
- * {
+ * void thread_consumer(void) {
  *     myobj* o = fiber_tbox.pop();
  *     o->test();
  *     delete o;
  * }
  */
 
+// The base box<T> defined in acl_cpp/stdlib/box.hpp, so you must include
+// box.hpp first before including fiber_tbox.hpp
 template<typename T>
-class fiber_tbox
-{
+class fiber_tbox : public box<T> {
 public:
 	/**
 	 * 构造方法
@@ -49,8 +47,7 @@ public:
 	 */
 	fiber_tbox(bool free_obj = true) : size_(0), free_obj_(free_obj) {}
 
-	~fiber_tbox(void)
-	{
+	~fiber_tbox(void) {
 		clear(free_obj_);
 	}
 
@@ -58,8 +55,7 @@ public:
 	 * 清理消息队列中未被消费的消息对象
 	 * @param free_obj {bool} 释放调用 delete 方法删除消息对象
 	 */
-	void clear(bool free_obj = false)
-	{
+	void clear(bool free_obj = false) {
 		if (free_obj) {
 			for (typename std::list<T*>::iterator it =
 				tbox_.begin(); it != tbox_.end(); ++it) {
@@ -80,11 +76,11 @@ public:
 	 *  则本参数应该设为 true，以避免 push 者还没有完全返回前因 fiber_tbox
 	 *  对象被提前销毁而造成内存非法访问
 	 * @return {bool}
+	 * @override
 	 */
-	bool push(T* t, bool notify_first = true)
-	{
+	bool push(T* t, bool notify_first = true) {
 		// 先加锁
-		if (event_.wait() == false) {
+		if (mutex_.lock() == false) {
 			abort();
 		}
 
@@ -96,12 +92,12 @@ public:
 			if (cond_.notify() == false) {
 				abort();
 			}
-			if (event_.notify() == false) {
+			if (mutex_.unlock() == false) {
 				abort();
 			}
 			return true;
 		} else {
-			if (event_.notify() == false) {
+			if (mutex_.unlock() == false) {
 				abort();
 			}
 			if (cond_.notify() == false) {
@@ -123,17 +119,17 @@ public:
 	 *  为 -1 时返回 NULL 依然认为获得了一个空消息对象，如果 wait_ms 大于
 	 *  等于 0 时返回 NULL，则应该检查 found 参数的值为 true 还是 false 来
 	 *  判断是否获得了一个空消息对象
+	 * @override
 	 */
-	T* pop(int wait_ms = -1, bool* found = NULL)
-	{
+	T* pop(int wait_ms = -1, bool* found = NULL) {
 		bool found_flag;
-		if (event_.wait() == false) {
+		if (mutex_.lock() == false) {
 			abort();
 		}
 		while (true) {
 			T* t = peek(found_flag);
 			if (found_flag) {
-				if (event_.notify() == false) {
+				if (mutex_.unlock() == false) {
 					abort();
 				}
 				if (found) {
@@ -143,8 +139,8 @@ public:
 			}
 
 			// 注意调用顺序，必须先调用 wait 再判断 wait_ms
-			if (!cond_.wait(event_, wait_ms) && wait_ms >= 0) {
-				if (event_.notify() == false) {
+			if (!cond_.wait(mutex_, wait_ms) && wait_ms >= 0) {
+				if (mutex_.unlock() == false) {
 					abort();
 				}
 				if (found) {
@@ -156,25 +152,31 @@ public:
 	}
 
 	/**
+	 * tbox 允许有空消息
+	 * @return {bool}
+	 * @override
+	 */
+	bool has_null(void) const {
+		return true;
+	}
+
+	/**
 	 * 返回当前存在于消息队列中的消息数量
 	 * @return {size_t}
 	 */
-	size_t size(void) const
-	{
+	size_t size(void) const {
 		return size_;
 	}
 
 public:
-	void lock(void)
-	{
-		if (event_.wait() == false) {
+	void lock(void) {
+		if (mutex_.lock() == false) {
 			abort();
 		}
 	}
 
-	void unlock(void)
-	{
-		if (event_.notify() == false) {
+	void unlock(void) {
+		if (mutex_.unlock() == false) {
 			abort();
 		}
 	}
@@ -187,11 +189,10 @@ private:
 	std::list<T*> tbox_;
 	size_t        size_;
 	bool          free_obj_;
-	fiber_event   event_;
+	fiber_mutex   mutex_;
 	fiber_cond    cond_;
 
-	T* peek(bool& found_flag)
-	{
+	T* peek(bool& found_flag) {
 		typename std::list<T*>::iterator it = tbox_.begin();
 		if (it == tbox_.end()) {
 			found_flag = false;
@@ -206,4 +207,3 @@ private:
 };
 
 } // namespace acl
-

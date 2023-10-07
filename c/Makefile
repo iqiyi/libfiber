@@ -195,7 +195,7 @@ endif
 
 ###########################################################
 
-LIB_PATH_DST = ../lib
+LIB_PATH_DST = .
 OBJ_PATH_DST = ./debug
 
 SRC_PATH_SRC = ./src
