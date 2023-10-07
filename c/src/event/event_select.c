@@ -18,14 +18,20 @@ typedef struct EVENT_SELECT {
 	int    count;
 	socket_t maxfd;
 	int    dirty;
-	ARRAY *ready;
+#ifdef	DELAY_CALL
+	ARRAY *r_ready;
+	ARRAY *w_ready;
+#endif
 } EVENT_SELECT;
 
 static void select_free(EVENT *ev)
 {
 	EVENT_SELECT *es = (EVENT_SELECT *) ev;
 	mem_free(es->files);
-	array_free(es->ready, NULL);
+#ifdef	DELAY_CALL
+	array_free(es->r_ready, NULL);
+	array_free(es->w_ready, NULL);
+#endif
 	mem_free(es);
 }
 
@@ -120,7 +126,10 @@ static int select_event_wait(EVENT *ev, int timeout)
 	EVENT_SELECT *es = (EVENT_SELECT *) ev;
 	fd_set rset = es->rset, wset = es->wset, xset = es->xset;
 	struct timeval tv, *tp;
-	ITER   iter;
+	FILE_EVENT *fe;
+#ifdef	DELAY_CALL
+	ITER iter;
+#endif
 	int n, i;
 
 	if (timeout >= 0) {
@@ -142,13 +151,13 @@ static int select_event_wait(EVENT *ev, int timeout)
 	if (es->dirty) {
 		es->maxfd = -1;
 		for (i = 0; i < es->count; i++) {
-			FILE_EVENT *fe = es->files[i];
+			fe = es->files[i];
 			if (fe->fd > es->maxfd) {
 				es->maxfd = fe->fd;
 			}
 		}
 	}
-	n = (*sys_select)(es->maxfd + 1, &rset, 0, &xset, tp);
+	n = (*sys_select)(es->maxfd + 1, &rset, &wset, &xset, tp);
 #endif
 	if (n < 0) {
 		if (acl_fiber_last_error() == FIBER_EINTR) {
@@ -160,31 +169,59 @@ static int select_event_wait(EVENT *ev, int timeout)
 	}
 
 	for (i = 0; i < es->count; i++) {
-		FILE_EVENT *fe = es->files[i];
-		array_append(es->ready, fe);
-	}
-
-	foreach(iter, es->ready) {
-		FILE_EVENT *fe = (FILE_EVENT *) iter.data;
+		fe = es->files[i];
 
 		if (FD_ISSET(fe->fd, &xset)) {
 			if (FD_ISSET(fe->fd, &es->rset) && fe->r_proc) {
+				CLR_READWAIT(fe);
+#ifdef	DELAY_CALL
+				array_append(es->r_ready, fe);
+#else
 				fe->r_proc(ev, fe);
+#endif
 			}
 			if (FD_ISSET(fe->fd, &es->wset) && fe->w_proc) {
+				CLR_WRITEWAIT(fe);
+#ifdef	DELAY_CALL
+				array_append(es->w_ready, fe);
+#else
 				fe->w_proc(ev, fe);
+#endif
 			}
 		} else {
 			if (FD_ISSET(fe->fd, &rset) && fe->r_proc) {
+				CLR_READWAIT(fe);
+#ifdef	DELAY_CALL
+				array_append(es->r_ready, fe);
+#else
 				fe->r_proc(ev, fe);
+#endif
 			}
 			if (FD_ISSET(fe->fd, &wset) && fe->w_proc) {
+				CLR_WRITEWAIT(fe);
+#ifdef	DELAY_CALL
+				array_append(es->w_ready, fe);
+#else
 				fe->w_proc(ev, fe);
+#endif
 			}
 		}
 	}
 
-	array_clean(es->ready, NULL);
+#ifdef	DELAY_CALL
+	foreach(iter, es->r_ready) {
+		fe = (FILE_EVENT *) iter.data;
+		fe->r_proc(ev, fe);
+	}
+
+	foreach(iter, es->w_ready) {
+		fe = (FILE_EVENT *) iter.data;
+		fe->w_proc(ev, fe);
+	}
+
+	array_clean(es->r_ready, NULL);
+	array_clean(es->w_ready, NULL);
+#endif
 
 	return n;
 }
@@ -211,19 +248,21 @@ EVENT *event_select_create(int size)
 
 	if (sys_select == NULL) {
 		hook_once();
-		if (sys_select == NULL) {
-			msg_error("%s: sys_select NULL", __FUNCTION__);
-			return NULL;
-		}
+		assert(sys_select != NULL);
 	}
 
 	// override size with system open limit setting
 	size      = open_limit(0);
 	es->maxfd = -1;
 	es->dirty = 0;
-	es->files = (FILE_EVENT**) mem_calloc(size, sizeof(FILE_EVENT*));
-	es->size  = size;
-	es->ready = array_create(100);
+	es->size  = size > 0 ? size : 10240;
+	es->files = (FILE_EVENT**) mem_calloc(es->size, sizeof(FILE_EVENT*));
+
+#ifdef	DELAY_CALL
+	es->r_ready = array_create(100);
+	es->w_ready = array_create(100);
+#endif
+
 	es->count = 0;
 	FD_ZERO(&es->rset);
 	FD_ZERO(&es->wset);

@@ -43,10 +43,14 @@ static void hook_init(void)
 /****************************************************************************/
 
 typedef struct EVENT_EPOLL {
-	EVENT event;
-	int   epfd;
+	EVENT  event;
+	int    epfd;
 	struct epoll_event *events;
-	int   size;
+	int    size;
+#ifdef	DELAY_CALL
+	ARRAY *r_ready;
+	ARRAY *w_ready;
+#endif
 } EVENT_EPOLL;
 
 static void epoll_free(EVENT *ev)
@@ -55,6 +59,10 @@ static void epoll_free(EVENT *ev)
 
 	close(ep->epfd);
 	mem_free(ep->events);
+#ifdef	DELAY_CALL
+	array_free(ep->r_ready, NULL);
+	array_free(ep->w_ready, NULL);
+#endif
 	mem_free(ep);
 }
 
@@ -197,6 +205,9 @@ static int epoll_event_wait(EVENT *ev, int timeout)
 	EVENT_EPOLL *ep = (EVENT_EPOLL *) ev;
 	struct epoll_event *ee;
 	FILE_EVENT *fe;
+#ifdef	DELAY_CALL
+	ITER iter;
+#endif
 	int n, i;
 
 	if (__sys_epoll_wait == NULL) {
@@ -209,8 +220,7 @@ static int epoll_event_wait(EVENT *ev, int timeout)
 		if (acl_fiber_last_error() == FIBER_EINTR) {
 			return 0;
 		}
-		msg_fatal("%s: epoll_wait error %s",
-			__FUNCTION__, last_serror());
+		msg_fatal("%s: epoll_wait error %s", __FUNCTION__, last_serror());
 	} else if (n == 0) {
 		return 0;
 	}
@@ -219,16 +229,55 @@ static int epoll_event_wait(EVENT *ev, int timeout)
 		ee = &ep->events[i];
 		fe = (FILE_EVENT *) ee->data.ptr;
 
-#define EVENT_ERR	(EPOLLERR | EPOLLHUP)
+#define ERR	(EPOLLERR | EPOLLHUP)
 
-		if (ee->events & (EPOLLIN | EVENT_ERR) && fe && fe->r_proc) {
+		if (ee->events & (EPOLLIN | ERR) && fe && fe->r_proc) {
+			if (ee->events & EPOLLERR) {
+				fe->mask |= EVENT_ERR;
+			}
+			if (ee->events & EPOLLHUP) {
+				fe->mask |= EVENT_HUP;
+			}
+
+			CLR_READWAIT(fe);
+#ifdef	DELAY_CALL
+			array_append(ep->r_ready, fe);
+#else
 			fe->r_proc(ev, fe);
+#endif
 		}
 
-		if (ee->events & (EPOLLOUT | EVENT_ERR) && fe && fe->w_proc) {
+		if (ee->events & (EPOLLOUT | ERR) && fe && fe->w_proc) {
+			if (ee->events & EPOLLERR) {
+				fe->mask |= EVENT_ERR;
+			}
+			if (ee->events & EPOLLHUP) {
+				fe->mask |= EVENT_HUP;
+			}
+
+			CLR_WRITEWAIT(fe);
+#ifdef	DELAY_CALL
+			array_append(ep->w_ready, fe);
+#else
 			fe->w_proc(ev, fe);
+#endif
 		}
 	}
+
+#ifdef	DELAY_CALL
+	foreach(iter, ep->r_ready) {
+		fe = (FILE_EVENT *) iter.data;
+		fe->r_proc(ev, fe);
+	}
+
+	foreach(iter, ep->w_ready) {
+		fe = (FILE_EVENT *) iter.data;
+		fe->w_proc(ev, fe);
+	}
+
+	array_clean(ep->r_ready, NULL);
+	array_clean(ep->w_ready, NULL);
+#endif
 
 	return n;
 }
@@ -266,11 +315,24 @@ EVENT *event_epoll_create(int size)
 		hook_init();
 	}
 
+	// Limit the max events buff maybe a good idea to impromve performance
+	// for handling large fds. Because epoll uses robin round to handle
+	// all the ready fds, so we needn't worry about the starvation of the
+	// left ready fds.
+	if (size <= 0 || size > 100) {
+		size = 100;
+	}
+
 	ep->events = (struct epoll_event *)
 		mem_malloc(sizeof(struct epoll_event) * size);
-	ep->size   = size;
+	ep->size    = size;
 
-	ep->epfd = __sys_epoll_create(1024);
+#ifdef	DELAY_CALL
+	ep->r_ready = array_create(100);
+	ep->w_ready = array_create(100);
+#endif
+
+	ep->epfd = __sys_epoll_create(size);
 	assert(ep->epfd >= 0);
 
 	ep->event.name   = epoll_name;

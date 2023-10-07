@@ -279,6 +279,29 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 	return 0;
 }
 
+int pthread_mutex_trylock(pthread_mutex_t *mutex)
+{
+	const char *myname = "pthread_mutex_trylock";
+	DWORD ret;
+
+	if (mutex == NULL) {
+		msg_error("%s, %s(%d): input invalid",
+			__FILE__, myname, __LINE__);
+		return -1;
+	}
+
+	ret = WaitForSingleObject(mutex->id, 0);
+	if (ret == WAIT_TIMEOUT) {
+		return FIBER_ETIME;
+	} else if (ret == WAIT_FAILED) {
+		msg_error("%s, %s(%d): WaitForSingleObject error(%s)",
+			__FILE__, myname, __LINE__, last_serror());
+		return -1;
+	}
+
+	return 0;
+}
+
 int pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	const char *myname = "pthread_mutex_unlock";
@@ -298,25 +321,33 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
 	return 0;
 }
 
-unsigned long __pthread_self(void)
+long thread_self(void)
 {
-	return GetCurrentThreadId();
+	return (long) GetCurrentThreadId();
 }
 
-#elif	defined(__linux__) || defined(__APPLE__)
-unsigned long __pthread_self(void)
+#elif	defined(__linux__)
+
+#include <sys/syscall.h>
+
+long thread_self(void)
 {
-	return (unsigned long) pthread_self();
+	return (long) syscall(SYS_gettid);
+}
+#elif	defined(__APPLE__)
+long thread_self(void)
+{
+	return (long) pthread_self();
 }
 #elif	defined(__FreeBSD__)
-unsigned long __pthread_self(void)
+long thread_self(void)
 {
 #if defined(__FreeBSD__) && (__FreeBSD__ >= 9)
-	return (unsigned long) pthread_getthreadid_np();
+	return (long) pthread_getthreadid_np();
 #else
-	return (unsigned long) pthread_self();
+	return (long) pthread_self();
 #endif
 }
 #else
-#error	"unknown OS"
+# error "Unknown OS"
 #endif
