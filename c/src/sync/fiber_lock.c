@@ -4,7 +4,7 @@
 #include "fiber/libfiber.h"
 #include "fiber.h"
 
-struct ACL_FIBER_MUTEX {
+struct ACL_FIBER_LOCK {
 	RING       me;
 	ACL_FIBER *owner;
 	RING       waiting;
@@ -17,9 +17,9 @@ struct ACL_FIBER_RWLOCK {
 	RING       wwaiting;
 };
 
-ACL_FIBER_MUTEX *acl_fiber_mutex_create(void)
+ACL_FIBER_LOCK *acl_fiber_lock_create(void)
 {
-	ACL_FIBER_MUTEX *lk = (ACL_FIBER_MUTEX *) mem_malloc(sizeof(ACL_FIBER_MUTEX));
+	ACL_FIBER_LOCK *lk = (ACL_FIBER_LOCK *) mem_malloc(sizeof(ACL_FIBER_LOCK));
 
 	lk->owner = NULL;
 	ring_init(&lk->me);
@@ -27,18 +27,21 @@ ACL_FIBER_MUTEX *acl_fiber_mutex_create(void)
 	return lk;
 }
 
-void acl_fiber_mutex_free(ACL_FIBER_MUTEX *lk)
+void acl_fiber_lock_free(ACL_FIBER_LOCK *lk)
 {
 	mem_free(lk);
 }
 
-static int __lock(ACL_FIBER_MUTEX *lk, int block)
+static int __lock(ACL_FIBER_LOCK *lk, int block)
 {
 	ACL_FIBER *curr = acl_fiber_running();
+	EVENT *ev;
 
 	if (lk->owner == NULL) {
 		lk->owner = acl_fiber_running();
+#ifdef	DEBUG_LOCK
 		ring_prepend(&curr->holding, &lk->me);
+#endif
 		return 0;
 	}
 
@@ -50,9 +53,19 @@ static int __lock(ACL_FIBER_MUTEX *lk, int block)
 	}
 
 	ring_prepend(&lk->waiting, &curr->me);
-	curr->waiting = lk;
 
+#ifdef	DEBUG_LOCK
+	curr->waiting = lk;
+#endif
+
+	curr->wstatus |= FIBER_WAIT_LOCK;
+
+	ev = fiber_io_event();
+	WAITER_INC(ev);  // Just for avoiding fiber_io_loop to exit
 	acl_fiber_switch();
+	WAITER_DEC(ev);
+
+	curr->wstatus &= ~FIBER_WAIT_LOCK;
 
 	/* if switch to me because other killed me, I should detach myself;
 	 * else if because other unlock, I'll be detached twice which is
@@ -64,23 +77,19 @@ static int __lock(ACL_FIBER_MUTEX *lk, int block)
 		return 0;
 	}
 
-	if (acl_fiber_killed(curr)) {
-		msg_info("%s(%d), %s: lock fiber-%u was killed",
-			__FILE__, __LINE__, __FUNCTION__, acl_fiber_id(curr));
-	} else {
-		msg_error("%s(%d), %s: qlock: owner=%p self=%p oops",
-			__FILE__, __LINE__, __FUNCTION__, lk->owner, curr);
+	if (acl_fiber_canceled(curr)) {
+		acl_fiber_set_error(curr->errnum);
 	}
 
 	return -1;
 }
 
-void acl_fiber_mutex_lock(ACL_FIBER_MUTEX *lk)
+int acl_fiber_lock_lock(ACL_FIBER_LOCK *lk)
 {
-	__lock(lk, 1);
+	return __lock(lk, 1);
 }
 
-int acl_fiber_mutex_trylock(ACL_FIBER_MUTEX *lk)
+int acl_fiber_lock_trylock(ACL_FIBER_LOCK *lk)
 {
 	return __lock(lk, 0) ? 0 : -1;
 }
@@ -91,7 +100,7 @@ int acl_fiber_mutex_trylock(ACL_FIBER_MUTEX *lk)
 #define FIRST_FIBER(head) \
     (ring_succ(head) != (head) ? RING_TO_FIBER(ring_succ(head)) : 0)
 
-void acl_fiber_mutex_unlock(ACL_FIBER_MUTEX *lk)
+void acl_fiber_lock_unlock(ACL_FIBER_LOCK *lk)
 {
 	ACL_FIBER *ready, *curr = acl_fiber_running();
 	
@@ -137,29 +146,42 @@ void acl_fiber_rwlock_free(ACL_FIBER_RWLOCK *lk)
 static int __rlock(ACL_FIBER_RWLOCK *lk, int block)
 {
 	ACL_FIBER *curr;
+	EVENT *ev;
 
 	if (lk->writer == NULL && FIRST_FIBER(&lk->wwaiting) == NULL) {
 		lk->readers++;
-		return 1;
+		return 0;
 	}
 
 	if (!block) {
-		return 0;
+		return -1;
 	}
 
 	curr = acl_fiber_running();
 	ring_prepend(&lk->rwaiting, &curr->me);
+
+	curr->wstatus |= FIBER_WAIT_LOCK;
+
+	ev = fiber_io_event();
+	WAITER_INC(ev);  // Just for avoiding fiber_io_loop to exit
 	acl_fiber_switch();
+	WAITER_DEC(ev);
+
+	curr->wstatus &= ~FIBER_WAIT_LOCK;
 
 	/* if switch to me because other killed me, I should detach myself */
 	ring_detach(&curr->me);
 
-	return 1;
+	if (acl_fiber_canceled(curr)) {
+		acl_fiber_set_error(curr->errnum);
+		return -1;
+	}
+	return 0;
 }
 
-void acl_fiber_rwlock_rlock(ACL_FIBER_RWLOCK *lk)
+int acl_fiber_rwlock_rlock(ACL_FIBER_RWLOCK *lk)
 {
-	(void) __rlock(lk, 1);
+	return __rlock(lk, 1);
 }
 
 int acl_fiber_rwlock_tryrlock(ACL_FIBER_RWLOCK *lk)
@@ -170,29 +192,42 @@ int acl_fiber_rwlock_tryrlock(ACL_FIBER_RWLOCK *lk)
 static int __wlock(ACL_FIBER_RWLOCK *lk, int block)
 {
 	ACL_FIBER *curr;
+	EVENT *ev;
 
 	if (lk->writer == NULL && lk->readers == 0) {
 		lk->writer = acl_fiber_running();
-		return 1;
+		return 0;
 	}
 
 	if (!block) {
-		return 0;
+		return -1;
 	}
 
 	curr = acl_fiber_running();
 	ring_prepend(&lk->wwaiting, &curr->me);
+
+	curr->wstatus |= FIBER_WAIT_LOCK;
+
+	ev = fiber_io_event();
+	WAITER_INC(ev);  // Just for avoiding fiber_io_loop to exit
 	acl_fiber_switch();
+	WAITER_DEC(ev);
+
+	curr->wstatus &= ~FIBER_WAIT_LOCK;
 
 	/* if switch to me because other killed me, I should detach myself */
 	ring_detach(&curr->me);
 
-	return 1;
+	if (acl_fiber_canceled(curr)) {
+		acl_fiber_set_error(curr->errnum);
+		return -1;
+	}
+	return 0;
 }
 
-void acl_fiber_rwlock_wlock(ACL_FIBER_RWLOCK *lk)
+int acl_fiber_rwlock_wlock(ACL_FIBER_RWLOCK *lk)
 {
-	__wlock(lk, 1);
+	return __wlock(lk, 1);
 }
 
 int acl_fiber_rwlock_trywlock(ACL_FIBER_RWLOCK *lk)

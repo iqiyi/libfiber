@@ -5,12 +5,20 @@
 #include "fiber.hpp"
 #include "fiber_tbox.hpp"
 
+// __cplusplus:
+//    199711L (C++98 or C++03)
+//    201103L (C++11)
+//    201402L (C++14)
+//    201703L (C++17)
+//    202002L (C++20)
+
+#if __cplusplus >= 201103L      // Support c++11 ?
+
 struct ACL_FIBER;
 
 namespace acl {
 
-class fiber_ctx
-{
+class fiber_ctx {
 public:
 	fiber_ctx(std::function<void()> fn) {
 		fn_ = std::move(fn);
@@ -22,26 +30,24 @@ public:
 };
 
 #define	go                  acl::go_fiber()>
-#define	go_stack(size)      acl::go_fiber(size)>
+#define	go_stack(size)      acl::go_fiber(size, false)>
+#define	go_share(size)      acl::go_fiber(size, true)>
 
 #define	go_wait_fiber       acl::go_fiber()<
 #define	go_wait_thread      acl::go_fiber()<<
 #define	go_wait             go_wait_thread
 
-class go_fiber
-{
+class go_fiber {
 public:
 	go_fiber(void) {}
-	go_fiber(size_t stack_size) : stack_size_(stack_size) {}
+	go_fiber(size_t stack_size, bool on) : stack_size_(stack_size), stack_share_(on) {}
 
-	void operator > (std::function<void()> fn)
-	{
+	ACL_FIBER* operator > (std::function<void()> fn) {
 		fiber_ctx* ctx = new fiber_ctx(fn);
-		fiber::fiber_create(fiber_main, (void*) ctx, stack_size_);
+		return fiber::fiber_create(fiber_main, (void*) ctx, stack_size_, stack_share_);
 	}
 
-	void operator < (std::function<void()> fn)
-	{
+	void operator < (std::function<void()> fn) {
 		fiber_tbox<int> box;
 
 		go[&] {
@@ -51,8 +57,7 @@ public:
 		(void) box.pop();
 	}
 
-	void operator << (std::function<void()> fn)
-	{
+	void operator << (std::function<void()> fn) {
 		fiber_tbox<int> box;
 
 		std::thread thread([&]() {
@@ -65,10 +70,10 @@ public:
 	}
 
 private:
-	size_t stack_size_ = 320000;
+	size_t stack_size_  = 320000;
+	bool   stack_share_ = false;
 
-	static void fiber_main(ACL_FIBER*, void* ctx)
-	{
+	static void fiber_main(ACL_FIBER*, void* ctx) {
 		fiber_ctx* fc = (fiber_ctx *) ctx;
 		std::function<void()> fn = fc->fn_;
 		delete fc;
@@ -79,30 +84,27 @@ private:
 
 } // namespace acl
 
+#endif // __cplusplus >= 201103L
+
 /**
- * static void fiber1(void)
- * {
+ * static void fiber1(void) {
  * 	printf("fiber: %d\r\n", acl::fiber::self());
  * }
  *
- * static void fiber2(acl::string& buf)
- * {
+ * static void fiber2(acl::string& buf) {
  * 	printf("in fiber: %d, buf: %s\r\n", acl::fiber::self(), buf.c_str());
  * 	buf = "world";
  * }
  *
- * static void fiber3(const acl::string& buf)
- * {
+ * static void fiber3(const acl::string& buf) {
  * 	printf("in fiber: %d, buf: %s\r\n", acl::fiber::self(), buf.c_str());
  * }
  *
- * static void incr(int& n)
- * {
+ * static void incr(int& n) {
  *	n++;
  * }
  *
- * static void waiter(void)
- * {
+ * static void waiter(void) {
  *	int n = 100;
  *
  *	// run in thread and wait for result
@@ -116,8 +118,7 @@ private:
  *  // here: n should be 201
  * }
  *
- * static test(void)
- * {
+ * static test(void) {
  * 	go fiber1;
  * 	
  * 	acl::string buf("hello");

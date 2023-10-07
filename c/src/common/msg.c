@@ -49,17 +49,30 @@ void msg_info(const char *fmt,...)
 	va_start (ap, fmt);
 
 	if (__pre_write_fn) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
 		__pre_write_fn(__pre_write_ctx, fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		__pre_write_fn(__pre_write_ctx, fmt, ap_tmp);
+#endif
+	}
+
+	if (__stdout_enable) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
+		printf("msg_info->pid(%d), ", GETPID());
+		vprintf(fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		printf("msg_info->pid(%d), ", GETPID());
+		vprintf(fmt, ap_tmp);
+#endif
+		printf("\r\n");
 	}
 
 	if (__write_fn != NULL) {
 		__write_fn(__msg_ctx, fmt, ap);
-	}
-
-	if (__stdout_enable) {
-		printf("msg_info->pid(%d), ", GETPID());
-		vprintf(fmt, ap);
-		printf("\r\n");
 	}
 
 	va_end (ap);
@@ -72,17 +85,30 @@ void msg_warn(const char *fmt,...)
 	va_start (ap, fmt);
 
 	if (__pre_write_fn) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
 		__pre_write_fn(__pre_write_ctx, fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		__pre_write_fn(__pre_write_ctx, fmt, ap_tmp);
+#endif
+	}
+	
+	if (__stdout_enable) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
+		printf("msg_warn->pid(%d), ", GETPID());
+		vprintf(fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		printf("msg_warn->pid(%d), ", GETPID());
+		vprintf(fmt, ap_tmp);
+#endif
+		printf("\r\n");
 	}
 
 	if (__write_fn != NULL) {
 		__write_fn(__msg_ctx, fmt, ap);
-	}
-	
-	if (__stdout_enable) {
-		printf("msg_warn->pid(%d), ", GETPID());
-		vprintf(fmt, ap);
-		printf("\r\n");
 	}
 
 	va_end (ap);
@@ -95,17 +121,30 @@ void msg_error(const char *fmt,...)
 	va_start (ap, fmt);
 
 	if (__pre_write_fn) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
 		__pre_write_fn(__pre_write_ctx, fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		__pre_write_fn(__pre_write_ctx, fmt, ap_tmp);
+#endif
+	}
+	
+	if (__stdout_enable) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
+		printf("msg_error->pid(%d), ", GETPID());
+		vprintf(fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		printf("msg_error->pid(%d), ", GETPID());
+		vprintf(fmt, ap_tmp);
+#endif
+		printf("\r\n");
 	}
 
 	if (__write_fn != NULL) {
 		__write_fn(__msg_ctx, fmt, ap);
-	}
-	
-	if (__stdout_enable) {
-		printf("msg_error->pid(%d), ", GETPID());
-		vprintf(fmt, ap);
-		printf("\r\n");
 	}
 
 	va_end (ap);
@@ -118,18 +157,32 @@ void msg_fatal(const char *fmt,...)
 	va_start (ap, fmt);
 
 	if (__pre_write_fn) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
 		__pre_write_fn(__pre_write_ctx, fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		__pre_write_fn(__pre_write_ctx, fmt, ap_tmp);
+#endif
+	}
+	
+	if (__stdout_enable) {
+#if (defined(_WIN32) || defined(_WIN64)) && _MSC_VER < 1900
+		printf("msg_fatal->pid(%d), ", GETPID());
+		printf("fatal:");
+		vprintf(fmt, ap);
+#else
+		va_list ap_tmp;
+		va_copy(ap_tmp, ap);
+		printf("msg_fatal->pid(%d), ", GETPID());
+		printf("fatal:");
+		vprintf(fmt, ap_tmp);
+#endif
+		printf("\r\n");
 	}
 
 	if (__write_fn != NULL) {
 		__write_fn(__msg_ctx, fmt, ap);
-	}
-	
-	if (__stdout_enable) {
-		printf("msg_fatal->pid(%d), ", GETPID());
-		printf("fatal:");
-		vprintf(fmt, ap);
-		printf("\r\n");
 	}
 
 	va_end (ap);
@@ -186,7 +239,7 @@ static char *__main_buf = NULL;
 
 static void thread_free_buf(void *buf)
 {
-	if (__pthread_self() != main_thread_self()) {
+	if (thread_self() != main_thread_self()) {
 		mem_free(buf);
 	}
 }
@@ -222,7 +275,7 @@ const char *last_serror(void)
 		buf = (char*) mem_malloc(__buf_size);
 		if (pthread_setspecific(__errbuf_key, buf) != 0)
 			abort();
-		if (__pthread_self() == main_thread_self()) {
+		if (thread_self() == main_thread_self()) {
 			__main_buf = buf;
 			atexit(main_free_buf);
 		}

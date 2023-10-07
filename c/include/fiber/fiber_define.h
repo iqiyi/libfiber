@@ -27,6 +27,7 @@ typedef SOCKET socket_t;
 typedef int socklen_t;
 
 # define	FIBER_ETIMEDOUT		WSAETIMEDOUT
+# define	FIBER_ETIME		WSAETIMEDOUT
 # define	FIBER_ENOMEM		WSAENOBUFS
 # define	FIBER_EINVAL		WSAEINVAL
 # define	FIBER_ECONNREFUSED	WSAECONNREFUSED
@@ -46,6 +47,10 @@ typedef int socklen_t;
 
 #else
 
+# ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+# endif
+
 # include <errno.h>
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -59,6 +64,8 @@ typedef int socklen_t;
 typedef int socket_t;
 
 # define	FIBER_ETIMEDOUT		ETIMEDOUT
+# define	FIBER_ETIME		ETIMEDOUT
+//# define	FIBER_ETIME		ETIME
 # define	FIBER_ENOMEM		ENOMEM
 # define	FIBER_EINVAL		EINVAL
 # define	FIBER_ECONNREFUSED	ECONNREFUSED
@@ -76,6 +83,10 @@ typedef int socket_t;
 # define	FIBER_ECONNABORTED	ECONNABORTED
 # define	FIBER_EINPROGRESS	EINPROGRESS
 
+# include <sys/syscall.h>
+# if defined(SYS_recvmmsg) && defined(SYS_sendmmsg) && !defined(ANDROID)
+#  define	HAS_MMSG
+# endif
 #endif
 
 #ifdef FIBER_LIB
@@ -95,9 +106,10 @@ typedef int socket_t;
 #endif
 
 /**
- * the fiber struct type definition
+ * The fiber struct type definition
  */
 typedef struct ACL_FIBER ACL_FIBER;
+typedef unsigned int acl_fiber_t;
 
 #ifdef __cplusplus
 }

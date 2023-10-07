@@ -362,12 +362,19 @@ static void resolver_init(void)
 
 #ifdef SYS_UNIX
 	load_reolv_conf(resolv_file, __resolv);
-#elif defined(SYS_WIN)
-	add_nameservers(__resolv);
-#endif
 
 	load_hosts_conf(hosts_file, __hosts);
 	load_services_conf(services_file, __services);
+#elif defined(SYS_WIN)
+	add_nameservers(__resolv);
+	{
+		CHAR win32_host[MAX_PATH];
+
+		GetSystemDirectoryA(win32_host, MAX_PATH);
+		lstrcatA(win32_host, "\\drivers\\etc\\hosts");
+		load_hosts_conf(win32_host, __hosts);
+	}
+#endif
 }
 
 static pthread_once_t  __once_control = PTHREAD_ONCE_INIT;
@@ -409,7 +416,7 @@ static int udp_request(const char *ip, unsigned short port,
 	ret = acl_fiber_sendto(sock, data, (int) dlen, 0, (struct sockaddr *) &addr,
 		     (socklen_t) sizeof(addr));
 #else
-	ret = acl_fiber_sendto(sock, data, dlen, 0, (struct sockaddr *) &addr,
+	ret = (int) acl_fiber_sendto(sock, data, dlen, 0, (struct sockaddr *) &addr,
 		     (socklen_t) sizeof(addr));
 #endif
 
@@ -433,7 +440,7 @@ static int udp_request(const char *ip, unsigned short port,
 	ret = acl_fiber_recvfrom(sock, buf, (int) size, 0,
 		(struct sockaddr*) &from_addr, &len);
 #else
-	ret = acl_fiber_recvfrom(sock, buf, size, 0,
+	ret = (int) acl_fiber_recvfrom(sock, buf, size, 0,
 		(struct sockaddr*) &from_addr, &len);
 #endif
 

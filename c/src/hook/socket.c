@@ -22,11 +22,20 @@ socket_t WINAPI acl_fiber_socket(int domain, int type, int protocol)
 		return sockfd;
 	}
 
+#if 0
+	/* We shouldn't set NON_BLOCKING where because the NON_BLOCKING will
+	 * be checked in acl_fiber_connect(). -- zsx, 2022.01.21
+	 */
 	if (sockfd != INVALID_SOCKET) {
 		non_blocking(sockfd, NON_BLOCKING);
 	} else {
 		fiber_save_errno(acl_fiber_last_error());
 	}
+#else
+	if (sockfd == INVALID_SOCKET) {
+		fiber_save_errno(acl_fiber_last_error());
+	}
+#endif
 
 	return sockfd;
 }
@@ -45,7 +54,14 @@ int WINAPI acl_fiber_listen(socket_t sockfd, int backlog)
 		return sys_listen ? (*sys_listen)(sockfd, backlog) : -1;
 	}
 
+#ifdef HAS_IO_URING
+	if (!EVENT_IS_IO_URING(fiber_io_event())) {
+		non_blocking(sockfd, NON_BLOCKING);
+	}
+#else
 	non_blocking(sockfd, NON_BLOCKING);
+#endif
+
 	if ((*sys_listen)(sockfd, backlog) == 0) {
 		return 0;
 	}
@@ -63,6 +79,22 @@ socket_t WSAAPI acl_fiber_WSAAccept(
     DWORD_PTR dwCallbackData)
 {
 	return acl_fiber_accept(s, addr, addrlen);
+}
+#endif
+
+#ifdef HAS_IO_URING
+static socket_t fiber_iocp_accept(FILE_EVENT *fe)
+{
+	fe->mask &= ~EVENT_READ;
+	fe->mask |= EVENT_ACCEPT;
+	fe->reader_ctx.res = INVALID_SOCKET;
+
+	if (fiber_wait_read(fe) < 0) {
+		msg_error("%s(%d): fiber_wait_read error=%s, fd=%d",
+			__FUNCTION__, __LINE__, last_serror(), (int) fe->fd);
+		return INVALID_SOCKET;
+	}
+	return fe->reader_ctx.res;
 }
 #endif
 
@@ -108,15 +140,23 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 #endif
 	}
 
+#ifdef HAS_IO_URING
+	if (EVENT_IS_IO_URING(fiber_io_event())) {
+		fe = fiber_file_open(sockfd);
+		return fiber_iocp_accept(fe);
+	}
+#endif
+
 #ifdef	FAST_ACCEPT
 
+	// We can set the sockfd in non-blocking mode for not the io_uring.
 	non_blocking(sockfd, NON_BLOCKING);
 
-#ifdef SYS_WSA_API
+# ifdef SYS_WSA_API
 	clifd = (*sys_WSAAccept)(sockfd, addr, addrlen, 0, 0);
-#else
+# else
 	clifd = (*sys_accept)(sockfd, addr, addrlen);
-#endif
+# endif
 
 	if (clifd != INVALID_SOCKET) {
 		non_blocking(clifd, NON_BLOCKING);
@@ -133,15 +173,20 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 	fe = fiber_file_open(sockfd);
 
 	while (1) {
-		fiber_wait_read(fe);
-
-		if (acl_fiber_killed(fe->fiber)) {
-			msg_info("%s(%d), %s: fiber-%u was killed", __FILE__,
-				__LINE__, __FUNCTION__, acl_fiber_id(fe->fiber));
+		if (fiber_wait_read(fe) < 0) {
+			msg_error("%s(%d): fiber_wait_read error=%s, fd=%d",
+				__FUNCTION__, __LINE__, last_serror(),
+				(int) sockfd);
 			return INVALID_SOCKET;
 		}
 
-#ifdef HAS_IOCP
+		if (acl_fiber_killed(fe->fiber_r)) {
+			msg_info("%s(%d), %s: fiber-%u was killed", __FILE__,
+				__LINE__, __FUNCTION__, acl_fiber_id(fe->fiber_r));
+			return INVALID_SOCKET;
+		}
+
+# ifdef HAS_IOCP
 		clifd = fe->iocp_sock;
 		if (clifd != INVALID_SOCKET) {
 			int ret;
@@ -160,13 +205,13 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			}
 			return clifd;
 		}
-#endif
+# endif
 
-#ifdef SYS_WSA_API
+# ifdef SYS_WSA_API
 		clifd = (*sys_WSAAccept)(sockfd, addr, addrlen, 0, 0);
-#else
+# else
 		clifd = (*sys_accept)(sockfd, addr, addrlen);
-#endif
+# endif
 
 		if (clifd != INVALID_SOCKET) {
 			non_blocking(clifd, NON_BLOCKING);
@@ -181,14 +226,19 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			return INVALID_SOCKET;
 		}
 	}
-#else
+#else /* !FAST_ACCEPT */
 	fe = fiber_file_open(sockfd);
 
 	while(1) {
 		if (IS_READABLE(fe)) {
 			CLR_READABLE(fe);
 		} else {
-			fiber_wait_read(fe);
+			if (fiber_wait_read(fe) < 0) {
+				msg_error("%s(%d): fiber_wait_read error=%s, fd=%d",
+					__FUNCTION__, __LINE__, last_serror(),
+					(int) sockfd);
+				return INVALID_SOCKET;
+			}
 
 			if (acl_fiber_killed(fe->fiber)) {
 				msg_info("%s(%d), %s: fiber-%u was killed",
@@ -199,7 +249,7 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 
 		}
 
-#ifdef HAS_IOCP
+# ifdef HAS_IOCP
 		clifd = fe->iocp_sock;
 		if (clifd != INVALID_SOCKET) {
 			non_blocking(clifd, NON_BLOCKING);
@@ -207,7 +257,7 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			fe->iocp_sock = INVALID_SOCKET;
 			return clifd;
 		}
-#endif
+# endif
 		clifd = (*sys_accept)(sockfd, addr, addrlen);
 
 		if (clifd != INVALID_SOCKET) {
@@ -223,13 +273,37 @@ socket_t WINAPI acl_fiber_accept(socket_t sockfd, struct sockaddr *addr,
 			return INVALID_SOCKET;
 		}
 	}
-#endif
+#endif /* FAST_ACCEPT */
 }
+
+extern int event_iocp_connect(EVENT* ev, FILE_EVENT* fe);
+
+#if defined(HAS_IO_URING)
+static socket_t fiber_iocp_connect(FILE_EVENT *fe)
+{
+	fe->mask &= ~EVENT_WRITE;
+	fe->mask |= EVENT_CONNECT;
+
+	if (fiber_wait_write(fe) < 0) {
+		fe->mask &= ~EVENT_CONNECT;
+		msg_error("%s(%d): fiber_wait_write rrror=%s, fd=%d",
+			__FUNCTION__, __LINE__, last_serror(), (int) fe->fd);
+		return INVALID_SOCKET;
+	}
+
+	fe->mask &= ~EVENT_CONNECT;
+	if (fe->writer_ctx.res < 0) {
+		acl_fiber_set_error(-fe->writer_ctx.res);
+		return -1;
+	}
+	return 0;
+}
+#endif
 
 int WINAPI acl_fiber_connect(socket_t sockfd, const struct sockaddr *addr,
 	socklen_t addrlen)
 {
-	int err, ret;
+	int err, ret, nblock;
 	socklen_t len;
 	FILE_EVENT *fe;
 	time_t begin, end;
@@ -246,11 +320,53 @@ int WINAPI acl_fiber_connect(socket_t sockfd, const struct sockaddr *addr,
 		return sys_connect ? (*sys_connect)(sockfd, addr, addrlen) : -1;
 	}
 
-	non_blocking(sockfd, NON_BLOCKING);
+	fe = fiber_file_open(sockfd);
 
+	SET_NDUBLOCK(fe);
+
+	SET_CONNECTING(fe);
+
+#if defined(HAS_IOCP) || defined(HAS_IO_URING)
+	memcpy(&fe->var.peer.addr, addr, addrlen);
+	fe->var.peer.len = addrlen;
+#endif
+
+	// The socket must be set to in no blocking status to avoid to be
+	// blocked by the sys_connect API. If sys_connect returns an error
+	// which is FIBER_EINPROGRESS or FIBER_EAGAIN and the original status
+	// of the socket is blocking, the socket should be be in waiting for
+	// writable by calling fiber_wait_write, which is just like the
+	// connecting process being in blocking mode.
+	nblock = is_non_blocking(sockfd);
+	if (!nblock) {
+		non_blocking(sockfd, NON_BLOCKING);
+	}
+
+#if defined(HAS_IO_URING)
+	// For IO_URING event, if the socket hasn't been set non-block,
+	// we should use io_uring to connect the server in block mode,
+	// else we should use connect system API in non-block, so the
+	// user can poll waiting for writable to check the connection is ok.
+	if (EVENT_IS_IO_URING(fiber_io_event()) && !nblock) {
+		return fiber_iocp_connect(fe);
+	}
+#endif
+
+#ifdef HAS_IOCP
+	if (EVENT_IS_IOCP(fiber_io_event())) {
+		EVENT *ev = fiber_io_event();
+		fe->type = TYPE_SPIPE | TYPE_EVENTABLE;
+		ret = event_iocp_connect(ev, fe);
+	} else {
+		ret = (*sys_connect)(sockfd, addr, addrlen);
+	}
+#else
 	ret = (*sys_connect)(sockfd, addr, addrlen);
+#endif
+
 	if (ret >= 0) {
 		tcp_nodelay(sockfd, 1);
+		CLR_CONNECTING(fe);
 		return ret;
 	}
 
@@ -295,28 +411,27 @@ int WINAPI acl_fiber_connect(socket_t sockfd, const struct sockaddr *addr,
 		return -1;
 	}
 
-	fe = fiber_file_open(sockfd);
+	/* If the non-blocking has bee set, we should return and don't wait */
+	if (nblock) {
+		return -1;
+	}
 
-#ifdef SYS_WIN
-	fe->status |= STATUS_CONNECTING;
-# ifdef HAS_IOCP
-	memcpy(&fe->peer_addr, addr, addrlen);
-# endif
-#endif
-
-	SET_POLLING(fe);
 	time(&begin);
-	fiber_wait_write(fe);
+	if (fiber_wait_write(fe) < 0) {
+		time(&end);
+		msg_error("%s(%d): fiber_wait_write error=%s, fd=%d, cost=%ld",
+			__FUNCTION__, __LINE__, last_serror(), (int) sockfd,
+			(long)(end - begin));
+		return -1;
+	}
 	time(&end);
 
-#ifdef SYS_WIN
-	fe->status &= ~STATUS_CONNECTING;
-#endif
+	CLR_CONNECTING(fe);
 
-	if (acl_fiber_killed(fe->fiber)) {
+	if (acl_fiber_killed(fe->fiber_w)) {
 		msg_info("%s(%d), %s: fiber-%u was killed, %s, spend %ld",
 			__FILE__, __LINE__, __FUNCTION__,
-			acl_fiber_id(fe->fiber), last_serror(),
+			acl_fiber_id(fe->fiber_w), last_serror(),
 			(long) (end - begin));
 		return -1;
 	}
@@ -381,8 +496,8 @@ static void fiber_timeout(ACL_FIBER *fiber UNUSED, void *ctx)
 	FILE_EVENT *fe = fiber_file_get(tc->sockfd);
 
 	// we must check the fiber carefully here.
-	if (fe == NULL || tc->fiber != fe->fiber
-		|| tc->fiber->id != fe->fiber->id) {
+	if (fe == NULL || tc->fiber != fe->fiber_r
+		|| tc->fiber->fid != fe->fiber_r->fid) {
 
 		mem_free(ctx);
 		return;
@@ -390,8 +505,7 @@ static void fiber_timeout(ACL_FIBER *fiber UNUSED, void *ctx)
 
 	// we can kill the fiber only if the fiber is waiting
 	// for readable ore writable of IO process.
-	if (fe->fiber->status == FIBER_STATUS_WAIT_READ
-		|| fe->fiber->status == FIBER_STATUS_WAIT_WRITE) {
+	if (fe->fiber_r->wstatus & (FIBER_WAIT_READ | FIBER_WAIT_WRITE)) {
 
 		tc->fiber->errnum = FIBER_EAGAIN;
 		acl_fiber_signal(tc->fiber, SIGINT);
@@ -405,6 +519,7 @@ int setsockopt(int sockfd, int level, int optname,
 {
 	size_t val;
 	TIMEOUT_CTX *ctx;
+	const struct timeval *tm;
 
 	if (sys_setsockopt == NULL) {
 		hook_once();
@@ -436,6 +551,10 @@ int setsockopt(int sockfd, int level, int optname,
 		break;
 	case 8:
 		val = *((const long long*) optval);
+		break;
+	case 16:
+		tm = (const struct timeval*) optval;
+		val = tm->tv_sec + tm->tv_usec / 1000000;
 		break;
 	default:
 		msg_error("invalid optlen=%d", (int) optlen);

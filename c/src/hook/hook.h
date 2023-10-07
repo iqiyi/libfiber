@@ -7,13 +7,6 @@
 extern "C" {
 #endif
 
-//extern struct dns_resolv_conf *var_dns_conf;
-//extern struct dns_hosts *var_dns_hosts;
-//extern struct dns_hints *var_dns_hints;
-
-extern void fiber_dns_set_read_wait(int timeout);
-extern void fiber_dns_init(void);
-
 typedef socket_t (WINAPI *socket_fn)(int, int, int);
 typedef int (WINAPI *close_fn)(socket_t);
 typedef int (WINAPI *listen_fn)(socket_t, int);
@@ -42,8 +35,9 @@ typedef int (WSAAPI *WSARecv_fn)(socket_t, LPWSABUF, DWORD, LPDWORD, LPDWORD,
 typedef socket_t (WSAAPI *WSAAccept_fn)(SOCKET, struct sockaddr FAR *,
     LPINT, LPCONDITIONPROC, DWORD_PTR);
 
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(MINGW)
 
+typedef int (*fcntl_fn)(int, int, ...);
 typedef int (*setsockopt_fn)(socket_t, int, int, const void *, socklen_t);
 typedef unsigned (*sleep_fn)(unsigned int seconds);
 typedef ssize_t  (*read_fn)(socket_t, void *, size_t);
@@ -59,6 +53,12 @@ typedef ssize_t  (*sendto_fn)(socket_t, const void *, size_t, int,
 	const struct sockaddr *, socklen_t);
 typedef ssize_t  (*sendmsg_fn)(socket_t, const struct msghdr *, int);
 
+# ifdef HAS_MMSG
+typedef int (*recvmmsg_fn)(int, struct mmsghdr *, unsigned int,
+	int, const struct timespec *);
+typedef int (*sendmmsg_fn)(int, struct mmsghdr *, unsigned int, int);
+# endif
+
 # ifdef  __USE_LARGEFILE64
 typedef ssize_t  (*sendfile64_fn)(socket_t, int, off64_t*, size_t);
 # endif
@@ -72,13 +72,33 @@ typedef int (*epoll_wait_fn)(int, struct epoll_event *,int, int);
 typedef int (*epoll_ctl_fn)(int, int, int, struct epoll_event *);
 # endif
 
+# ifdef HAS_IO_URING
+typedef int (*openat_fn)(int, const char *, int, mode_t);
+typedef int (*unlink_fn)(const char *);
+
+#  ifdef HAS_STATX
+typedef int (*statx_fn)(int dirfd, const char *, int, unsigned int, struct statx *);
+#  endif
+
+#  ifdef HAS_RENAMEAT2
+typedef int (*renameat2_fn)(int, const char *, int, const char *, unsigned);
+#  endif
+
+typedef int (*mkdirat_fn)(int, const char *, mode_t);
+typedef ssize_t (*splice_fn)(int, loff_t *, int, loff_t *, size_t, unsigned);
+# endif
+
 # ifndef __APPLE__
 typedef int (*gethostbyname_r_fn)(const char *, struct hostent *, char *,
 	size_t, struct hostent **, int *);
 # endif
 
-#endif
+typedef size_t (*pread_fn)(int, void *, size_t, off_t);
+typedef ssize_t (*pwrite_fn)(int, const void *, size_t, off_t);
 
+#endif  // __linux__, __APPLE__, __FreeBSD__, MINGW
+
+// in hook.c
 FIBER_API void WINAPI set_socket_fn(socket_fn *fn);
 FIBER_API void WINAPI set_close_fn(close_fn *fn);
 FIBER_API void WINAPI set_listen_fn(listen_fn *fn);
@@ -123,10 +143,11 @@ extern gethostbyname_fn     *sys_gethostbyname;
 extern WSARecv_fn           *sys_WSARecv;
 extern WSAAccept_fn         *sys_WSAAccept;
 
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)  // SYS_UNIX
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)  || defined(MINGW) // SYS_UNIX
 
-extern sleep_fn             *sys_sleep;
+extern fcntl_fn             *sys_fcntl;
 extern setsockopt_fn        *sys_setsockopt;
+extern sleep_fn             *sys_sleep;
 
 extern read_fn              *sys_read;
 extern readv_fn             *sys_readv;
@@ -136,27 +157,54 @@ extern write_fn             *sys_write;
 extern writev_fn            *sys_writev;
 extern sendmsg_fn           *sys_sendmsg;
 
+# ifdef HAS_MMSG
+extern recvmmsg_fn          *sys_recvmmsg;
+extern sendmmsg_fn          *sys_sendmmsg;
+# endif
+
 # ifdef __USE_LARGEFILE64
 extern sendfile64_fn        *sys_sendfile64;
 # endif
 
 # ifdef	HAS_EPOLL
-extern epoll_create_fn		*sys_epoll_create;
+extern epoll_create_fn      *sys_epoll_create;
 extern epoll_wait_fn        *sys_epoll_wait;
 extern epoll_ctl_fn         *sys_epoll_ctl;
 # endif
+
+# ifdef HAS_IO_URING
+extern openat_fn            *sys_openat;
+extern unlink_fn            *sys_unlink;
+# ifdef HAS_STATX
+extern statx_fn             *sys_statx;
+# endif
+# ifdef HAS_RENAMEAT2
+extern renameat2_fn         *sys_renameat2;
+# endif
+extern mkdirat_fn           *sys_mkdirat;
+extern splice_fn            *sys_splice;
+# endif // HAS_IO_URING
 
 # ifndef __APPLE__
 extern gethostbyname_r_fn   *sys_gethostbyname_r;
 # endif
 
+extern pread_fn             *sys_pread;
+extern pwrite_fn            *sys_pwrite;
+
 #endif // SYS_UNIX
 
+// in hook.c
 void hook_once(void);
+
+#if defined(__linux__)
+// in epoll.c
+int epoll_try_register(int epfd);
+int epoll_close(int epfd);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

@@ -13,13 +13,26 @@ extern void makecontext(ucontext_t *ucp, void (*func)(), int argc, ...);
 #endif
 */
 
-typedef enum {
-	FIBER_STATUS_READY,
-	FIBER_STATUS_RUNNING,
-	FIBER_STATUS_WAIT_READ,
-	FIBER_STATUS_WAIT_WRITE,
-	FIBER_STATUS_EXITING,
-} fiber_status_t;
+enum {
+	FIBER_STATUS_NONE	= (0),
+	FIBER_STATUS_READY	= (1 << 0),
+	FIBER_STATUS_RUNNING	= (1 << 1),
+	FIBER_STATUS_SUSPEND	= (1 << 2),
+	FIBER_STATUS_EXITING	= (1 << 3),
+};
+
+enum {
+	FIBER_WAIT_NONE		= (0),
+	FIBER_WAIT_READ		= (1 << 1),
+	FIBER_WAIT_WRITE	= (1 << 2),
+	FIBER_WAIT_POLL		= (1 << 3),
+	FIBER_WAIT_EPOLL	= (1 << 4),
+	FIBER_WAIT_MUTEX	= (1 << 5),
+	FIBER_WAIT_COND		= (1 << 6),
+	FIBER_WAIT_LOCK		= (1 << 7),
+	FIBER_WAIT_SEM		= (1 << 8),
+	FIBER_WAIT_DELAY	= (1 << 9),
+};
 
 typedef struct {
 	void  *ctx;
@@ -33,48 +46,62 @@ typedef struct FIBER_BASE {
 
 	socket_t event_in;
 	socket_t event_out;
+	FILE_EVENT *in;
+	FILE_EVENT *out;
 	RING     event_waiter;
 } FIBER_BASE;
 
+struct SYNC_WAITER;
+
 struct ACL_FIBER {
-	FIBER_BASE     base;
-	fiber_status_t status;
+	FIBER_BASE    *base;
 	RING           me;
-	unsigned       id;
+	long           tid;
+	unsigned int   fid;
 	unsigned       slot;
 	long long      when;
 	int            errnum;
-	int            sys;
 	int            signum;
-	unsigned int   flag;
+	unsigned short status;
+	unsigned short wstatus;
+	unsigned int   oflag;	// The flags for creating fiber.
+	unsigned int   flag;	// The flags for the fiber's running status.
 
-	RING           holding;
-	ACL_FIBER_MUTEX *waiting;
-
-#define FIBER_F_SAVE_ERRNO	(unsigned) 1 << 0
-#define	FIBER_F_KILLED		(unsigned) 1 << 1
-#define	FIBER_F_CLOSED		(unsigned) 1 << 2
-#define	FIBER_F_SIGNALED	(unsigned) 1 << 3
+#define	FIBER_F_STARTED		(unsigned) (1 << 0)
+#define	FIBER_F_SAVE_ERRNO	(unsigned) (1 << 1)
+#define	FIBER_F_KILLED		(unsigned) (1 << 2)
+#define	FIBER_F_CLOSED		(unsigned) (1 << 3)
+#define	FIBER_F_SIGNALED	(unsigned) (1 << 4)
 #define	FIBER_F_CANCELED	(FIBER_F_KILLED | FIBER_F_CLOSED | FIBER_F_SIGNALED)
+#define	FIBER_F_TIMER		(unsigned) (1 << 5)
+
+#ifdef	DEBUG_LOCK
+	RING           holding;
+	ACL_FIBER_LOCK *waiting;
+#endif
+
+	struct SYNC_WAITER *sync;
 
 	FIBER_LOCAL  **locals;
 	int            nlocal;
-
-	void (*init_fn)(ACL_FIBER *, size_t);
-	void (*free_fn)(ACL_FIBER *);
-	void (*swap_fn)(ACL_FIBER *, ACL_FIBER *);
-	void (*start_fn)(ACL_FIBER *);
-
-	void (*fn)(ACL_FIBER *, void *);
-	void  *arg;
-	void (*timer_fn)(ACL_FIBER *, void *);
 };
 
 /* in fiber.c */
 extern __thread int var_hook_sys_api;
-FIBER_BASE *fbase_alloc(void);
+
+FIBER_BASE *fbase_alloc(unsigned flag);
 void fbase_free(FIBER_BASE *fbase);
 void fiber_free(ACL_FIBER *fiber);
+void fiber_start(ACL_FIBER *fiber, void (*fn)(ACL_FIBER *, void *), void *arg);
+ACL_FIBER *fiber_origin(void);
+
+#ifdef	SHARE_STACK
+char *fiber_share_stack_addr(void);
+char *fiber_share_stack_bottom(void);
+size_t fiber_share_stack_size(void);
+size_t fiber_share_stack_dlen(void);
+void fiber_share_stack_set_dlen(size_t dlen);
+#endif
 
 /* in fbase.c */
 void fbase_event_open(FIBER_BASE *fbase);
@@ -85,38 +112,40 @@ int fbase_event_wakeup(FIBER_BASE *fbase);
 /* in fiber_schedule.c */
 void fiber_save_errno(int errnum);
 void fiber_exit(int exit_code);
-void fiber_system(void);
-void fiber_count_inc(void);
-void fiber_count_dec(void);
 
 /* in fiber_io.c */
 extern int var_maxfd;
 
 void fiber_io_check(void);
 void fiber_io_clear(void);
-void fiber_wait_read(FILE_EVENT *fe);
-void fiber_wait_write(FILE_EVENT *fe);
-void fiber_io_dec(void);
-void fiber_io_inc(void);
+
+// fiber_wait_read and fiber_wait_write will check if the given fd holding
+// in fe is a valid socket, if fd is a valid socket, it will be added to the
+// event loop until it's ready for  reading or writing, and the current fiber
+// will be suspended; if the given fd in fe isn't a valid socket, the function
+// will return immediatly, users can check fe->type.
+// the return value is same as which is from event_add_read or event_add_write.
+int fiber_wait_read(FILE_EVENT *fe);
+int fiber_wait_write(FILE_EVENT *fe);
+
 EVENT *fiber_io_event(void);
+void fiber_timer_add(ACL_FIBER *fiber, unsigned milliseconds);
+int fiber_timer_del(ACL_FIBER *fiber);
 
 FILE_EVENT *fiber_file_open(socket_t fd);
+void fiber_file_set(FILE_EVENT *fe);
 FILE_EVENT *fiber_file_get(socket_t fd);
-int fiber_file_close(socket_t fd, int *closed);
+void fiber_file_free(FILE_EVENT *fe);
+int fiber_file_close(FILE_EVENT *fe);
+FILE_EVENT *fiber_file_cache_get(socket_t fd);
+void fiber_file_cache_put(FILE_EVENT *fe);
 
-/* in hook/epoll.c */
-int  epoll_event_close(int epfd);
-
-/* in fiber/fiber_unix.c */
-#ifdef SYS_UNIX
-ACL_FIBER *fiber_unix_origin(void);
-ACL_FIBER *fiber_unix_alloc(void (*start_fn)(ACL_FIBER *), size_t size);
-#endif
-
-/* in fiber/fiber_win.c */
-#ifdef SYS_WIN
-ACL_FIBER *fiber_win_origin(void);
-ACL_FIBER *fiber_win_alloc(void (*start_fn)(ACL_FIBER *), size_t size);
-#endif
+/* in fiber/fiber_unix.c, fiber/fiber_win.c */
+ACL_FIBER *fiber_real_origin(void);
+ACL_FIBER *fiber_real_alloc(const ACL_FIBER_ATTR *attr);
+void fiber_real_init(ACL_FIBER *fiber, size_t size,
+	void (*fn)(ACL_FIBER *, void *), void *arg);
+void fiber_real_swap(ACL_FIBER *from, ACL_FIBER *to);
+void fiber_real_free(ACL_FIBER *fiber);
 
 #endif
