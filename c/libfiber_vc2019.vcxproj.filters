@@ -28,6 +28,9 @@
     <Filter Include="源文件\fiber">
       <UniqueIdentifier>{baaeb113-34bc-4df8-9649-b024ec495a95}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\sync">
+      <UniqueIdentifier>{3bcd6a5d-f48c-4f0b-986b-6a05fa499c0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -67,6 +70,9 @@
       <Filter>源文件\event</Filter>
     </ClInclude>
     <ClInclude Include="src\hook\hook.h">
+      <Filter>源文件\hook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hook\io.h">
       <Filter>源文件\hook</Filter>
     </ClInclude>
     <ClInclude Include="src\dns\resolver.h">
@@ -156,8 +162,38 @@
     <ClInclude Include="src\event\event_iocp.h">
       <Filter>源文件\event</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="src\common\avl.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\avl_impl.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\timer_cache.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fiber\fiber_mutex.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\mbox.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\queue.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\ypipe.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\yqueue.h">
+      <Filter>源文件\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync\sync_timer.h">
+      <Filter>源文件\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync\sync_type.h">
+      <Filter>源文件\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync\sync_waiter.h">
+      <Filter>源文件\sync</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -224,6 +260,12 @@
     <ClCompile Include="src\hook\io.c">
       <Filter>源文件\hook</Filter>
     </ClCompile>
+    <ClCompile Include="src\hook\fiber_read.c">
+      <Filter>源文件\hook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hook\fiber_write.c">
+      <Filter>源文件\hook</Filter>
+    </ClCompile>
     <ClCompile Include="src\hook\poll.c">
       <Filter>源文件\hook</Filter>
     </ClCompile>
@@ -245,9 +287,6 @@
     <ClCompile Include="src\dns\valid_hostname.c">
       <Filter>源文件\dns</Filter>
     </ClCompile>
-    <ClCompile Include="src\channel.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\event.c">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -257,19 +296,7 @@
     <ClCompile Include="src\fiber.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\fiber_cond.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fiber_event.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\fiber_io.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fiber_lock.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fiber_sem.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\file_event.c">
@@ -314,10 +341,50 @@
     <ClCompile Include="src\hook\hook.c">
       <Filter>源文件\hook</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="libfiber.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
+    <ClCompile Include="src\common\avl.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\timer_cache.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\mbox.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\queue.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\ypipe.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\yqueue.c">
+      <Filter>源文件\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\channel.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\fiber_cond.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\fiber_event.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\fiber_lock.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\fiber_mutex.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\fiber_sem.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\sync_timer.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\sync_type.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync\sync_waiter.c">
+      <Filter>源文件\sync</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

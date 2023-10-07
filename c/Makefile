@@ -7,6 +7,11 @@ ARFL    = rv
 #ARFL    = cru
 RANLIB  = ${ENV_RANLIB}
 
+#JMP_CTX = USE_CONTEXT
+JMP_CTX = USE_JMP_DEF
+#JMP_CTX = USE_BOOST_JMP
+#JMP_CTX = USE_JMP_SYS
+
 CFLAGS = -c -g -W \
 -std=gnu99 \
 -fPIC \
@@ -19,14 +24,17 @@ CFLAGS = -c -g -W \
 -Wno-long-long \
 -Wmissing-prototypes \
 -Wcast-qual \
--DUSE_JMP_DEF \
-#-DUSE_BOOST_JMP \
+-DUSE_FAST_RING \
+-O3 \
+-DUSE_CLOCK_GETTIME \
 #-DUSE_VALGRIND \
+#-DUSE_INLINE_MEMCPY\
+#-DUSE_FAST_TIME \
 #-Waggregate-return \
+#-DDEBUG_MEM \
 #-I/usr/local/include
 #-DUSE_PRINTF_MACRO
 #-Wno-clobbered
-#-O3
 
 #-pedantic
 # -Wcast-align
@@ -54,6 +62,10 @@ ifeq ($(RANLIB),)
 	RANLIB = ranlib
 endif
 
+ifeq ($(findstring Alpine, $(shell uname -a)), Alpine)
+	CFLAGS += -DALPINE
+endif
+
 ifeq ($(findstring gcc, $(CC)), gcc)
 	CFLAGS += -Wstrict-prototypes
 	GCC_VERSION=$(shell gcc --version | grep ^gcc | sed 's/^.* //g')
@@ -63,6 +75,7 @@ ifeq ($(findstring gcc, $(CC)), gcc)
 	GCC_VER:=$(shell [ $(GCC_MAJOR) -gt 4 -o \( $(GCC_MAJOR) -eq 4 -a $(GCC_MINOR) -gt 4 \) ] && echo true)
 #	ifeq ($(GCC_VER), true)
 #		CFLAGS += -Wno-implicit-fallthrough
+#		CFLAGS += -Wno-absolute-value
 #	endif
 endif
 
@@ -77,6 +90,18 @@ ifeq ($(findstring clang++, $(CC)), clang++)
 		  -Wno-invalid-offsetof
 endif
 
+ifeq ($(findstring arm64, $(UNIXNAME)), arm64)
+	JMP_CTX = USE_BOOST_JMP
+endif
+
+ifeq ($(findstring arm32, $(UNIXNAME)), arm32)
+	JMP_CTX = USE_BOOST_JMP
+endif
+
+ifeq ($(findstring arm, $(UNIXNAME)), arm)
+	JMP_CTX = USE_BOOST_JMP
+endif
+
 # For FreeBSD
 ifeq ($(findstring FreeBSD, $(UNIXNAME)), FreeBSD)
 	UNIXTYPE = FREEBSD
@@ -84,6 +109,7 @@ endif
 
 # For Darwin
 ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)
+#	CC += -arch x86_64 -arch arm64
 	CFLAGS += -DMACOSX -Wno-invalid-source-encoding \
 		  -Wno-invalid-offsetof \
 		  -Wno-deprecated-declarations
@@ -92,6 +118,43 @@ endif
 # For Linux
 ifeq ($(findstring Linux, $(UNIXNAME)), Linux)
 	UNIXTYPE = LINUX
+	CFLAGS += -DSHARE_STACK
+
+	ifeq ($(HOOK_MMSG_UBUNTU), yes)
+		CFLAGS += -DHOOK_MMSG_UBUNTU
+	endif
+
+	ifeq ($(HOOK_MMSG_CENTOS), yes)
+		CFLAGS += -DHOOK_MMSG_CENTOS
+	endif
+
+# If HAS_IO_URING=yes or has_io_uring=yes has been set in environment,
+# or you run "$make HAS_IO_URING=yes", the io_uring engine will be used.
+# will use io_uring.
+	ifeq ($(HAS_IO_URING), yes)
+		CFLAGS += -DHAS_IO_URING
+	endif
+	ifeq ($(has_io_uring), yes)
+		CFLAGS += -DHAS_IO_URING
+	endif
+	ifeq ($(HAS_STATX), yes)
+		CFLAGS += -DHAS_STATX
+	endif
+	ifeq ($(HAS_RENAMEAT2), yes)
+		CFLAGS += -DHAS_RENAMEAT2
+	endif
+
+	ifeq ($(DEBUG_STACK), yes)
+		CFLAGS += -DDEBUG_STACK
+	endif
+	ifeq ($(debug_stack), yes)
+		CFLAGS += -DDEBUG_STACK
+	endif
+endif
+
+# For CYGWIN
+ifeq ($(findstring CYGWIN, $(UNIXNAME)), CYGWIN)
+	CFLAGS += -DLINUX2 -DMINGW
 endif
 
 # For MINGW
@@ -122,13 +185,17 @@ ifeq ($(findstring HP-UX, $(UNIXNAME)), HP-UX)
 	UNIXTYPE = HPUX
 endif
 
+# set which jump lib should be used
+CFLAGS += -D$(JMP_CTX)
+
 #Find system type.
 ifneq ($(SYSPATH),)
 	CHECKSYSRES = @echo "System is $(shell uname -sm)"
 endif
+
 ###########################################################
 
-LIB_PATH_DST = .
+LIB_PATH_DST = ../lib
 OBJ_PATH_DST = ./debug
 
 SRC_PATH_SRC = ./src
@@ -142,7 +209,8 @@ SRC = $(wildcard $(SRC_PATH_SRC)/*.c) \
       $(wildcard $(SRC_PATH_SRC)/dns/*.c) \
       $(wildcard $(SRC_PATH_SRC)/fiber/*.c) \
       $(wildcard $(SRC_PATH_SRC)/event/*.c) \
-      $(wildcard $(SRC_PATH_SRC)/hook/*.c)
+      $(wildcard $(SRC_PATH_SRC)/hook/*.c) \
+      $(wildcard $(SRC_PATH_SRC)/sync/*.c)
 
 #ASM_OBJ=$(OBJ_PATH_DST)/setjmp.o $(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
 ASM_OBJ=$(OBJ_PATH_DST)/make_gas.o $(OBJ_PATH_DST)/jump_gas.o
@@ -152,6 +220,8 @@ OBJ = $(patsubst %.c, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC))) $(ASM_OBJ)
 
 STATIC_LIBNAME = libfiber.a
 SHARED_LIBNAME = libfiber.so
+STATIC_OLD_LIBNAME = lib_fiber.a
+SHARED_OLD_LIBNAME = lib_fiber.so
 
 ###########################################################
 
@@ -168,6 +238,8 @@ static: $(OBJ)
 	@echo 'creating $(LIB_PATH_DST)/$(STATIC_LIBNAME)'
 	$(AR) $(ARFL) $(LIB_PATH_DST)/$(STATIC_LIBNAME) $(OBJ)
 	$(RANLIB) $(LIB_PATH_DST)/$(STATIC_LIBNAME)
+	@(cd $(LIB_PATH_DST); rm -f ${STATIC_OLD_LIBNAME}; \
+		ln -s $(STATIC_LIBNAME) ${STATIC_OLD_LIBNAME})
 	@echo 'build $(LIB_PATH_DST)/$(STATIC_LIBNAME) ok!'
 
 shared_ldflags = -lrt -lpthread
@@ -216,8 +288,12 @@ $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/event/%.c
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/hook/%.c
 	$(COMPILE) $< -o $@
+$(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/sync/%.c
+	$(COMPILE) $< -o $@
 
 clean cl:
 	rm -f $(LIB_PATH_DST)/${STATIC_LIBNAME}
 	rm -f $(LIB_PATH_DST)/${SHARED_LIBNAME}
+	rm -f $(LIB_PATH_DST)/${STATIC_OLD_LIBNAME}
+	rm -f $(LIB_PATH_DST)/${SHARED_OLD_LIBNAME}
 	rm -f $(OBJ)
