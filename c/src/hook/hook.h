@@ -3,6 +3,13 @@
 
 #include "fiber/fiber_define.h"
 
+#ifdef COSMOCC
+# include <libc/sysv/consts/epoll.h>
+# include <libc/sock/epoll.h>
+#elif defined(__linux__) || defined(LINUX2)
+# include <sys/epoll.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,10 +42,11 @@ typedef int (WSAAPI *WSARecv_fn)(socket_t, LPWSABUF, DWORD, LPDWORD, LPDWORD,
 typedef socket_t (WSAAPI *WSAAccept_fn)(SOCKET, struct sockaddr FAR *,
     LPINT, LPCONDITIONPROC, DWORD_PTR);
 
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(MINGW)
+#elif defined(__linux__) || defined(LINUX2) || defined(__APPLE__) || defined(__FreeBSD__) || defined(MINGW)
 
 typedef int (*fcntl_fn)(int, int, ...);
 typedef int (*setsockopt_fn)(socket_t, int, int, const void *, socklen_t);
+typedef int (*getsockopt_fn)(socket_t, int, int, void *, socklen_t*);
 typedef unsigned (*sleep_fn)(unsigned int seconds);
 typedef ssize_t  (*read_fn)(socket_t, void *, size_t);
 typedef ssize_t  (*readv_fn)(socket_t, const struct iovec *, int);
@@ -143,10 +151,11 @@ extern gethostbyname_fn     *sys_gethostbyname;
 extern WSARecv_fn           *sys_WSARecv;
 extern WSAAccept_fn         *sys_WSAAccept;
 
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)  || defined(MINGW) // SYS_UNIX
+#elif defined(__linux__) || defined(LINUX2) || defined(__APPLE__) || defined(__FreeBSD__)  || defined(MINGW) // SYS_UNIX
 
 extern fcntl_fn             *sys_fcntl;
 extern setsockopt_fn        *sys_setsockopt;
+extern getsockopt_fn        *sys_getsockopt;
 extern sleep_fn             *sys_sleep;
 
 extern read_fn              *sys_read;
@@ -197,7 +206,7 @@ extern pwrite_fn            *sys_pwrite;
 // in hook.c
 void hook_once(void);
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(LINUX2)
 // in epoll.c
 int epoll_try_register(int epfd);
 int epoll_close(int epfd);

@@ -442,13 +442,7 @@ void acl_fiber_clear(ACL_FIBER *fiber)
 	}
 }
 
-void acl_fiber_kill(ACL_FIBER *fiber)
-{
-	fiber->errnum = ECANCELED;
-	acl_fiber_signal(fiber, SIGTERM);
-}
-
-void acl_fiber_signal(ACL_FIBER *fiber, int signum)
+static void fiber_signal(ACL_FIBER *fiber, int signum, int synchronized)
 {
 	ACL_FIBER *curr = __thread_fiber->running;
 
@@ -478,15 +472,44 @@ void acl_fiber_signal(ACL_FIBER *fiber, int signum)
 
 	// Just only wakeup the suspended fiber.
 	if (fiber->status == FIBER_STATUS_SUSPEND) {
+#if 0
+		// The fiber will be detached at first in acl_fiber_ready.
 		ring_detach(&fiber->me); // This is safety!
-		
-		acl_fiber_ready(fiber);
+#endif
+		FIBER_READY(fiber);
+
+		// Yield myself if in synchronous mode.
+		if (synchronized) {
+			acl_fiber_yield();
+		}
 	}
+}
+
+void acl_fiber_signal(ACL_FIBER *fiber, int signum)
+{
+	fiber_signal(fiber, signum, 0);
+}
+
+void acl_fiber_signal_wait(ACL_FIBER *fiber, int signum)
+{
+	fiber_signal(fiber, signum, 1);
+}
+
+void acl_fiber_kill(ACL_FIBER *fiber)
+{
+	fiber->errnum = ECANCELED;
+	fiber_signal(fiber, SIGTERM, 0);
+}
+
+void acl_fiber_kill_wait(ACL_FIBER *fiber)
+{
+	fiber->errnum = ECANCELED;
+	fiber_signal(fiber, SIGTERM, 1);
 }
 
 int acl_fiber_signum(ACL_FIBER *fiber)
 {
-	if (fiber) {
+	if (fiber == NULL) {
 		fiber = acl_fiber_running();
 	}
 	return fiber ? fiber->signum : 0;
@@ -505,10 +528,14 @@ void fiber_exit(int exit_code)
 void acl_fiber_ready(ACL_FIBER *fiber)
 {
 	if (fiber->status != FIBER_STATUS_EXITING) {
+#if 0
 		if (fiber->status == FIBER_STATUS_READY) {
 			ring_detach(&fiber->me);
 		}
-
+#else
+		// Detach the other binding such as timer binding.
+		ring_detach(&fiber->me);
+#endif
 		fiber->status = FIBER_STATUS_READY;
 		assert(__thread_fiber);
 		ring_prepend(&__thread_fiber->ready, &fiber->me);
@@ -526,7 +553,7 @@ int acl_fiber_yield(void)
 	// Reset the current fiber's status in order to be added to
 	// ready queue again.
 	__thread_fiber->running->status = FIBER_STATUS_NONE;
-	acl_fiber_ready(__thread_fiber->running);
+	FIBER_READY(__thread_fiber->running);
 	acl_fiber_switch();
 
 	return 1;
@@ -636,13 +663,25 @@ static ACL_FIBER *fiber_alloc(void (*fn)(ACL_FIBER *, void *),
 		id = (unsigned long) atomic_int64_add_fetch(__idgen_atomic, 1);
 	}
 
-	fiber->fid     = id;
+	fiber->fid     = (unsigned) id;
 	fiber->errnum  = 0;
 	fiber->signum  = 0;
 	fiber->oflag   = attr ? attr->oflag : 0;
 	fiber->flag    = 0;
 	fiber->status  = FIBER_STATUS_NONE;
 	fiber->wstatus = FIBER_WAIT_NONE;
+
+#ifdef	DEBUG_READY
+	fiber->ctag[0]  = 0;
+	fiber->cline    = 0;
+	fiber->ltag[0]  = 0;
+	fiber->lline    = 0;
+	fiber->curr     = 0;
+	fiber->last     = 0;
+	fiber->lstatus  = 0;
+	fiber->lwstatus = 0;
+	fiber->lflag    = 0;
+#endif
 
 #ifdef	DEBUG_LOCK
 	fiber->waiting = NULL;
@@ -703,7 +742,7 @@ ACL_FIBER *acl_fiber_create2(const ACL_FIBER_ATTR *attr,
 	fiber->slot = __thread_fiber->slot;
 	__thread_fiber->fibers[__thread_fiber->slot++] = fiber;
 
-	acl_fiber_ready(fiber);
+	FIBER_READY(fiber);
 	if (__schedule_auto && !acl_fiber_scheduled()) {
 		acl_fiber_schedule();
 	}
@@ -731,7 +770,15 @@ int acl_fiber_status(const ACL_FIBER *fiber)
 	if (fiber == NULL) {
 		fiber = acl_fiber_running();
 	}
-	return fiber ? fiber->status : 0;
+	return fiber ? fiber->status : FIBER_STATUS_NONE;
+}
+
+int acl_fiber_waiting_status(const ACL_FIBER *fiber)
+{
+	if (fiber == NULL) {
+		fiber = acl_fiber_running();
+	}
+	return fiber ? fiber->wstatus : FIBER_WAIT_NONE; 
 }
 
 void acl_fiber_set_shared_stack_size(size_t size)
@@ -844,18 +891,12 @@ int acl_fiber_set_specific(int *key, void *ctx, void (*free_fn)(void *))
 	ACL_FIBER *curr;
 
 	if (key == NULL) {
-		msg_error("%s(%d), %s: key NULL",
-			__FILE__, __LINE__, __FUNCTION__);
 		return -1;
 	}
 
 	if (__thread_fiber == NULL) {
-		msg_error("%s(%d), %s: __thread_fiber: NULL",
-			__FILE__, __LINE__, __FUNCTION__);
 		return -1;
 	} else if (__thread_fiber->running == NULL) {
-		msg_error("%s(%d), %s: running: NULL",
-			__FILE__, __LINE__, __FUNCTION__);
 		return -1;
 	} else {
 		curr = __thread_fiber->running;
@@ -864,9 +905,6 @@ int acl_fiber_set_specific(int *key, void *ctx, void (*free_fn)(void *))
 	if (*key <= 0) {
 		*key = ++__thread_fiber->nlocal;
 	} else if (*key > __thread_fiber->nlocal) {
-		msg_error("%s(%d), %s: invalid key: %d > nlocal: %d",
-			__FILE__, __LINE__, __FUNCTION__,
-			*key, __thread_fiber->nlocal);
 		return -1;
 	}
 
@@ -898,12 +936,8 @@ void *acl_fiber_get_specific(int key)
 	}
 
 	if (__thread_fiber == NULL) {
-		msg_error("%s(%d), %s: __thread_fiber NULL",
-			__FILE__, __LINE__, __FUNCTION__);
 		return NULL;
 	} else if (__thread_fiber->running == NULL) {
-		msg_error("%s(%d), %s: running fiber NULL",
-			__FILE__, __LINE__, __FUNCTION__);
 		return NULL;
 	} else {
 		curr = __thread_fiber->running;

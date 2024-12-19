@@ -37,7 +37,7 @@
 static void file_read_callback(EVENT *ev UNUSED, FILE_EVENT *fe)
 {
 	if (fe->fiber_r->status != FIBER_STATUS_READY) {
-		acl_fiber_ready(fe->fiber_r);
+		FIBER_READY(fe->fiber_r);
 	}
 }
 
@@ -504,7 +504,7 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
 
 	fe->fd = fd;
 	fe->out.write_ctx.off = offset;
-	ret = fiber_iocp_write(fe, buf, (int) count);
+	ret = fiber_uring_write(fe, buf, (int) count);
 	file_event_unrefer(fe);
 
 	return ret;

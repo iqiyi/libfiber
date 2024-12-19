@@ -14,7 +14,7 @@
 #endif
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+# define _GNU_SOURCE
 #endif
 
 #include <stdio.h>
@@ -56,15 +56,24 @@
 #define STRDUP strdup
 #define GETPID getpid
 
+// xxx: Don't use fstat to check fd's type, because in CentOS7.2, this maybe
+// make the OpenSSL blocked by mutex, and the reason hasn't been got yet.
+//#define USE_FSTAT_CHECKFD
+
 #elif defined(SYS_WIN)
 
 #define STRDUP _strdup
 #define GETPID _getpid
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(LINUX2)
 # include <sys/sendfile.h>
-# include <sys/epoll.h>
+# ifdef COSMOCC
+#  include <libc/sysv/consts/epoll.h>
+#  include <libc/sock/epoll.h>
+# else
+#  include <sys/epoll.h>
+# endif
 
 /*
 # if !defined(__aarch64__) && !defined(__arm__)
