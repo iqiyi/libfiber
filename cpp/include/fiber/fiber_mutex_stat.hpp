@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 struct ACL_FIBER_MUTEX;
 
