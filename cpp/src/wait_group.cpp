@@ -55,13 +55,7 @@ void wait_group::add(int n)
 	atomic_int64_set((ATOMIC*) state_, 0);
 
 	for (size_t i = 0; i < w; i++) {
-#ifdef	_DEBUG
-		unsigned long* tid = new unsigned long;
-		*tid = acl::thread::self();
-		box_->push(tid);
-#else
 		box_->push(NULL);
-#endif
 	}
 }
 
@@ -84,14 +78,8 @@ void wait_group::wait()
 		//等待者数量加一，失败的话重新获取state
 		if (atomic_int64_cas((ATOMIC*) state_, state, state + 1) == state) {
 			bool found;
-#ifdef	_DEBUG
-			unsigned long* tid = box_->pop(-1, &found);
-			assert(found);
-			delete tid;
-#else
 			(void) box_->pop(-1, &found);
 			assert(found);
-#endif
 			if(atomic_int64_fetch_add((ATOMIC*) state_, 0) == 0) {
 				return;
 			}

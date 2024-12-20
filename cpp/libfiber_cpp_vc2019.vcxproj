@@ -287,10 +287,14 @@
     <ClInclude Include="include\fiber\fiber_cpp_define.hpp" />
     <ClInclude Include="include\fiber\fiber_event.hpp" />
     <ClInclude Include="include\fiber\fiber_lock.hpp" />
+    <ClInclude Include="include\fiber\fiber_mutex.hpp" />
+    <ClInclude Include="include\fiber\fiber_mutex_stat.hpp" />
     <ClInclude Include="include\fiber\fiber_sem.hpp" />
     <ClInclude Include="include\fiber\fiber_tbox.hpp" />
+    <ClInclude Include="include\fiber\fiber_tbox2.hpp" />
     <ClInclude Include="include\fiber\go_fiber.hpp" />
     <ClInclude Include="include\fiber\libfiber.hpp" />
+    <ClInclude Include="include\fiber\wait_group.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\detours\detours.h" />
     <ClInclude Include="src\detours\detver.h" />
@@ -308,6 +312,8 @@
     <ClCompile Include="src\fiber_cond.cpp" />
     <ClCompile Include="src\fiber_event.cpp" />
     <ClCompile Include="src\fiber_lock.cpp" />
+    <ClCompile Include="src\fiber_mutex.cpp" />
+    <ClCompile Include="src\fiber_mutex_stat.cpp" />
     <ClCompile Include="src\fiber_sem.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -319,6 +325,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\wait_group.cpp" />
     <ClCompile Include="src\winapi_hook.cpp" />
   </ItemGroup>
   <ItemGroup>
