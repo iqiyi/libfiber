@@ -1,4 +1,4 @@
-#include "stdafx.hpp"
+ï»¿#include "stdafx.hpp"
 #include <assert.h>
 #include "../../c/src/common/atomic.h"
 #include "fiber/fiber_tbox.hpp"
@@ -27,13 +27,13 @@ void wait_group::add(int n)
 	long long state = atomic_int64_add_fetch((ATOMIC*) state_,
 			(long long) n << 32);
 
-	//¸ß32Î»ÎªÈÎÎñÊıÁ¿
+	//é«˜32ä½ä¸ºä»»åŠ¡æ•°é‡
 	int c = (int)(state >> 32);
 
-	//µÍ32Î»ÎªµÈ´ıÕßÊıÁ¿
+	//ä½32ä½ä¸ºç­‰å¾…è€…æ•°é‡
 	unsigned w =  (unsigned) state;
 
-	//count²»ÄÜĞ¡ÓÚ0
+	//countä¸èƒ½å°äº0
 	if (c < 0){
 		msg_fatal("Negative wait_group counter");
 	}
@@ -46,12 +46,12 @@ void wait_group::add(int n)
 		return;
 	}
 
-	//¼ì²éstateÊÇ·ñ±»ĞŞ¸Ä
+	//æ£€æŸ¥stateæ˜¯å¦è¢«ä¿®æ”¹
 	if (atomic_int64_fetch_add((ATOMIC*) state_, 0) != state) {
 		msg_fatal("Add called concurrently with wait");
 	}
 
-	//ÕâÀïcountÎª0ÁË£¬Çå¿Õstate²¢»½ĞÑËùÓĞµÈ´ıÕß
+	//è¿™é‡Œcountä¸º0äº†ï¼Œæ¸…ç©ºstateå¹¶å”¤é†’æ‰€æœ‰ç­‰å¾…è€…
 	atomic_int64_set((ATOMIC*) state_, 0);
 
 	for (size_t i = 0; i < w; i++) {
@@ -70,12 +70,12 @@ void wait_group::wait()
 		long long state = atomic_int64_fetch_add((ATOMIC*) state_, 0);
 		int c = (int) (state >> 32);
 
-		//Ã»ÓĞÈÎÎñÖ±½Ó·µ»Ø
+		//æ²¡æœ‰ä»»åŠ¡ç›´æ¥è¿”å›
 		if (c == 0) {
 			return;
 		}
 
-		//µÈ´ıÕßÊıÁ¿¼ÓÒ»£¬Ê§°ÜµÄ»°ÖØĞÂ»ñÈ¡state
+		//ç­‰å¾…è€…æ•°é‡åŠ ä¸€ï¼Œå¤±è´¥çš„è¯é‡æ–°è·å–state
 		if (atomic_int64_cas((ATOMIC*) state_, state, state + 1) == state) {
 			bool found;
 			(void) box_->pop(-1, &found);
