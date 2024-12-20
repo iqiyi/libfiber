@@ -1,4 +1,4 @@
-#include "stdafx.hpp"
+﻿#include "stdafx.hpp"
 #include <assert.h>
 #include "../../c/src/common/atomic.h"
 #include "fiber/fiber_tbox.hpp"
