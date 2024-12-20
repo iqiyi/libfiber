@@ -62,10 +62,45 @@ static size_t      __stack_size  = 128000;
 static const char *__listen_ip   = "127.0.0.1";
 static int         __listen_port = 9001;
 
+static int set_timeout(SOCKET fd, int opt, int timeo)
+{
+# if defined(_WIN32) || defined(_WIN64)
+	timeout *= 1000; // From seconds to millisecond.
+	if (setsockopt(fd, SOL_SOCKET, opt, (const char*) &timeo, sizeof(timeo)) < 0) {
+		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+			strerror(errno), timeo, opt, (int) fd);
+		return -1;
+	}
+# else   // Must be Linux or __APPLE__.
+	struct timeval tm;
+	tm.tv_sec  = timeo;
+	tm.tv_usec = 0;
+
+	if (setsockopt(fd, SOL_SOCKET, opt, &tm, sizeof(tm)) < 0) {
+		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+			strerror(errno), timeo, opt, (int) fd);
+		return -1;
+	}
+# endif
+	return 0;
+}
+
+static int set_rw_timeout(SOCKET fd, int timeo)
+{
+	if (set_timeout(fd, SO_RCVTIMEO, timeo) == -1 
+		  || set_timeout(fd, SO_SNDTIMEO, timeo) == -1) {
+		return -1;
+	}
+	return 0;
+}
+
 static void fiber_client(ACL_FIBER *fb, void *ctx)
 {
 	SOCKET *pfd = (SOCKET *) ctx;
 	char buf[8192];
+
+	// Set the socket's read/write timeout.
+	set_rw_timeout(*pfd, 10);
 
 	while (1) {
 #ifdef _WIN32
