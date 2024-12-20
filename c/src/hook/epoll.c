@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#ifdef	HAS_EPOLL
+#if defined(HAS_EPOLL) && !defined(DISABLE_HOOK)
 
 #include "common.h"
 #include "fiber/libfiber.h"
@@ -99,7 +99,7 @@ static EPOLL_EVENT *epoll_event_alloc(void)
 		return ee;
 	}
 
-	ee = mem_calloc(1, sizeof(EPOLL_EVENT));
+	ee = (EPOLL_EVENT*) mem_calloc(1, sizeof(EPOLL_EVENT));
 	acl_fiber_set_specific(&__local_key, ee, fiber_on_exit);
 
 	ring_init(&ee->me);
@@ -431,7 +431,6 @@ static void read_callback(EVENT *ev, FILE_EVENT *fe)
 {
 	EPOLL_CTX   *epx = fe->epx;
 	EPOLL_EVENT *ee;
-	EPOLL       *ep;
 
 	assert(epx);
 	assert(epx->fd == fe->fd);
@@ -440,8 +439,7 @@ static void read_callback(EVENT *ev, FILE_EVENT *fe)
 	ee = epx->ee;
 	assert(ee);
 
-	ep = ee->epoll;
-	assert(ep);
+	assert(ee->epoll);
 
 	// If the ready count exceeds the maxevents been set which limits the
 	// the buffer space to hold the the ready fds, we just return to let
@@ -451,7 +449,7 @@ static void read_callback(EVENT *ev, FILE_EVENT *fe)
 		return;
 	}
 
-	assert(ep->fds[epx->fd] == epx);
+	assert(ee->epoll->fds[epx->fd] == epx);
 
 	// Save the fd IO event's result to the result receiver been set in
 	// epoll_wait as below.
@@ -461,7 +459,7 @@ static void read_callback(EVENT *ev, FILE_EVENT *fe)
 	memcpy(&ee->events[ee->nready].data, &epx->data, sizeof(epx->data));
 
 	if (ee->nready == 0) {
-		timer_cache_remove(ev->epoll_list, ee->expire, &ee->me);
+		timer_cache_remove(ev->epoll_timer, ee->expire, &ee->me);
 		ring_prepend(&ev->epoll_ready, &ee->me);
 	}
 
@@ -476,7 +474,6 @@ static void write_callback(EVENT *ev fiber_unused, FILE_EVENT *fe)
 {
 	EPOLL_CTX   *epx = fe->epx;
 	EPOLL_EVENT *ee;
-	EPOLL       *ep;
 
 	assert(epx);
 	assert(epx->fd == fe->fd);
@@ -485,20 +482,19 @@ static void write_callback(EVENT *ev fiber_unused, FILE_EVENT *fe)
 	ee = epx->ee;
 	assert(ee);
 
-	ep = ee->epoll;
-	assert(ep);
+	assert(ee->epoll);
 
 	if (ee->nready >= ee->maxevents) {
 		return;
 	}
 
-	assert(ep->fds[epx->fd] == epx);
+	assert(ee->epoll->fds[epx->fd] == epx);
 
 	ee->events[ee->nready].events |= EPOLLOUT;
 	memcpy(&ee->events[ee->nready].data, &epx->data, sizeof(epx->data));
 
 	if (ee->nready == 0) {
-		timer_cache_remove(ev->epoll_list, ee->expire, &ee->me);
+		timer_cache_remove(ev->epoll_timer, ee->expire, &ee->me);
 		ring_prepend(&ev->epoll_ready, &ee->me);
 	}
 
@@ -556,13 +552,13 @@ static void epoll_ctl_del(EVENT *ev, EPOLL_EVENT *ee, int fd)
 
 	if (epx->mask & EVENT_READ) {
 		assert(epx->fe);
-		event_del_read(ev, epx->fe);
+		event_del_read(ev, epx->fe, 0);
 		CLR_READWAIT(epx->fe);
 	}
 
 	if (epx->mask & EVENT_WRITE) {
 		assert(epx->fe);
-		event_del_write(ev, epx->fe);
+		event_del_write(ev, epx->fe, 0);
 		CLR_WRITEWAIT(epx->fe);
 	}
 
@@ -623,7 +619,7 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 static void epoll_callback(EVENT *ev fiber_unused, EPOLL_EVENT *ee)
 {
 	if (ee->fiber->status != FIBER_STATUS_READY) {
-		acl_fiber_ready(ee->fiber);
+		FIBER_READY(ee->fiber);
 	}
 }
 
@@ -685,7 +681,7 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 	event_epoll_set(ev, ee, timeout);
 
 	while (1) {
-		timer_cache_add(ev->epoll_list, ee->expire, &ee->me);
+		timer_cache_add(ev->epoll_timer, ee->expire, &ee->me);
 
 		ee->fiber->wstatus |= FIBER_WAIT_EPOLL;
 
@@ -696,7 +692,7 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 		ee->fiber->wstatus &= ~FIBER_WAIT_EPOLL;
 
 		if (ee->nready == 0) {
-			timer_cache_remove(ev->epoll_list, ee->expire, &ee->me);
+			timer_cache_remove(ev->epoll_timer, ee->expire, &ee->me);
 		}
 
 		ev->timeout = old_timeout;
@@ -707,13 +703,12 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 				ee->nready = -1;
 			}
 
-			msg_info("%s(%d), %s: fiber-%u was killed",
-				__FILE__, __LINE__, __FUNCTION__,
-				acl_fiber_id(ee->fiber));
+			//msg_info("%s(%d), %s: fiber-%u was killed",
+			//	__FILE__, __LINE__, __FUNCTION__, acl_fiber_id(ee->fiber));
 			break;
 		}
 
-		if (timer_cache_size(ev->epoll_list) == 0) {
+		if (timer_cache_size(ev->epoll_timer) == 0) {
 			ev->timeout = -1;
 		}
 
@@ -729,6 +724,35 @@ int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 	}
 
 	return ee->nready;
+}
+
+#define TO_APPL	ring_to_appl
+
+void wakeup_epoll_waiters(EVENT *ev)
+{
+	RING_ITER iter;
+	RING *head;
+	EPOLL_EVENT *ee;
+	long long now = event_get_stamp(ev);
+	TIMER_CACHE_NODE *node = TIMER_FIRST(ev->epoll_timer), *next;
+
+	while (node && node->expire >= 0 && node->expire <= now) {
+		next = TIMER_NEXT(ev->epoll_timer, node);
+
+		ring_foreach(iter, &node->ring) {
+			ee = TO_APPL(iter.ptr, EPOLL_EVENT, me);
+			ee->proc(ev, ee);
+		}
+
+		node = next;
+	}
+
+	while ((head = ring_pop_head(&ev->epoll_ready)) != NULL) {
+		ee = TO_APPL(head, EPOLL_EVENT, me);
+		ee->proc(ev, ee);
+	}
+
+	ring_init(&ev->epoll_ready);
 }
 
 #endif	// end HAS_EPOLL

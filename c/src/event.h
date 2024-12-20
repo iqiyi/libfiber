@@ -6,7 +6,12 @@
 #include "common/timer_cache.h"
 
 #ifdef	HAS_EPOLL
-#include <sys/epoll.h>
+# ifdef COSMOCC
+#  include <libc/sysv/consts/epoll.h>
+#  include <libc/sock/epoll.h>
+# else
+#  include <sys/epoll.h>
+# endif
 #endif
 
 #ifdef	HAS_IO_URING
@@ -94,10 +99,24 @@ typedef struct IO_URING_CTX {
 /**
  * for each connection fd
  */
+
+#define PIN_FILE(f) {                                                         \
+    SET_TIME((f)->stamp);                                                     \
+    (f)->line = __LINE__;                                                     \
+    SAFE_STRNCPY((f)->tag, __FUNCTION__, sizeof((f)->tag));                   \
+}
+
 struct FILE_EVENT {
 	RING       me;
 	ACL_FIBER *fiber_r;
 	ACL_FIBER *fiber_w;
+
+#ifdef DEBUG_READY
+	long long stamp;
+	char tag[32];
+	int  line;
+#endif
+
 	socket_t   fd;
 	int id;
 	unsigned status;
@@ -106,7 +125,7 @@ struct FILE_EVENT {
 #define	STATUS_READABLE		(unsigned) (1 << 1)	// Ready for reading
 #define	STATUS_WRITABLE		(unsigned) (1 << 2)	// Ready for writing
 #define	STATUS_POLLING		(unsigned) (1 << 3)	// In polling status
-#define	STATUS_NDUBLOCK		(unsigned) (1 << 4)	// If need to set unblock
+#define	STATUS_NDUBLOCK		(unsigned) (1 << 4)	// If needing to set unblock
 #define	STATUS_READWAIT		(unsigned) (1 << 5)	// Wait for readable
 #define	STATUS_WRITEWAIT	(unsigned) (1 << 6)	// Wait for Writable
 #define	STATUS_CLOSING		(unsigned) (1 << 7)	// In closing status
@@ -194,6 +213,9 @@ struct FILE_EVENT {
 #define	EVENT_SENDMSG		(unsigned) (1 << 28)
 #endif // HAS_IO_URING
 
+#define	EVENT_SO_RCVTIMEO	(unsigned) (1 << 29)
+#define	EVENT_SO_SNDTIMEO	(unsigned) (1 << 30)
+
 	event_proc   *r_proc;
 	event_proc   *w_proc;
 #ifdef HAS_POLL
@@ -225,7 +247,7 @@ struct FILE_EVENT {
 			int flags;
 		} recv_ctx;
 
-#if defined(IO_URING_HAS_RECVFROM)
+# if defined(IO_URING_HAS_RECVFROM)
 		struct {
 			char *buf;
 			unsigned len;
@@ -233,7 +255,7 @@ struct FILE_EVENT {
 			struct sockaddr *src_addr;
 			socklen_t *addrlen;
 		} recvfrom_ctx;
-#endif
+# endif
 
 		struct {
 			struct msghdr *msg;
@@ -260,7 +282,7 @@ struct FILE_EVENT {
 			int flags;
 		} send_ctx;
 
-#if defined(IO_URING_HAS_SENDTO)
+# if defined(IO_URING_HAS_SENDTO)
 		struct {
 			const void *buf;
 			unsigned len;
@@ -268,7 +290,7 @@ struct FILE_EVENT {
 			const struct sockaddr *dest_addr;
 			socklen_t addrlen;
 		} sendto_ctx;
-#endif
+# endif
 
 		struct {
 			const struct msghdr *msg;
@@ -282,9 +304,9 @@ struct FILE_EVENT {
 			socklen_t          len;
 		} peer;
 
-#ifdef HAS_STATX
+# ifdef HAS_STATX
 		struct statx *statxbuf;
-#endif
+# endif
 		char  *path;
 	} var;
 
@@ -292,10 +314,11 @@ struct FILE_EVENT {
 	struct IO_URING_CTX writer_ctx;
 	struct __kernel_timespec rts;
 	struct __kernel_timespec wts;
+
+#endif  // HAS_IO_URING
+
 	int           r_timeout;
 	int           w_timeout;
-
-#endif
 
 	ACL_FIBER_SEM* mbox_wsem; // Used in sync_waiter_wakeup.c
 
@@ -317,7 +340,8 @@ struct FILE_EVENT {
 			socklen_t          len;
 		} peer;
 	} var;
-#endif
+#endif  // HAS_IOCP
+
 	short refer;
 	short busy;
 #define	EVENT_BUSY_NONE		(0)
@@ -371,12 +395,12 @@ struct EVENT {
 #define	EVENT_IS_IO_URING(x)	((x)->flag & EVENT_F_IO_URING)
 
 #ifdef HAS_POLL
-	TIMER_CACHE *poll_list;
+	TIMER_CACHE *poll_timer;
 	RING   poll_ready;
 #endif
 
 #ifdef HAS_EPOLL
-	TIMER_CACHE *epoll_list;
+	TIMER_CACHE *epoll_timer;
 	RING   epoll_ready;
 #endif
 
@@ -431,8 +455,18 @@ int  event_checkfd(EVENT *ev, FILE_EVENT *fe);
 int  event_add_read(EVENT *ev, FILE_EVENT *fe, event_proc *proc);
 int  event_add_write(EVENT *ev, FILE_EVENT *fe, event_proc *proc);
 
-void event_del_read(EVENT *ev, FILE_EVENT *fe);
-void event_del_write(EVENT *ev, FILE_EVENT *fe);
+void event_del_read(EVENT *ev, FILE_EVENT *fe, int directly);
+void event_del_write(EVENT *ev, FILE_EVENT *fe, int directly);
 int  event_process(EVENT *ev, int left);
+
+/* hook/poll.c */
+#ifdef HAS_POLL
+void wakeup_poll_waiters(EVENT *ev);
+#endif
+
+/* hook/epoll.c */
+#ifdef HAS_EPOLL
+void wakeup_epoll_waiters(EVENT *ev);
+#endif
 
 #endif

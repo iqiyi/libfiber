@@ -72,12 +72,14 @@ static void wakeup_waiter(SYNC_TIMER *timer UNUSED, SYNC_OBJ *obj)
 	// The fiber must has been awakened by the other fiber or thread.
 
 	if (obj->delay < 0) {
-		// No timer has been set if delay < 0, 
-		acl_fiber_ready(obj->fb);
+		// No timer has been set if delay < 0,
+		ring_detach(&obj->fb->me);  // Safety detatch me from others.
+		FIBER_READY(obj->fb);
 	} else if (fiber_timer_del(obj->fb) == 1) {
 		// Wakeup the waiting fiber before the timer arrives,
 		// just remove it from the timer.
-		acl_fiber_ready(obj->fb);
+		ring_detach(&obj->fb->me);  // Safety detatch me from others.
+		FIBER_READY(obj->fb);
 	}
 	// else: The fiber has been awakened by the timer.
 }

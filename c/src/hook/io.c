@@ -1,4 +1,11 @@
 #include "stdafx.h"
+
+#if defined(SYS_UNIX) && defined(USE_TCMALLOC)
+# include <unistd.h>
+# include <sys/syscall.h>
+# include <sys/types.h>
+#endif
+
 #include "common.h"
 
 #include "fiber.h"
@@ -6,9 +13,9 @@
 #include "io.h"
 
 #ifdef SYS_UNIX
-#define IS_INVALID(fd) (fd <= INVALID_SOCKET)
+# define IS_INVALID(fd) (fd <= INVALID_SOCKET)
 #elif defined(_WIN32) || defined(_WIN64)
-#define IS_INVALID(fd) (fd == INVALID_SOCKET)
+# define IS_INVALID(fd) (fd == INVALID_SOCKET)
 #endif
 
 #if defined(SYS_UNIX) && !defined(DISABLE_HOOK)
@@ -39,23 +46,33 @@ int WINAPI acl_fiber_close(socket_t fd)
 	FILE_EVENT *fe;
 	EVENT *ev;
 
+
+#ifndef USE_TCMALLOC
 	if (sys_close == NULL) {
 		hook_once();
-		if (sys_close == NULL) {
-			msg_error("%s: sys_close NULL", __FUNCTION__);
-			return -1;
-		}
 	}
+#endif
 
 	if (!var_hook_sys_api) {
+#ifdef USE_TCMALLOC
+		return syscall(SYS_close, fd);
+#else
 		// In thread mode, we only need to free the fe, because
 		// no fiber was bound with the fe.
-		fe = fiber_file_get(fd);
-		if (fe) {
-			fiber_file_free(fe);
-		}
+		//fe = fiber_file_get(fd);
+		//if (fe) {
+		//	fiber_file_free(fe);
+		//}
+
 		return (*sys_close)(fd);
+#endif
 	}
+
+#ifdef USE_TCMALLOC
+	if (sys_close == NULL) {
+		hook_once();
+	}
+#endif
 
 	if (IS_INVALID(fd)) {
 		msg_error("%s(%d): invalid fd=%u", __FUNCTION__, __LINE__, fd);
@@ -131,6 +148,15 @@ ssize_t acl_fiber_read(socket_t fd, void *buf, size_t count)
 		return -1;
 	}
 
+# ifdef USE_TCMALLOC
+	if (!var_hook_sys_api) {
+		return syscall(SYS_read, fd, buf, count);
+	}
+
+	if (sys_read == NULL) {
+		hook_once();
+	}
+# else
 	if (sys_read == NULL) {
 		hook_once();
 	}
@@ -138,6 +164,7 @@ ssize_t acl_fiber_read(socket_t fd, void *buf, size_t count)
 	if (!var_hook_sys_api) {
 		return (*sys_read)(fd, buf, count);
 	}
+# endif
 
 	fe = fiber_file_open(fd);
 	return fiber_read(fe, buf, count);
@@ -198,8 +225,24 @@ ssize_t acl_fiber_recv(socket_t sockfd, void *buf, size_t len, int flags)
 		return (*sys_recv)(sockfd, buf, len, flags);
 	}
 
+#ifdef MSG_DONTWAIT
+	if ((flags & MSG_DONTWAIT)) {
+		return (*sys_recv)(sockfd, buf, len, flags);
+	}
+#endif
+
+#ifdef MSG_PEEK
+	if ((flags & MSG_PEEK)) {
+		return (*sys_recv)(sockfd, buf, len, flags);
+	}
+#endif
+
 	fe = fiber_file_open(sockfd);
+#ifdef SYS_WIN
+	return (int) fiber_recv(fe, buf, len, flags);
+#else
 	return fiber_recv(fe, buf, len, flags);
+#endif
 }
 
 #ifdef SYS_WIN
@@ -225,8 +268,27 @@ ssize_t acl_fiber_recvfrom(socket_t sockfd, void *buf, size_t len,
 				src_addr, addrlen);
 	}
 
+#ifdef MSG_DONTWAIT
+	if ((flags & MSG_DONTWAIT)) {
+		return (*sys_recvfrom)(sockfd, buf, len, flags,
+		       		src_addr, addrlen);
+	}
+#endif
+
+#ifdef MSG_PEEK
+	if ((flags & MSG_PEEK)) {
+		return (*sys_recvfrom)(sockfd, buf, len, flags,
+		       		src_addr, addrlen);
+	}
+#endif
+
 	fe = fiber_file_open(sockfd);
+
+#ifdef SYS_WIN
+	return (int) fiber_recvfrom(fe, buf, len, flags, src_addr, addrlen);
+#else
 	return fiber_recvfrom(fe, buf, len, flags, src_addr, addrlen);
+#endif
 }
 
 #ifdef SYS_UNIX
@@ -246,6 +308,18 @@ ssize_t acl_fiber_recvmsg(socket_t sockfd, struct msghdr *msg, int flags)
 	if (!var_hook_sys_api) {
 		return (*sys_recvmsg)(sockfd, msg, flags);
 	}
+
+# ifdef MSG_DONTWAIT
+	if ((flags & MSG_DONTWAIT)) {
+		return (*sys_recvmsg)(sockfd, msg, flags);
+	}
+# endif
+
+# ifdef MSG_PEEK
+	if ((flags & MSG_PEEK)) {
+		return (*sys_recvmsg)(sockfd, msg, flags);
+	}
+# endif
 
 	fe = fiber_file_open(sockfd);
 	return fiber_recvmsg(fe, msg, flags);
@@ -277,9 +351,9 @@ int acl_fiber_recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 	fe = fiber_file_open(sockfd);
 	return fiber_recvmmsg(fe, msgvec, vlen, flags, timeout);
 }
-# endif
+# endif  // HAS_MMSG
 
-#endif
+#endif   // SYS_UNIX
 
 /****************************************************************************/
 
@@ -293,6 +367,15 @@ ssize_t acl_fiber_write(socket_t fd, const void *buf, size_t count)
 		return -1;
 	}
 
+# ifdef USE_TCMALLOC
+	if (!var_hook_sys_api) {
+		return syscall(SYS_write, fd, buf, count);
+	}
+
+	if (sys_write == NULL) {
+		hook_once();
+	}
+# else
 	if (sys_write == NULL) {
 		hook_once();
 	}
@@ -300,6 +383,7 @@ ssize_t acl_fiber_write(socket_t fd, const void *buf, size_t count)
 	if (!var_hook_sys_api) {
 		return (*sys_write)(fd, buf, count);
 	}
+# endif
 
 	fe = fiber_file_open(fd);
 	return fiber_write(fe, buf, count);
@@ -348,7 +432,12 @@ ssize_t acl_fiber_send(socket_t sockfd, const void *buf, size_t len, int flags)
 	}
 
 	fe = fiber_file_open(sockfd);
+
+#ifdef SYS_WIN
+	return (int) fiber_send(fe, buf, len, flags);
+#else
 	return fiber_send(fe, buf, len, flags);
+#endif
 }
 
 #ifdef SYS_WIN
@@ -376,7 +465,12 @@ ssize_t acl_fiber_sendto(socket_t sockfd, const void *buf, size_t len,
 	}
 
 	fe = fiber_file_open(sockfd);
+
+#ifdef SYS_WIN
+	return (int) fiber_sendto(fe, buf, len, flags, dest_addr, addrlen);
+#else
 	return fiber_sendto(fe, buf, len, flags, dest_addr, addrlen);
+#endif
 }
 
 #ifdef SYS_UNIX

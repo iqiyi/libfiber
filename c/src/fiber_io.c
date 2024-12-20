@@ -153,7 +153,7 @@ void fiber_io_check(void)
 		}
 
 		thread_init();
-	} else if (__thread_fiber->ev_fiber == NULL) {
+	} else if (var_hook_sys_api && __thread_fiber->ev_fiber == NULL) {
 		__thread_fiber->ev_fiber  = acl_fiber_create(fiber_io_loop,
 				__thread_fiber->event, STACK_SIZE);
 		__thread_fiber->io_stop   = 0;
@@ -172,38 +172,38 @@ static long long fiber_io_stamp(void)
 	return event_get_stamp(ev);
 }
 
-void fiber_timer_add(ACL_FIBER *fiber, unsigned milliseconds)
+void fiber_timer_add(ACL_FIBER *fb, size_t milliseconds)
 {
 	EVENT *ev = fiber_io_event();
 	long long now = event_get_stamp(ev);
 	TIMER_CACHE_NODE *timer;
 
-	fiber->when = now + milliseconds;
-	ring_detach(&fiber->me);
-	timer_cache_add(__thread_fiber->ev_timer, fiber->when, &fiber->me);
+	fb->when = now + (ssize_t) milliseconds;
+	ring_detach(&fb->me);  // Detach the previous binding.
+	timer_cache_add(__thread_fiber->ev_timer, fb->when, &fb->me);
 
 	/* Compute the event waiting interval according the timers' head */
 	timer = TIMER_FIRST(__thread_fiber->ev_timer);
 
 	if (timer->expire <= now) {
-		/* If the first timer has been expired, we should wakeup it
+		/* If the first timer has been expired, we should wake up it
 		 * immediately, so the event waiting interval should be set 0.
 		 */
 		ev->timeout = 0;
 	} else {
-		/* Then we use the interval between the first timer and now */
-		ev->timeout = (int) (fiber->when - now);
+		/* Then using the interval between the first timer and now. */
+		ev->timeout = (int) (fb->when - now);
 	}
 }
 
-int fiber_timer_del(ACL_FIBER *fiber)
+int fiber_timer_del(ACL_FIBER *fb)
 {
 	fiber_io_check();
 
-	return timer_cache_remove(__thread_fiber->ev_timer,
-			fiber->when, &fiber->me);
+	return timer_cache_remove(__thread_fiber->ev_timer, fb->when, &fb->me);
 }
 
+// wakeup_timers - Wake up all waiters in timers set in fiber_timer_add.
 static void wakeup_timers(TIMER_CACHE *timers, long long now)
 {
 	TIMER_CACHE_NODE *node = TIMER_FIRST(timers), *next;
@@ -223,12 +223,22 @@ static void wakeup_timers(TIMER_CACHE *timers, long long now)
 			// Set the flag that the fiber wakeuped for the
 			// timer's arriving.
 			fb->flag |= FIBER_F_TIMER;
-			acl_fiber_ready(fb);
+
+			// The fb->me was appended in fiber_timer_add, and
+			// we detach fb->me from timer node and append it to
+			// the ready ring in acl_fiber_ready.
+			ring_detach(&fb->me);
+			FIBER_READY(fb);
 		}
 
+		array_append(timers->objs2, node);
+
 		next = TIMER_NEXT(timers, node);
-		timer_cache_free_node(timers, node);
 		node = next;
+	}
+
+	while ((node = (TIMER_CACHE_NODE*) array_pop_back(timers->objs2))) {
+		timer_cache_free_node(timers, node);
 	}
 }
 
@@ -246,7 +256,6 @@ static void fiber_io_loop(ACL_FIBER *self fiber_unused, void *ctx)
 			left = -1;
 		} else {
 			now  = event_get_stamp(__thread_fiber->event);
-			last = now;
 			if (now >= timer->expire) {
 				left = 0;
 			} else {
@@ -272,9 +281,7 @@ static void fiber_io_loop(ACL_FIBER *self fiber_unused, void *ctx)
 			 */
 			while (acl_fiber_yield() > 0) {}
 
-			if (ev->waiter > 0) {
-				continue;
-			} else if (ring_size(&ev->events) > 0) {
+			if (ev->waiter > 0 || ring_size(&ev->events) > 0) {
 				continue;
 			}
 
@@ -295,6 +302,7 @@ static void fiber_io_loop(ACL_FIBER *self fiber_unused, void *ctx)
 		now = event_get_stamp(__thread_fiber->event);
 		if (now - last >= left) {
 			wakeup_timers(__thread_fiber->ev_timer, now);
+			last = now;
 		}
 
 		if (timer_cache_size(__thread_fiber->ev_timer) == 0) {
@@ -318,14 +326,19 @@ void fiber_io_clear(void)
 	}
 }
 
-unsigned int acl_fiber_delay(unsigned int milliseconds)
+size_t acl_fiber_delay(size_t milliseconds)
 {
 	long long now;
 	ACL_FIBER *fiber;
 	EVENT *ev;
 
 	if (!var_hook_sys_api) {
-		doze(milliseconds);
+		doze((unsigned) milliseconds);
+		return 0;
+	}
+
+	if (milliseconds == 0) {
+		acl_fiber_yield();
 		return 0;
 	}
 
@@ -343,13 +356,20 @@ unsigned int acl_fiber_delay(unsigned int milliseconds)
 	// Clear the flag been set in wakeup_timers.
 	fiber->flag &= ~FIBER_F_TIMER;
 
+	if (acl_fiber_killed(fiber)) {
+		// If been killed, the fiber must have been detatched from the
+		// timer node in acl_fiber_signal(); We call fiber_timer_del
+		// here in order to try to free the timer node.
+		fiber_timer_del(fiber);
+	}
+
 	ev = fiber_io_event();
 	now = event_get_stamp(ev);
 	if (now <= fiber->when) {
 		return 0;
 	}
 
-	return (unsigned int) (now - fiber->when);
+	return (size_t) (now - fiber->when);
 }
 
 typedef struct {
@@ -370,7 +390,7 @@ static void fiber_timer_callback(ACL_FIBER *fiber, void *ctx)
 			break;
 		}
 
-		acl_fiber_delay((unsigned int) left);
+		acl_fiber_delay((size_t) left);
 
 		now = fiber_io_stamp();
 		if (fiber->when <= now) {
@@ -383,7 +403,7 @@ static void fiber_timer_callback(ACL_FIBER *fiber, void *ctx)
 	fiber_exit(0);
 }
 
-ACL_FIBER *acl_fiber_create_timer(unsigned int milliseconds, size_t size,
+ACL_FIBER *acl_fiber_create_timer(size_t milliseconds, size_t size,
 	void (*fn)(ACL_FIBER *, void *), void *ctx)
 {
 	long long when;
@@ -396,14 +416,14 @@ ACL_FIBER *acl_fiber_create_timer(unsigned int milliseconds, size_t size,
 	fiber_io_check();
 
 	when = fiber_io_stamp();
-	when += milliseconds;
+	when += (ssize_t) milliseconds;
 
 	fiber       = acl_fiber_create(fiber_timer_callback, tc, size);
 	fiber->when = when;
 	return fiber;
 }
 
-int acl_fiber_reset_timer(ACL_FIBER *fiber, unsigned int milliseconds)
+int acl_fiber_reset_timer(ACL_FIBER *fiber, size_t milliseconds)
 {
 	// The previous timer with the fiber must be removed first.
 	int ret = fiber_timer_del(fiber);
@@ -417,7 +437,7 @@ int acl_fiber_reset_timer(ACL_FIBER *fiber, unsigned int milliseconds)
 	return 0;
 }
 
-unsigned int acl_fiber_sleep(unsigned int seconds)
+size_t acl_fiber_sleep(size_t seconds)
 {
 	return acl_fiber_delay(seconds * 1000) / 1000;
 }
@@ -427,14 +447,16 @@ unsigned int acl_fiber_sleep(unsigned int seconds)
 static void read_callback(EVENT *ev, FILE_EVENT *fe)
 {
 	CLR_READWAIT(fe);
-	event_del_read(ev, fe);
+	event_del_read(ev, fe, 0);
 
 	/* If the reader fiber has been set in ready status when the
 	 * other fiber killed the reader fiber, the reader fiber should
 	 * not be set in ready queue again.
+	 * We should check if fe->fiber_r is NULL, which maybe set NULL if
+	 * the other fiber acl_fiber_kill() the fiber_r before.
 	 */
-	if (fe->fiber_r->status != FIBER_STATUS_READY) {
-		acl_fiber_ready(fe->fiber_r);
+	if (fe->fiber_r && fe->fiber_r->status != FIBER_STATUS_READY) {
+		FIBER_READY(fe->fiber_r);
 	}
 }
 
@@ -452,6 +474,7 @@ int fiber_wait_read(FILE_EVENT *fe)
 	fiber_io_check();
 
 	curr = acl_fiber_running();
+
 	if (acl_fiber_canceled(curr)) {
 		acl_fiber_set_error(curr->errnum);
 		return -1;
@@ -471,19 +494,45 @@ int fiber_wait_read(FILE_EVENT *fe)
 		WAITER_INC(__thread_fiber->event);
 	}
 
+	if ((fe->mask & EVENT_SO_RCVTIMEO) && fe->r_timeout > 0) {
+		fiber_timer_add(curr, fe->r_timeout);
+	}
+
 	acl_fiber_switch();
+
+	if ((fe->mask & EVENT_SO_RCVTIMEO) && fe->r_timeout > 0) {
+		fiber_timer_del(curr);
+	}
 
 	fe->fiber_r->wstatus &= ~FIBER_WAIT_READ;
 	fe->fiber_r = NULL;
+
+#ifdef	DEBUG_READY
+	PIN_FILE(fe);
+#endif
 
 	if (!(fe->type & TYPE_INTERNAL)) {
 		WAITER_DEC(__thread_fiber->event);
 	}
 
 	if (acl_fiber_canceled(curr)) {
+		// If the IO has been canceled, we should try to remove the
+		// IO read event directly(without delay deleting), because the
+		// fiber's wakeup process wasn't from read_callback normally.
+		event_del_read(__thread_fiber->event, fe, 1);
 		acl_fiber_set_error(curr->errnum);
 		return -1;
+	} else if (curr->flag & FIBER_F_TIMER) {
+		// If the IO reading timeout set in setsockopt.
+		// Clear FIBER_F_TIMER flag been set in wakeup_timers.
+		curr->flag &= ~FIBER_F_TIMER;
+		event_del_read(__thread_fiber->event, fe, 0);
+
+		acl_fiber_set_errno(curr, FIBER_EAGAIN);
+		acl_fiber_set_error(FIBER_EAGAIN);
+		return -1;
 	}
+	// else: the IO read event should have been removed in read_callback.
 
 	return ret;
 }
@@ -491,14 +540,14 @@ int fiber_wait_read(FILE_EVENT *fe)
 static void write_callback(EVENT *ev, FILE_EVENT *fe)
 {
 	CLR_WRITEWAIT(fe);
-	event_del_write(ev, fe);
+	event_del_write(ev, fe, 0);
 
 	/* If the writer fiber has been set in ready status when the
 	 * other fiber killed the writer fiber, the writer fiber should
 	 * not be set in ready queue again.
 	 */
-	if (fe->fiber_w->status != FIBER_STATUS_READY) {
-		acl_fiber_ready(fe->fiber_w);
+	if (fe->fiber_w && fe->fiber_w->status != FIBER_STATUS_READY) {
+		FIBER_READY(fe->fiber_w);
 	}
 }
 
@@ -510,6 +559,7 @@ int fiber_wait_write(FILE_EVENT *fe)
 	fiber_io_check();
 
 	curr = acl_fiber_running();
+
 	if (acl_fiber_canceled(curr)) {
 		acl_fiber_set_error(curr->errnum);
 		return -1;
@@ -528,7 +578,15 @@ int fiber_wait_write(FILE_EVENT *fe)
 		WAITER_INC(__thread_fiber->event);
 	}
 
+	if ((fe->mask & EVENT_SO_SNDTIMEO) && fe->w_timeout > 0) {
+		fiber_timer_add(curr, fe->w_timeout);
+	}
+
 	acl_fiber_switch();
+
+	if ((fe->mask & EVENT_SO_SNDTIMEO) && fe->w_timeout > 0) {
+		fiber_timer_del(curr);
+	}
 
 	fe->fiber_w->wstatus &= ~FIBER_WAIT_WRITE;
 	fe->fiber_w = NULL;
@@ -538,7 +596,15 @@ int fiber_wait_write(FILE_EVENT *fe)
 	}
 
 	if (acl_fiber_canceled(curr)) {
+		event_del_write(__thread_fiber->event, fe, 1);
 		acl_fiber_set_error(curr->errnum);
+		return -1;
+	} else if (curr->flag & FIBER_F_TIMER) {
+		curr->flag &= ~FIBER_F_TIMER;
+		event_del_write(__thread_fiber->event, fe, 0);
+
+		acl_fiber_set_errno(curr, FIBER_EAGAIN);
+		acl_fiber_set_error(FIBER_EAGAIN);
 		return -1;
 	}
 
