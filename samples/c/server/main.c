@@ -13,10 +13,11 @@ static char __listen_ip[64];
 static int  __listen_port = 9001;
 static int  __listen_qlen = 64;
 static int  __rw_timeout = 0;
+static int  __use_setsockopt = 0;
 static int  __echo_data  = 1;
 static int  __stack_size = 128000;
 
-static int check_read(int fd, int timeout)
+static int check_read(SOCKET fd, int timeout)
 {
 	struct pollfd pfd;
 	int n;
@@ -31,12 +32,42 @@ static int check_read(int fd, int timeout)
 		return -1;
 	}
 
-	if (n == 0)
+	if (n == 0) {
 		return 0;
-	if (pfd.revents & POLLIN)
+	}
+	if (pfd.revents & POLLIN) {
 		return 1;
-	else
+	} else {
 		return 0;
+	}
+}
+
+static int set_timeout(SOCKET fd, int opt, int timeo)
+{
+# if defined(_WIN32) || defined(_WIN64)
+	timeout *= 1000; // From seconds to millisecond.
+	if (setsockopt(fd, SOL_SOCKET, opt, (const char*) &timeo, sizeof(timeo)) < 0) {
+		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+			strerror(errno), timeo, opt, (int) fd);
+		return -1;
+	}
+# else   // Must be Linux or __APPLE__.
+	struct timeval tm;
+	tm.tv_sec  = timeo;
+	tm.tv_usec = 0;
+
+	if (setsockopt(fd, SOL_SOCKET, opt, &tm, sizeof(tm)) < 0) {
+		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+			strerror(errno), timeo, opt, (int) fd);
+		return -1;
+	}
+# endif
+	return 0;
+}
+
+static int set_read_timeout(SOCKET fd, int timeo)
+{
+	return set_timeout(fd, SO_RCVTIMEO, timeo);
 }
 
 static void echo_client(ACL_FIBER *fiber, void *ctx)
@@ -46,12 +77,21 @@ static void echo_client(ACL_FIBER *fiber, void *ctx)
 	char  buf[8192];
 	int   ret;
 
+	if (__rw_timeout > 0 && __use_setsockopt) {
+		if (set_read_timeout(fd, __rw_timeout) == -1) {
+			printf("set_read_timeout error=%s, fd=%d\r\n",
+				strerror(errno), (int) fd);
+		} else {
+			printf("set_read_timeout ok, fd=%d\r\n", (int) fd);
+		}
+	}
+
 	(void) fiber;
 	__socket_count++;
 	printf("client fiber-%d: fd: %d\r\n", acl_fiber_self(), fd);
 
 	while (1) {
-		if (__rw_timeout > 0) {
+		if (__rw_timeout > 0 && !__use_setsockopt) {
 			ret = check_read(fd, __rw_timeout * 1000);
 			if (ret < 0)
 				break;
@@ -154,6 +194,7 @@ static void usage(const char *procname)
 		" -s listen_ip\r\n"
 		" -p listen_port\r\n"
 		" -r rw_timeout\r\n"
+		" -O [if using setsockopt to set IO timeout, default: false]\r\n"
 		" -q listen_queue\r\n"
 		" -z stack_size\r\n"
 		" -S [if using single IO, default: no]\r\n", procname);
@@ -167,7 +208,7 @@ int main(int argc, char *argv[])
 
 	socket_init();
 
-	while ((ch = getopt(argc, argv, "hs:p:r:q:Sz:e:")) > 0) {
+	while ((ch = getopt(argc, argv, "hs:p:r:Oq:Sz:e:")) > 0) {
 		switch (ch) {
 		case 'h':
 			usage(argv[0]);
@@ -180,6 +221,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'r':
 			__rw_timeout = atoi(optarg);
+			break;
+		case 'O':
+			__use_setsockopt = 1;
 			break;
 		case 'q':
 			__listen_qlen = atoi(optarg);
