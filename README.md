@@ -12,6 +12,8 @@
     * [Resolve domain address in coroutine](#resolve-domain-address-in-coroutine)
     * [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
     * [Create fiber with C++1x API](#create-fiber-with-c1x-api)
+    * [Transfer objects through box](#transfer-objects-through-box)
+    * [Using wait_group to wait for the others done](#using-waitgroup-to-wait-for-the-others-done)
     * [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
     * [Http server supporting http url route](#http-server-supporting-http-url-route)
     * [Windows GUI sample](#windows-gui-sample)
@@ -32,19 +34,19 @@
 <!-- vim-markdown-toc -->
 
 ## About
-The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platfroms including Linux, FreeBSD, MacOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platfrom. With libfiber, you can write network application services having the high performance and large cocurrent more easily than the traditional asynchronus  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's realy amazing.
+The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platforms including Linux, FreeBSD, macOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platform. With libfiber, you can write network application services having the high performance and large concurrent more easily than the traditional asynchronous  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's really amazing.
 
 ## Which IO events are supported ?
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
-Event|Linux|BSD|Mac|Windows
------|----|------|---|---
-<b>select</b>|yes|yes|yes|yes
-<b>poll</b>|yes|yes|yes|yes
-<b>epoll</b>|yes|no|no|no
-<b>kqueue</b>|no|yes|yes|no
-<b>iocp</b>|no|no|no|yes
-<b>Win GUI message</b>|no|no|no|yes
+| Event                  | Linux | BSD | Mac | Windows |
+|------------------------|-------|-----|-----|---------|
+| <b>select</b>          | yes   | yes | yes | yes     |
+| <b>poll</b>            | yes   | yes | yes | yes     |
+| <b>epoll</b>           | yes   | no  | no  | no      |
+| <b>kqueue</b>          | no    | yes | yes | no      |
+| <b>iocp</b>            | no    | no  | no  | yes     |
+| <b>Win GUI message</b> | no    | no  | no  | yes     |
 
 ## SAMPLES
 
@@ -362,6 +364,70 @@ int main(void) {
 }
 ```
 
+### Transfer objects through box
+You can use fiber_tbox or fiber_tbox2 to transfer objs between different fibers and threads:
+```c++
+#include <memory>
+#include <thread>
+#include "fiber/fiber_tbox.hpp"
+
+class myobj {
+public:
+    myobj() = default;
+    ~myobj() = default;
+    void run() { printf("hello world!\r\n"); }
+};
+
+void test_tbox() {
+    std::shared_ptr<acl::fiber_tbox<myobj>> box(new acl::fiber_tbox<myobj>);
+    go[box] {
+        myobj *o = box->pop();
+        o->run();
+        delete o;
+    };
+    go[box] {
+        myobj *o = new myobj;
+        box->push(o);
+    };
+    
+    go[box] {
+        myobj *o = box->pop();
+        o->run();
+        delete o;
+    };
+    std::thread thread([box] {
+        myobj *o = new myobj;
+        box->push(o);
+    });
+    thread.detach();
+}
+```
+
+### Using wait_group to wait for the others done
+You can use wait_group to wait for the other tasks:
+```c++
+#include "fiber/go_fiber.hpp"
+#include "fiber/wait_group.hpp"
+
+void wait_others() {
+    acl::wait_group wg;
+    wg.add(2);
+
+    std::thread thr([&wg]{
+        ::sleep(1);
+        wg.done();
+    });
+    thr.detach();
+
+    go[&wg] {
+        ::sleep(1);
+        wg.done();
+    };
+    
+    wg.wait();
+}
+```
+
 ### Wait for the result from a thread
 ```C
 #include <stdio.h>
@@ -447,9 +513,9 @@ int main(void) {
 ```
 
 ### Windows GUI sample
-There is one Windows GUI sample with libfiber in [directory](samples/c/WinEchod). The screen shot is ![here](res/winecho.png)  
+There is one Windows GUI sample with libfiber in [directory](samples/c/WinEchod). The screenshot is ![here](res/winecho.png)  
 
-The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memroy collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronus API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
+The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memory collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronous API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
 
 ### More SAMPLES
 You can get more samples in [samples](samples/), which use many APIs in [acl project](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples) library.
