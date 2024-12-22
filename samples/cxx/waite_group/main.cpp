@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 	sync.add(threads_count + fibers_count);
 
 	for (int i = 0; i < threads_count; i++) {
-		std::thread* thr = new std::thread([&sync] {
+		std::thread thr([&sync] {
 			std::cout << "Thread " << std::this_thread::get_id()
 				<< " started, delay " << __delay << " seconds\r\n";
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 			sync.done();
 		});
 
-		thr->detach();
+		thr.detach();
 	}
 
 	for (int i = 0; i < fibers_count; i++) {
