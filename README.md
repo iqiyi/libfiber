@@ -34,23 +34,24 @@
 <!-- vim-markdown-toc -->
 
 ## About
+
 The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platforms including Linux, FreeBSD, macOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platform. With libfiber, you can write network application services having the high performance and large concurrent more easily than the traditional asynchronous  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's really amazing.
 
 ## Which IO events are supported ?
+
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
-| Event                  | Linux | BSD | Mac | Windows |
-|------------------------|-------|-----|-----|---------|
-| <b>select</b>          | yes   | yes | yes | yes     |
-| <b>poll</b>            | yes   | yes | yes | yes     |
-| <b>epoll</b>           | yes   | no  | no  | no      |
-| <b>kqueue</b>          | no    | yes | yes | no      |
-| <b>iocp</b>            | no    | no  | no  | yes     |
-| <b>Win GUI message</b> | no    | no  | no  | yes     |
+| Platform       | Event type                      |
+|----------------|---------------------------------|
+| <b>Linux</b>   | select, poll, epoll, io-uring   |
+| <b>BSD</b>     | select, poll, kqueue            |
+| <b>Mac</b>     | select, poll, kqueue            |
+| <b>Windows</b> | select, poll, iocp, GUI Message |
 
 ## SAMPLES
 
 ### One server sample with C API
+
 ```C
 // fiber_server.c
 
@@ -64,95 +65,92 @@ static size_t      __stack_size  = 128000;
 static const char *__listen_ip   = "127.0.0.1";
 static int         __listen_port = 9001;
 
-static int set_timeout(SOCKET fd, int opt, int timeo)
-{
+// Set read/write timeout with setsockopt API.
+static int set_timeout(SOCKET fd, int opt, int timeo) {
 # if defined(_WIN32) || defined(_WIN64)
-	timeout *= 1000; // From seconds to millisecond.
-	if (setsockopt(fd, SOL_SOCKET, opt, (const char*) &timeo, sizeof(timeo)) < 0) {
-		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
-			strerror(errno), timeo, opt, (int) fd);
+    timeout *= 1000; // From seconds to millisecond.
+    if (setsockopt(fd, SOL_SOCKET, opt, (const char*) &timeo, sizeof(timeo)) < 0) {
+        printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+            strerror(errno), timeo, opt, (int) fd);
 		return -1;
 	}
 # else   // Must be Linux or __APPLE__.
-	struct timeval tm;
-	tm.tv_sec  = timeo;
-	tm.tv_usec = 0;
+    struct timeval tm;
+    tm.tv_sec  = timeo;
+    tm.tv_usec = 0;
 
-	if (setsockopt(fd, SOL_SOCKET, opt, &tm, sizeof(tm)) < 0) {
-		printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
-			strerror(errno), timeo, opt, (int) fd);
-		return -1;
-	}
+    if (setsockopt(fd, SOL_SOCKET, opt, &tm, sizeof(tm)) < 0) {
+        printf("setsockopt error=%s, timeout=%d, opt=%d, fd=%d\r\n",
+            strerror(errno), timeo, opt, (int) fd);
+        return -1;
+    }
 # endif
-	return 0;
+    return 0;
 }
 
-static int set_rw_timeout(SOCKET fd, int timeo)
-{
-	if (set_timeout(fd, SO_RCVTIMEO, timeo) == -1 
-		  || set_timeout(fd, SO_SNDTIMEO, timeo) == -1) {
-		return -1;
-	}
-	return 0;
+static int set_rw_timeout(SOCKET fd, int timeo) {
+    if (set_timeout(fd, SO_RCVTIMEO, timeo) == -1 
+       || set_timeout(fd, SO_SNDTIMEO, timeo) == -1) {
+        return -1;
+    }
+    return 0;
 }
 
-static void fiber_client(ACL_FIBER *fb, void *ctx)
-{
-	SOCKET *pfd = (SOCKET *) ctx;
-	char buf[8192];
+static void fiber_client(ACL_FIBER *fb, void *ctx) {
+    SOCKET *pfd = (SOCKET *) ctx;
+    char buf[8192];
 
-	// Set the socket's read/write timeout.
-	set_rw_timeout(*pfd, 10);
+    // Set the socket's read/write timeout.
+    set_rw_timeout(*pfd, 10);
 
-	while (1) {
+    while (1) {
 #ifdef _WIN32
-		int ret = acl_fiber_recv(*pfd, buf, sizeof(buf), 0);
+        int ret = acl_fiber_recv(*pfd, buf, sizeof(buf), 0);
 #else
-		int ret = recv(*pfd, buf, sizeof(buf), 0);
+        int ret = recv(*pfd, buf, sizeof(buf), 0);
 #endif
-		if (ret == 0) {
-			break;
-		} else if (ret < 0) {
-			if (acl_fiber_last_error() == FIBER_EINTR) {
-				continue;
-			}
-			break;
-		}
+        if (ret == 0) {
+            break;
+        } else if (ret < 0) {
+            if (acl_fiber_last_error() == FIBER_EINTR) {
+                continue;
+            }
+            break;
+        }
 #ifdef _WIN32
-		if (acl_fiber_send(*pfd, buf, ret, 0) < 0) {
+        if (acl_fiber_send(*pfd, buf, ret, 0) < 0) {
 #else
-		if (send(*pfd, buf, ret, 0) < 0) {
+        if (send(*pfd, buf, ret, 0) < 0) {
 #endif			
-			break;
-		}
-	}
+            break;
+        }
+    }
 
-	socket_close(*pfd);
-	free(pfd);
+    socket_close(*pfd);
+    free(pfd);
 }
 
-static void fiber_accept(ACL_FIBER *fb, void *ctx)
-{
-	const char *addr = (const char *) ctx;
-	SOCKET lfd = socket_listen(__listen_ip, __listen_port);
+static void fiber_accept(ACL_FIBER *fb, void *ctx) {
+    const char *addr = (const char *) ctx;
+    SOCKET lfd = socket_listen(__listen_ip, __listen_port);
 
-	assert(lfd >= 0);
+    assert(lfd >= 0);
 
-	for (;;) {
-		SOCKET *pfd, cfd = socket_accept(lfd);
-		if (cfd == INVALID_SOCKET) {
-			printf("accept error %s\r\n", acl_fiber_last_serror());
-			break;
-		}
-		pfd = (SOCKET *) malloc(sizeof(SOCKET));
-		*pfd = cfd;
+    for (;;) {
+        SOCKET *pfd, cfd = socket_accept(lfd);
+        if (cfd == INVALID_SOCKET) {
+            printf("accept error %s\r\n", acl_fiber_last_serror());
+            break;
+        }
+        pfd = (SOCKET *) malloc(sizeof(SOCKET));
+        *pfd = cfd;
 
-		// create and start one fiber to handle the client socket IO
-		acl_fiber_create(fiber_client, pfd, __stack_size);
-	}
+        // create and start one fiber to handle the client socket IO
+        acl_fiber_create(fiber_client, pfd, __stack_size);
+    }
 
-	socket_close(lfd);
-	exit (0);
+    socket_close(lfd);
+    exit (0);
 }
 
 // FIBER_EVENT_KERNEL represents the event type on
@@ -161,27 +159,26 @@ static void fiber_accept(ACL_FIBER *fb, void *ctx)
 // FIBER_EVENT_SELECT: select on Linux/BSD/Mac/Windows
 // FIBER_EVENT_WMSG: Win GUI message on Windows
 // acl_fiber_create/acl_fiber_schedule_with are in `lib_fiber.h`.
-// socket_listen/socket_accept/socket_close are in patch.c of the samples path.
+// socket_listen/socket_accept/socket_close are in patch.c of the samples' path.
 
-int main(void)
-{
-	int event_mode = FIBER_EVENT_KERNEL;
-
-#ifdef _WIN32
-	socket_init();
-#endif
-
-	// create one fiber to accept connections
-	acl_fiber_create(fiber_accept, NULL, __stack_size);
-
-	// start the fiber schedule process
-	acl_fiber_schedule_with(event_mode);
+int main(void) {
+    int event_mode = FIBER_EVENT_KERNEL;
 
 #ifdef _WIN32
-	socket_end();
+    socket_init();
 #endif
 
-	return 0;
+    // create one fiber to accept connections
+    acl_fiber_create(fiber_accept, NULL, __stack_size);
+
+    // start the fiber schedule process
+    acl_fiber_schedule_with(event_mode);
+
+#ifdef _WIN32
+    socket_end();
+#endif
+
+    return 0;
 }
 ```
 
@@ -195,77 +192,76 @@ int main(void)
 #include <string.h>
 #include <assert.h>
 #include "fiber/lib_fiber.h"
-#include "patch.h" // in the samples path
+#include "patch.h" // in the samples' path
 
 static const char *__server_ip   = "127.0.0.1";
 static int         __server_port = 9001;
 
 // socket_init/socket_end/socket_connect/socket_close are in patch.c of the samples path
 
-static void fiber_client(ACL_FIBER *fb, void *ctx)
-{
-	SOCKET cfd = socket_connect(__server_ip, __server_port);
-	const char *s = "hello world\r\n";
-	char buf[8192];
-	int i, ret;
+static void fiber_client(ACL_FIBER *fb, void *ctx) {
+    SOCKET cfd = socket_connect(__server_ip, __server_port);
+    const char *s = "hello world\r\n";
+    char buf[8192];
+    int i, ret;
 
-	if (cfd == INVALID_SOCKET) {
-		return;
-	}
+    if (cfd == INVALID_SOCKET) {
+        return;
+    }
 
-	for (i = 0; i < 1024; i++) {
+    for (i = 0; i < 1024; i++) {
 #ifdef _WIN32
-		if (acl_fiber_send(cfd, s, strlen(s), 0) <= 0) {
+        if (acl_fiber_send(cfd, s, strlen(s), 0) <= 0) {
 #else
-		if (send(cfd, s, strlen(s), 0) <= 0) {
+        if (send(cfd, s, strlen(s), 0) <= 0) {
 #endif			
-			printf("send error %s\r\n", acl_fiber_last_serror());
-			break;
-		}
+            printf("send error %s\r\n", acl_fiber_last_serror());
+            break;
+        }
 
 #ifdef _WIN32
-		ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0);
+        ret = acl_fiber_recv(cfd, buf, sizeof(buf), 0);
 #else
-		ret = recv(cfd, buf, sizeof(buf), 0);
+        ret = recv(cfd, buf, sizeof(buf), 0);
 #endif		
-		if (ret <= 0) {
-			break;
-		}
-	}
+        if (ret <= 0) {
+            break;
+        }
+    }
 
 #ifdef _WIN32
-	acl_fiber_close(cfd);
+    acl_fiber_close(cfd);
 #else
-	close(cfd);
+    close(cfd);
 #endif
 }
 
-int main(void)
-{
-	int event_mode = FIBER_EVENT_KERNEL;
-	size_t stack_size = 128000;
+int main(void) {
+    int event_mode = FIBER_EVENT_KERNEL;
+    size_t stack_size = 128000;
 
-	int i;
-
-#ifdef _WIN32
-	socket_init();
-#endif
-
-	for (i = 0; i < 100; i++) {
-		acl_fiber_create(fiber_client, NULL, stack_size);
-	}
-
-	acl_fiber_schedule_with(event_mode);
+    int i;
 
 #ifdef _WIN32
-	socket_end();
+    socket_init();
 #endif
 
-	return 0;
+    for (i = 0; i < 100; i++) {
+        acl_fiber_create(fiber_client, NULL, stack_size);
+    }
+
+    acl_fiber_schedule_with(event_mode);
+
+#ifdef _WIN32
+    socket_end();
+#endif
+
+    return 0;
 }
 ```
 
 ### Resolve domain address in coroutine
+
 The rfc1035 for DNS has been implement in libfiber, so you can call gethostbyname or getaddrinfo to get the givent domain's IP addresses in coroutine.
 ```C
 #include <stdio.h>
@@ -275,41 +271,42 @@ The rfc1035 for DNS has been implement in libfiber, so you can call gethostbynam
 #include "fiber/lib_fiber.h"
 
 static void lookup(ACL_FIBER *fiber, void *ctx) {
-	char *name = (char *) ctx;
-	struct addrinfo hints, *res0;
-	int ret;
+    char *name = (char *) ctx;
+    struct addrinfo hints, *res0;
+    int ret;
 
-	(void) fiber; // avoid compiler warning
+    (void) fiber; // avoid compiler warning
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
 
-	ret = getaddrinfo(name, "80", &hints, &res0);
-	free(name);
+    ret = getaddrinfo(name, "80", &hints, &res0);
+    free(name);
 
-	if (ret != 0) {
-		printf("getaddrinfo error %s\r\n", gai_strerror(ret));
-	} else {
-		printf("getaddrinfo ok\r\n");
-		freeaddrinfo(res0);
-	}
+    if (ret != 0) {
+        printf("getaddrinfo error %s\r\n", gai_strerror(ret));
+    } else {
+        printf("getaddrinfo ok\r\n");
+        freeaddrinfo(res0);
+    }
 }
 
 int main(void) {
-	char *name1 = strdup("www.iqiyi.com");
-	char *name2 = strdup("www.baidu.com");
+    char *name1 = strdup("www.iqiyi.com");
+    char *name2 = strdup("www.baidu.com");
 
-	acl_fiber_create(lookup, name1, 128000);
-	acl_fiber_create(lookup, name2, 128000);
+    acl_fiber_create(lookup, name1, 128000);
+    acl_fiber_create(lookup, name2, 128000);
 
-	acl_fiber_schedule();
-	return 0;
+    acl_fiber_schedule();
+    return 0;
 }
 ```
 
 ### Create fiber with standard C++ API
+
 You can create one coroutine with standard C++ API in libfiber:
 ```C
 #include <stdio.h>
@@ -317,31 +314,32 @@ You can create one coroutine with standard C++ API in libfiber:
 
 class myfiber : public acl::fiber {
 public:
-	myfiber(void) {}
+    myfiber() {}
 
 private:
-	~myfiber(void) {}
+    ~myfiber() {}
 
 protected:
-	// @override from acl::fiber
-	void run(void) {
-		printf("hello world!\r\n");
-		delete this;
-	}
+    // @override from acl::fiber
+    void run() {
+        printf("hello world!\r\n");
+        delete this;
+    }
 };
 
-int main(void) {
-	for (int i = 0; i < 10; i++) {
-		acl::fiber* fb = new myfiber();
-		fb->start();
-	}
+int main() {
+    for (int i = 0; i < 10; i++) {
+        acl::fiber* fb = new myfiber();
+        fb->start();
+    }
 
-	acl::fiber::schedule();
-	return 0;
+    acl::fiber::schedule();
+    return 0;
 }
 ```
 
 ### Create fiber with C++1x API
+
 You can also create one coroutine with c++11 API in libfiber:
 ```C
 #include <stdio.h>
@@ -349,22 +347,23 @@ You can also create one coroutine with c++11 API in libfiber:
 #include "fiber/go_fiber.hpp"
 
 static void fiber_routine(int i) {
-	printf("hi, i=%d, curr fiber=%u\r\n", i, acl::fiber::self());
+    printf("hi, i=%d, curr fiber=%u\r\n", i, acl::fiber::self());
 }
 
-int main(void) {
-	for (int i = 0; i < 10; i++) {
-		go[=] {
-			fiber_routine(i);
-		};
-	}
+int main() {
+    for (int i = 0; i < 10; i++) {
+        go[=] {
+            fiber_routine(i);
+        };
+    }
 
-	acl::fiber::schedule();
-	return 0;
+    acl::fiber::schedule();
+    return 0;
 }
 ```
 
 ### Transfer objects through box
+
 You can use fiber_tbox or fiber_tbox2 to transfer objs between different fibers and threads:
 ```c++
 #include <memory>
@@ -404,6 +403,7 @@ void test_tbox() {
 ```
 
 ### Using wait_group to wait for the others done
+
 You can use wait_group to wait for the other tasks:
 ```c++
 #include "fiber/go_fiber.hpp"
@@ -429,34 +429,36 @@ void wait_others() {
 ```
 
 ### Wait for the result from a thread
+
 ```C
 #include <stdio.h>
 #include <unistd.h>
 #include "fiber/go_fiber.hpp"
 
 static void fiber_routine(int i) {
-	go_wait[&] {	// running in another thread
-		i += 100;
-		usleep(10000);
-	};
+    go_wait[&] {	// running in another thread
+        i += 100;
+        ::usleep(10000);
+    };
 
-	printf("i is %d\r\n", i);
+    printf("i is %d\r\n", i);
 }
 
-int main(void) {
-	// create ten fibers
-	for (int i = 0; i < 10; i++) {
-		go[=] {
-			fiber_routine(i);
-		};
-	}
+int main() {
+    // create ten fibers
+    for (int i = 0; i < 10; i++) {
+        go[=] {
+            fiber_routine(i);
+        };
+    }
 
-	acl::fiber::schedule();
-	return 0;
+    acl::fiber::schedule();
+    return 0;
 }
 ```
 
 ### Http server supporting http url route
+
 One http server written with libfiber and http module of [acl](https://github.com/acl-dev/acl) supports http handler route which is in [http server](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples-c%2B%2B1x/httpd).
 
 ```C
@@ -475,52 +477,55 @@ static acl::master_int_tbl var_conf_int_tab[] = {
         { 0, 0 , 0 , 0, 0 }
 };
 
-int main(void) {
-        acl::acl_cpp_init();
-        acl::http_server server;
+int main(d) {
+    acl::acl_cpp_init();
+    acl::http_server server;
 
-        // set the configure variables
-        server.set_cfg_int(var_conf_int_tab)
-                .set_cfg_str(var_conf_str_tab);
+    // set the configure variables
+    server.set_cfg_int(var_conf_int_tab)
+          .set_cfg_str(var_conf_str_tab);
 
-        // set http handler route
-        server.Get("/", [](acl::HttpRequest&, acl::HttpResponse& res) {
-                acl::string buf("hello world1!\r\n");
-                res.setContentLength(buf.size());
-                return res.write(buf.c_str(), buf.size());
-        }).Post("/ok", [](acl::HttpRequest& req, acl::HttpResponse& res) {
-                acl::string buf;
-                req.getBody(buf);
-                res.setContentLength(buf.size());
-                return res.write(buf.c_str(), buf.size());
-        }).Get("/json", [&](acl::HttpRequest&, acl::HttpResponse& res) {
-                acl::json json;
-                acl::json_node& root = json.get_root();
-                root.add_number("code", 200)
-                        .add_text("status", "+ok")
-                        .add_child("data",
-                                json.create_node()
-                                        .add_text("name", "value")
-                                        .add_bool("success", true)
-                                        .add_number("number", 200));
-                return res.write(json);
-        });
+    // set http handler route
+    server.Get("/", [](acl::HttpRequest&, acl::HttpResponse& res) {
+        acl::string buf("hello world1!\r\n");
+        res.setContentLength(buf.size());
+        return res.write(buf.c_str(), buf.size());
+    }).Post("/ok", [](acl::HttpRequest& req, acl::HttpResponse& res) {
+        acl::string buf;
+        req.getBody(buf);
+        res.setContentLength(buf.size());
+        return res.write(buf.c_str(), buf.size());
+    }).Get("/json", [&](acl::HttpRequest&, acl::HttpResponse& res) {
+        acl::json json;
+        acl::json_node& root = json.get_root();
+        root.add_number("code", 200)
+            .add_text("status", "+ok")
+            .add_child("data",
+                json.create_node()
+                    .add_text("name", "value")
+                    .add_bool("success", true)
+                    .add_number("number", 200));
+        return res.write(json);
+    });
 
-        // start the server in alone mode
-        server.run_alone("0.0.0.0|8194, 127.0.0.1|8195", "./httpd.cf");
-        return 0;
+    // start the server in alone mode
+    server.run_alone("0.0.0.0|8194, 127.0.0.1|8195", "./httpd.cf");
+    return 0;
 }
 ```
 
 ### Windows GUI sample
+
 There is one Windows GUI sample with libfiber in [directory](samples/c/WinEchod). The screenshot is ![here](res/winecho.png)  
 
 The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memory collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronous API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
 
 ### More SAMPLES
+
 You can get more samples in [samples](samples/), which use many APIs in [acl project](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples) library.
 ## BUILDING
 ### On Unix
+
 ```
 $cd libfiber
 $make
@@ -539,16 +544,19 @@ fiber_client: fiber_client.c
 ```
 
 ### On Windows
-You can open the [fiber_vc2012.sln](c/fiber_vc2012.sln)/ [fiber_vc2013.sln](c/fiber_vc2013.sln)/[c/fiber_vc2015.sln](fiber_vc2015.sln) with vc2012/vc2013/vc2015, and build the libfiber library and the [samples](samples) included.
+
+You can open the [fiber_vc2012.sln](c/fiber_vc2012.sln)/ [fiber_vc2013.sln](c/fiber_vc2013.sln)/[c/fiber_vc2015.sln](fiber_vc2015.sln) with vc2019, and build the libfiber library and the [samples](samples) included.
 
 ## Benchmark
-The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/master-go/tree/master/examples/echo), and the sample written by libfiber is in [server sample directory](samples/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
+
+The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/master-go/tree/master/examples/echo), and the sample written by libfiber is in [server sample directory](samples/c/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
 
 ![Benchmark](res/benchmark.png)
 
 ## API support  
 
-### Base API  
+### Base API
+
 - acl_fiber_create  
 - acl_fiber_self  
 - acl_fiber_status  
@@ -570,6 +578,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_last_serror  
 
 ### IO API
+
 - acl_fiber_recv  
 - acl_fiber_recvfrom  
 - acl_fiber_read  
@@ -585,6 +594,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_close  
 
 ### Net API
+
 - acl_fiber_socket  
 - acl_fiber_listen  
 - acl_fiber_accept  
@@ -594,6 +604,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_freeaddrinfo
 
 ### Channel API  
+
 - acl_channel_create  
 - acl_channel_free  
 - acl_channel_send  
@@ -610,6 +621,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_channel_recvul_nb  
 
 ### Sync API
+
 <b>ACL_FIBER_MUTEX</b>  
 - acl_fiber_mutex_create  
 - acl_fiber_mutex_free  
@@ -642,6 +654,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_sem_num  
 
 ## About API Hook
+
 On Linux/BSD/Mac, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
 The standard APIs been hooked are shown below:
 - close
@@ -668,12 +681,13 @@ The standard APIs been hooked are shown below:
 - getaddrinfo/freeaddrinfo
 
 ## FAQ
+
 1. <b>Is the coroutine schedule in multi-threads?</b>  
-No. The coroutine schedule of libfiber is in one single thread. But you can start multiple threads that one one thread has one schedule process.  
+No. The coroutine schedule of libfiber is in one single thread. But you can start multiple threads that one thread has one schedule process.  
 2. <b>How are the multi-cores of CPU used?</b>  
 multiple threads can be started with its own coroutine schedule, each thread can ocpupy one CPU.  
 3. <b>How does different threads mutex in coroutine schedule status?</b>  
-Even though the OS system mutex APIs, such as pthread_mutex_t's APIs can be used, the ACL_FIBER_EVENT's APIs are recommended. It's safety when the OS system mutex APIs are used in short time without recursive invocation. But it's unsafety using system mutex APIs in this case: One coroutine A1 of thread A had locked the thread-mutex-A, the coroutine A2 of thread A wanted to lock the thread-mutex-B which had been locked by one coroutine B1 of thread B, when the coroutine B2 of thread B wanted to lock the thread-mutex-A, thread deadlock happened! So, the coroutine mutex for threads and coroutines named ACL_FIBER_EVENT's APIs of libfiber were created, which can be used to make critical region between multiple coroutines in different threads(multiple continues in the same thread or not; it can also be used for different threads without coroutines).  
+Even though the OS system mutex APIs, such as pthread_mutex_t's APIs can be used, the ACL_FIBER_EVENT's APIs are recommended. It's safety when the OS system mutex APIs are used in short time without recursive invocation. But its unsafely using system mutex APIs in this case: One coroutine A1 of thread A had locked the thread-mutex-A, the coroutine A2 of thread A wanted to lock the thread-mutex-B which had been locked by one coroutine B1 of thread B, when the coroutine B2 of thread B wanted to lock the thread-mutex-A, thread deadlock happened! So, the coroutine mutex for threads and coroutines named ACL_FIBER_EVENT's APIs of libfiber were created, which can be used to make critical region between multiple coroutines in different threads(multiple continues in the same thread or not; it can also be used for different threads without coroutines).  
 4. <b>Should the mysql-driven source codes be changed when used with libfiber?</b>  
 In UNIX OS, the System IO APIs are hooked by libfiber, so nothing should be changed in mysql-driven.  
 5. <b>How to avoid make the mysqld overloaded when many coroutines started?</b>  

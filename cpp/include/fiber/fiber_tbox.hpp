@@ -16,7 +16,7 @@ namespace acl {
  * class myobj {
  * public:
  *     myobj() {}
- *     ~myobj(void) {}
+ *     ~myobj() {}
  *
  *     void test() { printf("hello world\r\n"); }
  * };

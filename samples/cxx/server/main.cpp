@@ -86,8 +86,6 @@ int main(int argc, char* argv[]) {
 
 	printf("listen %s %d ok\r\n", ip.c_str(), port);
 
-	//acl::fiber::init(acl::FIBER_EVENT_T_KERNEL, true);
-
 	go[=] {
 		fiber_listen(fd);
 	};
