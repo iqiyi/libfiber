@@ -4,12 +4,12 @@
 
 namespace acl {
 
-fiber_cond::fiber_cond(void)
+fiber_cond::fiber_cond()
 {
 	cond_ = acl_fiber_cond_create(0);
 }
 
-fiber_cond::~fiber_cond(void)
+fiber_cond::~fiber_cond()
 {
 	acl_fiber_cond_free(cond_);
 }
@@ -29,7 +29,7 @@ bool fiber_cond::wait(fiber_mutex& mutex, int timeout /* = -1 */)
 	}
 }
 
-bool fiber_cond::notify(void)
+bool fiber_cond::notify()
 {
 	return acl_fiber_cond_signal(cond_) == 0;
 }
