@@ -12,6 +12,7 @@
     * [Resolve domain address in coroutine](#resolve-domain-address-in-coroutine)
     * [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
     * [Create fiber with C++1x API](#create-fiber-with-c1x-api)
+    * [Create shared stack fiber](#create-shared-stack-fiber)
     * [Sync between fibers and threads](#sync-between-fibers-and-threads)
     * [Transfer objects through box](#transfer-objects-through-box)
     * [Using wait_group to wait for the others done](#using-waitgroup-to-wait-for-the-others-done)
@@ -361,6 +362,29 @@ int main() {
     acl::fiber::schedule();
     return 0;
 }
+```
+
+### Create shared stack fiber
+
+You can create fiber in shared stack mode to decrease the memory's size.
+```c++
+#include <stdio.h>
+#include <stdlib.h>
+#include <memory>
+#include "fiber/go_fiber.hpp"
+
+void test_shared_stack() {
+   std::shared_ptr<int> count(new int);
+   for (int i = 0; i < 10; i++) {
+       go_share(1024)[count] {
+           (*count)++;
+       }; 
+   }
+   
+   acl::fiber::schedule();
+   printf("At last the count is %d\r\n", *count);
+}
+
 ```
 
 ### Sync between fibers and threads
