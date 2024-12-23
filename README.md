@@ -12,6 +12,7 @@
     * [Resolve domain address in coroutine](#resolve-domain-address-in-coroutine)
     * [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
     * [Create fiber with C++1x API](#create-fiber-with-c1x-api)
+    * [Sync between fibers and threads](#sync-between-fibers-and-threads)
     * [Transfer objects through box](#transfer-objects-through-box)
     * [Using wait_group to wait for the others done](#using-waitgroup-to-wait-for-the-others-done)
     * [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
@@ -359,6 +360,47 @@ int main() {
 
     acl::fiber::schedule();
     return 0;
+}
+```
+
+### Sync between fibers and threads
+
+fiber_mutex can be used to sync between different fibers and threads:
+```c++
+#include <thread>
+#include "fiber/go_fiber.hpp"
+#include "fiber/fiber_mutex.hpp"
+
+void test_mutex() {
+    // Create one fiber mutex can be shared between different fibers and threads.
+    std::shared_ptr<acl::fiber_mutex> mutex(new acl::fiber_mutex);
+    
+    // Create one fiber to use fiber mutex.
+    go[mutex] {
+        mutex->lock();
+        ::sleep(1);
+        mutex->unlock();
+    };
+
+    // Create one thread to use fiber mutex.
+    std::thread([mutex] {
+        mutex->lock();
+        ::sleep(1);
+        mutex->unlock();
+    }).detach();
+
+    // Create one thread and one fiber in it to use fiber mutex.
+    std::thread([mutex] {
+        go[mutex] {
+            mutex->lock();
+            ::sleep(1);
+            mutex->unlock();
+        };
+        acl::fiber::schedule();
+    }).detach();
+    
+    // Start the current thread's schedule.
+    acl::fiber::schedule();
 }
 ```
 
