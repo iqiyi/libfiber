@@ -61,7 +61,7 @@ The libfiber supports many events including select/poll/epoll/kqueue/iocp, and W
 #include <stdlib.h>
 #include <assert.h>
 #include "fiber/lib_fiber.h"
-#include "patch.h" // in the samples path
+#include "patch.h" // in the samples' path
 
 static size_t      __stack_size  = 128000;
 static const char *__listen_ip   = "127.0.0.1";

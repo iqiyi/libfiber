@@ -29,7 +29,7 @@ bool fiber_mutex::lock()
 
 bool fiber_mutex::trylock()
 {
-	return acl_fiber_mutex_trylock(mutex_) == 0 ? true : false;
+	return acl_fiber_mutex_trylock(mutex_) == 0;
 }
 
 bool fiber_mutex::unlock()

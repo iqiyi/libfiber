@@ -21,17 +21,17 @@ fiber_event::~fiber_event()
 
 bool fiber_event::wait()
 {
-	return acl_fiber_event_wait(event_) == 0 ? true : false;
+	return acl_fiber_event_wait(event_) == 0;
 }
 
 bool fiber_event::trywait()
 {
-	return acl_fiber_event_trywait(event_) == 0 ? true : false;
+	return acl_fiber_event_trywait(event_) == 0;
 }
 
 bool fiber_event::notify()
 {
-	return acl_fiber_event_notify(event_) == 0 ? true : false;
+	return acl_fiber_event_notify(event_) == 0;
 }
 
 } // namespace acl

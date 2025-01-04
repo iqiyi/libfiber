@@ -19,7 +19,7 @@ bool fiber_cond::wait(fiber_mutex& mutex, int timeout /* = -1 */)
 	ACL_FIBER_MUTEX* m = mutex.get_mutex();
 
 	if (timeout < 0) {
-		return acl_fiber_cond_wait(cond_, m) == 0 ? true : false;
+		return acl_fiber_cond_wait(cond_, m) == 0;
 	}
 
 	if (acl_fiber_cond_timedwait(cond_, m, timeout) == 0) {
