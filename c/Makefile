@@ -271,7 +271,7 @@ shared: $(OBJ)
 	fi
 
 INC_FIBER=/usr/local/include/fiber
-LIB_FIBER=/usr/local/lib/
+LIB_FIBER=/usr/local/lib
 
 install:
 	$(shell mkdir -p $(INC_FIBER))
