@@ -130,7 +130,7 @@ SRC = $(wildcard src/*.cpp) #$(wildcard src/*/*.cpp)
 OBJ = $(patsubst %.cpp, $(OBJ_PATH_DST)/%.o, $(notdir $(SRC)))
 
 ###########################################################
-.PHONY = static shared clean
+.PHONY = static shared clean install
 VERSION = 0.9
 DATE_NOW = 20`date +%y`.`date +%m`.`date +%d`
 
@@ -185,6 +185,15 @@ shared: $(OBJ)
 	else \
 		echo 'skip build $(SHARED_LIBNAME); usage: make shared rpath=xxx'; \
 	fi
+
+INC_FIBER=/usr/local/include/fiber
+LIB_FIBER=/usr/local/lib
+
+install:
+	$(shell mkdir -p $(INC_FIBER))
+	$(shell mkdir -p $(LIB_FIBER))
+	cp -f include/fiber/*.hpp $(INC_FIBER)/
+	cp libfiber_cpp.a $(LIB_FIBER)/
 
 # src
 $(OBJ_PATH_DST)/%.o: ./src/%.cpp
