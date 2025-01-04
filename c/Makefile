@@ -225,7 +225,7 @@ SHARED_OLD_LIBNAME = lib_fiber.so
 
 ###########################################################
 
-.PHONY = static shared clean
+.PHONY = static shared clean install
 COMPILE = $(CC) $(CFLAGS) -O3
 COMPILE_FIBER = $(CC) $(CFLAGS) 
 
@@ -270,6 +270,14 @@ shared: $(OBJ)
 		echo 'skip build $(SHARED_LIBNAME); usage: make shared rpath=xxx'; \
 	fi
 
+INC_FIBER=/usr/local/include/fiber
+LIB_FIBER=/usr/local/lib/
+
+install:
+	$(shell mkdir -p $(INC_FIBER))
+	$(shell mkdir -p $(LIB_FIBER))
+	cp -f include/fiber/*.h $(INC_FIBER)/
+	cp libfiber.a $(LIB_FIBER)/
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/%.c
 	$(COMPILE) $< -o $@
 $(OBJ_PATH_DST)/%.o: $(SRC_PATH_SRC)/common/%.c
