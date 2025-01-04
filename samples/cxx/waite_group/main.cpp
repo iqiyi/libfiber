@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
 			::sleep((unsigned) __delay);
 
-			std::cout << "Thread "<< std::this_thread::get_id() << " done!\r\n";
+			std::cout << "Thread " << std::this_thread::get_id() << " done!\r\n";
 			sync.done();
 		});
 
@@ -84,9 +84,24 @@ int main(int argc, char *argv[]) {
 	}
 
 	go[&sync] {
+		printf("fiber-%d: waiting for all done\r\n", acl::fiber::self());
 		sync.wait();
-		printf("All threads and fibers were done\r\n");
+		printf("fiber-%d: all threads and fibers done\r\n", acl::fiber::self());
 	};
+
+	go[&sync] {
+		printf("fiber-%d: waiting for all done\r\n", acl::fiber::self());
+		sync.wait();
+		printf("fiber-%d: all threads and fibers done\r\n", acl::fiber::self());
+	};
+
+    std::thread([&sync] {
+		std::cout << "Thread-" << std::this_thread::get_id()
+			<< ": waiting for all done\r\n";
+		sync.wait();
+		std::cout << "Thread-" << std::this_thread::get_id()
+			<< ": all threads and fibers done\r\n";
+	}).detach();
 
 	acl::fiber::schedule_with(event_type);
 	return 0;
