@@ -27,13 +27,13 @@ void wait_group::add(int n)
 	long long state = atomic_int64_add_fetch((ATOMIC*) state_,
 			(long long) n << 32);
 
-	//高32位为任务数量
+	// The high 32 bits store the number of tasks.
 	int c = (int)(state >> 32);
 
-	//低32位为等待者数量
+	// The low 32 bits store the number of waiters.
 	unsigned w =  (unsigned) state;
 
-	//count不能小于0
+	// count must be >= 0.
 	if (c < 0){
 		msg_fatal("Negative wait_group counter");
 	}
@@ -46,12 +46,12 @@ void wait_group::add(int n)
 		return;
 	}
 
-	//检查state是否被修改
+	// Check if the state has been changed.
 	if (atomic_int64_fetch_add((ATOMIC*) state_, 0) != state) {
 		msg_fatal("Add called concurrently with wait");
 	}
 
-	//这里count为0了，清空state并唤醒所有等待者
+	// The count should be zero, so clear state and wakeup all the waiters.
 	atomic_int64_set((ATOMIC*) state_, 0);
 
 	for (size_t i = 0; i < w; i++) {
@@ -70,12 +70,12 @@ void wait_group::wait()
 		long long state = atomic_int64_fetch_add((ATOMIC*) state_, 0);
 		int c = (int) (state >> 32);
 
-		//没有任务直接返回
+		// Return if no tasks.
 		if (c == 0) {
 			return;
 		}
 
-		//等待者数量加一，失败的话重新获取state
+		// Increase the number of waiters, or get state again if failed.
 		if (atomic_int64_cas((ATOMIC*) state_, state, state + 1) == state) {
 			bool found;
 			(void) box_->pop(-1, &found);

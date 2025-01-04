@@ -21,7 +21,7 @@ bool fiber_lock::lock()
 
 bool fiber_lock::trylock()
 {
-	return acl_fiber_lock_trylock(lock_) == 0 ? true : false;
+	return acl_fiber_lock_trylock(lock_) == 0;
 }
 
 bool fiber_lock::unlock()
@@ -49,7 +49,7 @@ void fiber_rwlock::rlock()
 
 bool fiber_rwlock::tryrlock()
 {
-	return acl_fiber_rwlock_tryrlock(rwlk_) == 0 ? true : false;
+	return acl_fiber_rwlock_tryrlock(rwlk_) == 0;
 }
 
 void fiber_rwlock::runlock()
@@ -64,7 +64,7 @@ void fiber_rwlock::wlock()
 
 bool fiber_rwlock::trywlock()
 {
-	return acl_fiber_rwlock_trywlock(rwlk_) == 0 ? true : false;
+	return acl_fiber_rwlock_trywlock(rwlk_) == 0;
 }
 
 void fiber_rwlock::wunlock()

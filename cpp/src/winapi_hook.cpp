@@ -40,7 +40,7 @@ gethostbyname_fn __gethostbyname = gethostbyname;
 
 static bool __hook_ok = false;
 
-static void winapi_hook_once(void) {
+static void winapi_hook_once() {
 	//DetourIsHelperProcess();
 	DetourRestoreAfterWith();
 	DetourTransactionBegin();
@@ -72,7 +72,7 @@ static void winapi_hook_once(void) {
 
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
 
-bool winapi_hook(void) {
+bool winapi_hook() {
 	if (pthread_once(&__once, winapi_hook_once) != 0) {
 		return false;
 	}
@@ -97,7 +97,7 @@ bool winapi_hook(void) {
 
 #else
 
-bool winapi_hook(void) {
+bool winapi_hook() {
 	return true;
 }
 
