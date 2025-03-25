@@ -20,6 +20,8 @@
 		70D5A2E32D15604C00E75387 /* fiber_mutex_stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70D5A2DF2D15604C00E75387 /* fiber_mutex_stat.cpp */; };
 		70E41F5D26F32AA90068042B /* winapi_hook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70E41F5B26F32AA90068042B /* winapi_hook.cpp */; };
 		70E41F5E26F32AA90068042B /* winapi_hook.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 70E41F5C26F32AA90068042B /* winapi_hook.hpp */; };
+		70FC07192D9284AE00928928 /* fiber_pool.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 70FC07182D9284AE00928928 /* fiber_pool.hpp */; };
+		70FC071B2D9284D600928928 /* fiber_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 70FC071A2D9284D600928928 /* fiber_pool.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +53,8 @@
 		70D5A30E2D15609E00E75387 /* wait_group.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = wait_group.hpp; sourceTree = "<group>"; };
 		70E41F5B26F32AA90068042B /* winapi_hook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = winapi_hook.cpp; path = cpp/src/winapi_hook.cpp; sourceTree = "<group>"; };
 		70E41F5C26F32AA90068042B /* winapi_hook.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = winapi_hook.hpp; path = cpp/src/winapi_hook.hpp; sourceTree = "<group>"; };
+		70FC07182D9284AE00928928 /* fiber_pool.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fiber_pool.hpp; sourceTree = "<group>"; };
+		70FC071A2D9284D600928928 /* fiber_pool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = fiber_pool.cpp; path = cpp/src/fiber_pool.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +96,7 @@
 		070F35F220902DB100672EDC /* src */ = {
 			isa = PBXGroup;
 			children = (
+				70FC071A2D9284D600928928 /* fiber_pool.cpp */,
 				70D5A2DE2D15604C00E75387 /* fiber_mutex.cpp */,
 				70D5A2DF2D15604C00E75387 /* fiber_mutex_stat.cpp */,
 				70D5A2E02D15604C00E75387 /* wait_group.cpp */,
@@ -112,6 +117,7 @@
 		70D5A30F2D15609E00E75387 /* fiber */ = {
 			isa = PBXGroup;
 			children = (
+				70FC07182D9284AE00928928 /* fiber_pool.hpp */,
 				70D5A3012D15609E00E75387 /* channel.hpp */,
 				70D5A3022D15609E00E75387 /* fiber.hpp */,
 				70D5A3032D15609E00E75387 /* fiber_cond.hpp */,
@@ -147,6 +153,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				707539EA251E473E005B6E56 /* stdafx.hpp in Headers */,
+				70FC07192D9284AE00928928 /* fiber_pool.hpp in Headers */,
 				70E41F5E26F32AA90068042B /* winapi_hook.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -208,6 +215,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				70FC071B2D9284D600928928 /* fiber_pool.cpp in Sources */,
 				70E41F5D26F32AA90068042B /* winapi_hook.cpp in Sources */,
 				707539EB251E473E005B6E56 /* fiber_cond.cpp in Sources */,
 				707539E6251E473E005B6E56 /* fiber_sem.cpp in Sources */,

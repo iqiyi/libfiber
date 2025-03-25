@@ -12,3 +12,4 @@
 #include "fiber_tbox2.hpp"
 #include "go_fiber.hpp"
 #include "wait_group.hpp"
+#include "fiber_pool.hpp"
