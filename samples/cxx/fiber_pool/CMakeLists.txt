@@ -89,7 +89,7 @@ link_directories(${output_path})
 
 add_executable(fiber_pool ${src_files})
 if (JEMALLOC)
-    target_link_libraries(fiber_pool ${lib_all} ${JEMALLOC})
+    target_link_libraries(fiber_pool ${lib_all} ${JEMALLOC} -lpthread)
 else()
     target_link_libraries(fiber_pool ${lib_all})
 endif()
