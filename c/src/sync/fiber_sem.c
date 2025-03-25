@@ -188,13 +188,18 @@ int acl_fiber_sem_post(ACL_FIBER_SEM *sem)
 
 	if ((ready = FIRST_FIBER(&sem->waiting)) == NULL) {
 #if 0
-		// Don't yield here to avoid never wakeup. --zsx, 2025.1.9
+		// Don't yield here. --- 2025.1.8
 		if (sem->num >= sem->buf) {
 			acl_fiber_yield();
 		}
 #endif
 		return sem->num;
 	}
+
+	/* Must clear the FIBER_F_TIMER flag for the waiting fiber to avoid
+	 * the flag will be used incorrectly in acl_fiber_sem_timed_wait().
+	 */
+	ready->flag &= ~FIBER_F_TIMER;
 
 	ring_detach(&ready->me2);
 	FIBER_READY(ready);

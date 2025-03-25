@@ -167,6 +167,15 @@ bool fiber::winapi_hook() {
 	return ::winapi_hook();
 }
 
+void fiber::share_epoll(bool yes)
+{
+#ifdef __linux__
+	acl_fiber_share_epoll(yes ? 1 : 0);
+#else
+	(void) yes;
+#endif
+}
+
 void fiber::run()
 {
 	msg_fatal("%s(%d), %s: base function be called",
@@ -381,6 +390,7 @@ void fiber::stackshow(const fiber& fb, size_t max /* = 50 */)
 //////////////////////////////////////////////////////////////////////////////
 
 fiber_timer::fiber_timer()
+: f_(NULL)
 {
 }
 
