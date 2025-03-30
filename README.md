@@ -4,42 +4,43 @@
 
 <!-- vim-markdown-toc GFM -->
 
-* [About](#about)
-* [Which IO events are supported?](#which-io-events-are-supported-)
-* [SAMPLES](#samples)
-    * [One server sample with C API](#one-server-sample-with-c-api)
-    * [One client sample with C API](#one-client-sample-with-c-api)
-    * [Resolve domain address in coroutine](#resolve-domain-address-in-coroutine)
-    * [Create fiber with standard C++ API](#create-fiber-with-standard-c-api)
-    * [Create fiber with C++1x API](#create-fiber-with-c1x-api)
-    * [Create shared stack fiber](#create-shared-stack-fiber)
-    * [Sync between fibers and threads](#sync-between-fibers-and-threads)
-    * [Transfer objects through box](#transfer-objects-through-box)
-    * [Using wait_group to wait for the others done](#using-waitgroup-to-wait-for-the-others-done)
-    * [Wait for the result from a thread](#wait-for-the-result-from-a-thread)
-    * [Http server supporting http url route](#http-server-supporting-http-url-route)
-    * [Windows GUI sample](#windows-gui-sample)
-    * [More SAMPLES](#more-samples)
-* [BUILDING](#building)
-    * [On Unix](#on-unix)
-    * [On Windows](#on-windows)
-* [Benchmark](#benchmark)
-* [API support](#api-support)
-    * [Base API](#base-api)
-    * [IO API](#io-api)
-    * [Net API](#net-api)
-    * [Channel API](#channel-api)
-    * [Sync API](#sync-api)
-* [About API Hook](#about-api-hook)
-* [FAQ](#faq)
+* [1 About](#1-about)
+* [2 Which IO events are supported?](#2-which-io-events-are-supported-)
+* [3 SAMPLES](#3-samples)
+    * [3.1 One server sample with C API](#31-one-server-sample-with-c-api)
+    * [3.2 One client sample with C API](#32-one-client-sample-with-c-api)
+    * [3.3 Resolve domain address in coroutine](#33-resolve-domain-address-in-coroutine)
+    * [3.4 Create fiber with standard C++ API](#34-create-fiber-with-standard-c-api)
+    * [3.5 Create fiber with C++1x API](#35-create-fiber-with-c1x-api)
+    * [3.6 Create shared stack fiber](#36-create-shared-stack-fiber)
+    * [3.7 Sync between fibers and threads](#37-sync-between-fibers-and-threads)
+    * [3.8 Transfer objects through box](#38-transfer-objects-through-box)
+    * [3.9 Using wait_group to wait for the others done](#39-using-wait_group-to-wait-for-the-others-done)
+    * [3.10 Using fiber_pool to execute different tasks](#310-using-fiber_pool-to-execute-different-tasks)
+    * [3.11 Wait for the result from a thread](#311-wait-for-the-result-from-a-thread)
+    * [3.12 Http server supporting http url route](#312-http-server-supporting-http-url-route)
+    * [3.13 Windows GUI sample](#313-windows-gui-sample)
+    * [3.14 More SAMPLES](#314-more-samples)
+* [4 BUILDING](#4-building)
+    * [4.1 On Unix](#41-on-unix)
+    * [4.2 On Windows](#42-on-windows)
+* [5 Benchmark](#5-benchmark)
+* [6 API support](#6-api-support)
+    * [6.1 Base API](#61-base-api)
+    * [6.2 IO API](#62-io-api)
+    * [6.3 Net API](#63-net-api)
+    * [6.4 Channel API](#64-channel-api)
+    * [6.5 Sync API](#65-sync-api)
+* [7 About API Hook](#7-about-api-hook)
+* [8 FAQ](#8-faq)
 
 <!-- vim-markdown-toc -->
 
-## About
+## 1 About
 
 The libfiber project comes from the coroutine module of the [acl project](#https://github.com/acl-dev/acl) in lib_fiber directory of which. It can be used on OS platforms including Linux, FreeBSD, macOS, and Windows, which supports select, poll, epoll, kqueue, iocp, and even Windows GUI messages for different platform. With libfiber, you can write network application services having the high performance and large concurrent more easily than the traditional asynchronous  framework with event-driven model. <b>What's more</b>, with the help of libfiber, you can even write network module of the Windows GUI application written by MFC, wtl or other GUI framework on Windows in coroutine way. That's really amazing.
 
-## Which IO events are supported ?
+## 2 Which IO events are supported ?
 
 The libfiber supports many events including select/poll/epoll/kqueue/iocp, and Windows GUI messages.
 
@@ -50,9 +51,9 @@ The libfiber supports many events including select/poll/epoll/kqueue/iocp, and W
 | <b>Mac</b>     | select, poll, kqueue            |
 | <b>Windows</b> | select, poll, iocp, GUI Message |
 
-## SAMPLES
+## 3 SAMPLES
 
-### One server sample with C API
+### 3.1 One server sample with C API
 
 ```C
 // fiber_server.c
@@ -184,7 +185,7 @@ int main(void) {
 }
 ```
 
-### One client sample with C API
+### 3.2 One client sample with C API
 
 ```C
 // fiber_client.c
@@ -262,7 +263,7 @@ int main(void) {
 }
 ```
 
-### Resolve domain address in coroutine
+### 3.3 Resolve domain address in coroutine
 
 The rfc1035 for DNS has been implement in libfiber, so you can call gethostbyname or getaddrinfo to get the givent domain's IP addresses in coroutine.
 ```C
@@ -307,11 +308,11 @@ int main(void) {
 }
 ```
 
-### Create fiber with standard C++ API
+### 3.4 Create fiber with standard C++ API
 
 You can create one coroutine with standard C++ API in libfiber:
 ```C
-#include <stdio.h>
+#include <cstdio>
 #include "fiber/libfiber.hpp"
 
 class myfiber : public acl::fiber {
@@ -340,11 +341,11 @@ int main() {
 }
 ```
 
-### Create fiber with C++1x API
+### 3.5 Create fiber with C++1x API
 
 You can also create one coroutine with c++11 API in libfiber:
 ```C
-#include <stdio.h>
+#include <cstdio>
 #include "fiber/libfiber.hpp"
 #include "fiber/go_fiber.hpp"
 
@@ -364,12 +365,12 @@ int main() {
 }
 ```
 
-### Create shared stack fiber
+### 3.6 Create shared stack fiber
 
 You can create fiber in shared stack mode to decrease the memory's size.
 ```c++
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include "fiber/go_fiber.hpp"
 
@@ -387,7 +388,7 @@ void test_shared_stack() {
 
 ```
 
-### Sync between fibers and threads
+### 3.7 Sync between fibers and threads
 
 fiber_mutex can be used to sync between different fibers and threads:
 ```c++
@@ -428,7 +429,7 @@ void test_mutex() {
 }
 ```
 
-### Transfer objects through box
+### 3.8 Transfer objects through box
 
 You can use fiber_tbox or fiber_tbox2 to transfer objs between different fibers and threads:
 ```c++
@@ -468,7 +469,7 @@ void test_tbox() {
 }
 ```
 
-### Using wait_group to wait for the others done
+### 3.9 Using wait_group to wait for the others done
 
 You can use wait_group to wait for the other tasks:
 ```c++
@@ -494,10 +495,61 @@ void wait_others() {
 }
 ```
 
-### Wait for the result from a thread
+### 3.10 Using fiber_pool to execute different tasks
+
+You can use fiber_pool to run multiple tasks with high performance:
+```c++
+#include <cstdio>                                                             
+#include <cstdlib>                                                             
+#include <acl-lib/acl_cpp/lib_acl.hpp>                                         
+#include <acl-lib/fiber/libfiber.hpp>
+
+static void mytest(acl::wait_group& sync, int i) {
+   printf("Task %d is running\n", i);
+   sync.done();
+}
+
+int main() {
+    // Create one fiber pool with min=1, max=20, idle=30s, buf=500, stack=64000.
+    acl::fiber_pool pool(1, 20, 30, 500, 64000, false);
+    acl::wait_group sync;
+    int i = 0;
+                                                                               
+    sync.add(1);
+    // Run the first task.
+    pool.exec([&sync, i]() {
+        printf("Task %d is running\n", i);
+        sync.done();
+    });
+    i++;
+                                                                               
+    sync.add(1);
+    // Run the second task.
+    pool.exec([&sync](int i) {
+       printf("Task %d is running\n", i);
+       sync.done();
+    }, i);
+    i++;
+
+    sync.add(1);
+    // Run the third task.
+    pool.exec(mytest, std::ref(sync), i);
+
+    // Create one fiber to wait for all tasks done and stop the fiber pool.
+    go[&sync, &pool] {
+        sync.wait();
+        pool.stop();
+    };
+
+    acl::fiber::schedule();
+    return 0;
+ }
+```
+
+### 3.11 Wait for the result from a thread
 
 ```C
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include "fiber/go_fiber.hpp"
 
@@ -523,7 +575,7 @@ int main() {
 }
 ```
 
-### Http server supporting http url route
+### 3.12 Http server supporting http url route
 
 One http server written with libfiber and http module of [acl](https://github.com/acl-dev/acl) supports http handler route which is in [http server](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples-c%2B%2B1x/httpd).
 
@@ -580,17 +632,17 @@ int main(d) {
 }
 ```
 
-### Windows GUI sample
+### 3.13 Windows GUI sample
 
 There is one Windows GUI sample with libfiber in [directory](samples/c/WinEchod). The screenshot is ![here](res/winecho.png)  
 
 The server coroutine and client coroutine are all running in the same thread as the GUI, so you can operate the GUI object in server and client coroutine without worrying about the memory collision problem. And you can write network process with sequence way, other than asynchronus callback way which is so horrible. With the libfirber for Windows GUI, the asynchronous API like CAsyncSocket should be discarded. The network APIs are intergrated with the Windows GUI seamlessly because the libfiber using GUI message pump as event driven internal.
 
-### More SAMPLES
+### 3.14 More SAMPLES
 
 You can get more samples in [samples](samples/), which use many APIs in [acl project](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples) library.
-## BUILDING
-### On Unix
+## 4 BUILDING
+### 4.1 On Unix
 
 ```
 $cd libfiber
@@ -609,19 +661,19 @@ fiber_client: fiber_client.c
 	gcc -o fiber_client fiber_client.c patch.c -I{path_of_fiber_header} -L{path_of_fiber_lib) -lfiber -ldl -lpthread
 ```
 
-### On Windows
+### 4.2 On Windows
 
 You can open the [fiber_vc2012.sln](c/fiber_vc2012.sln)/ [fiber_vc2013.sln](c/fiber_vc2013.sln)/[c/fiber_vc2015.sln](fiber_vc2015.sln) with vc2019, and build the libfiber library and the [samples](samples) included.
 
-## Benchmark
+## 5 Benchmark
 
 The picture below show the IOPS (io echo per-second) benchmark written by libfiber, comparing with the samples writen by [libmill](https://github.com/sustrik/libmill), golang and [libco](https://github.com/Tencent/libco). The samples written by libmill and libco are in [directory](benchmark), the sample written by golang is in [here](https://github.com/acl-dev/master-go/tree/master/examples/echo), and the sample written by libfiber is in [server sample directory](samples/c/server). The testing client is in [here](https://github.com/acl-dev/acl/tree/master/lib_fiber/samples/client2) from the [acl project](https://github.com/acl-dev/acl/).
 
 ![Benchmark](res/benchmark.png)
 
-## API support  
+## 6 API support  
 
-### Base API
+### 6.1 Base API
 
 - acl_fiber_create  
 - acl_fiber_self  
@@ -643,7 +695,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_last_error  
 - acl_fiber_last_serror  
 
-### IO API
+### 6.2 IO API
 
 - acl_fiber_recv  
 - acl_fiber_recvfrom  
@@ -659,7 +711,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_poll  
 - acl_fiber_close  
 
-### Net API
+### 6.3 Net API
 
 - acl_fiber_socket  
 - acl_fiber_listen  
@@ -669,7 +721,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_getaddrinfo
 - acl_fiber_freeaddrinfo
 
-### Channel API  
+### 6.4 Channel API  
 
 - acl_channel_create  
 - acl_channel_free  
@@ -686,7 +738,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_channel_sendul_nb  
 - acl_channel_recvul_nb  
 
-### Sync API
+### 6.5 Sync API
 
 <b>ACL_FIBER_MUTEX</b>  
 - acl_fiber_mutex_create  
@@ -719,7 +771,7 @@ The picture below show the IOPS (io echo per-second) benchmark written by libfib
 - acl_fiber_sem_post  
 - acl_fiber_sem_num  
 
-## About API Hook
+## 7 About API Hook
 
 On Linux/BSD/Mac, many IO and Net APIs are hooked. So you can just use the System standard APIs in your applications with libfiber, the hooked APIs will be replaced with libfiber APIs. In this case, you can <b>`coroutine`</b> your DB application with mysql driven and change nothing in mysql driven.  
 The standard APIs been hooked are shown below:
@@ -746,7 +798,7 @@ The standard APIs been hooked are shown below:
 - gethostbyname(_r)
 - getaddrinfo/freeaddrinfo
 
-## FAQ
+## 8 FAQ
 
 1. <b>Is the coroutine schedule in multi-threads?</b>  
 No. The coroutine schedule of libfiber is in one single thread. But you can start multiple threads that one thread has one schedule process.  
