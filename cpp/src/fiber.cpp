@@ -234,7 +234,7 @@ bool fiber::self_killed()
 	if (curr == NULL) {
 		return false;
 	}
-	return acl_fiber_killed(curr) ? true : false;
+	return acl_fiber_killed(curr) != 0;
 }
 
 void fiber::init(fiber_event_t type, bool schedule_auto /* = false */)
