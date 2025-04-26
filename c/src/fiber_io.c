@@ -178,7 +178,7 @@ void fiber_timer_add(ACL_FIBER *fb, size_t milliseconds)
 	long long now = event_get_stamp(ev);
 	TIMER_CACHE_NODE *timer;
 
-	fb->when = now + (ssize_t) milliseconds;
+	fb->when = now + (long long) milliseconds;
 	ring_detach(&fb->me);  // Detach the previous binding.
 	timer_cache_add(__thread_fiber->ev_timer, fb->when, &fb->me);
 
@@ -849,6 +849,7 @@ FILE_EVENT *fiber_file_cache_get(socket_t fd)
 		fe = file_event_alloc(fd);
 	} else {
 		file_event_init(fe, fd);
+		fe->status &= ~STATUS_BUFFED;
 	}
 
 #ifdef	HAS_IO_URING
@@ -862,11 +863,22 @@ FILE_EVENT *fiber_file_cache_get(socket_t fd)
 
 void fiber_file_cache_put(FILE_EVENT *fe)
 {
-	fiber_file_del(fe, fe->fd);
-	fe->fd = INVALID_SOCKET;
+	// If the fe is being refered by more than one fibers, don't put it
+	// back to cache or free it, because the fe is still aliving now.
+	if (fe->refer > 1) {
+		return;
+	}
+
+	if (fe->fd != INVALID_SOCKET) {
+		fiber_file_del(fe, fe->fd);
+		fe->fd = INVALID_SOCKET;
+	}
 
 	if (array_size(__thread_fiber->cache) < __thread_fiber->cache_max) {
-		array_push_back(__thread_fiber->cache, fe);
+		if (!(fe->status & STATUS_BUFFED)) {
+			array_push_back(__thread_fiber->cache, fe);
+			fe->status |= STATUS_BUFFED;
+		}
 	} else {
 		file_event_unrefer(fe);
 	}

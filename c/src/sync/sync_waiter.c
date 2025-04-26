@@ -11,6 +11,7 @@ struct SYNC_WAITER {
 	ACL_FIBER *fb;
 	MBOX *box;
 	int stop;
+	long tid;
 };
 
 static SYNC_WAITER *sync_waiter_new(void)
@@ -21,6 +22,7 @@ static SYNC_WAITER *sync_waiter_new(void)
 
 	pthread_mutex_init(&waiter->lock, NULL);
 	waiter->box = mbox_create(MBOX_T_MPSC);
+	waiter->tid = thread_self();
 
 	out = mbox_out(waiter->box);
 	assert(out != INVALID_SOCKET);
@@ -69,7 +71,7 @@ static void fiber_waiting(ACL_FIBER *fiber fiber_unused, void *ctx)
 
 	while (!waiter->stop) {
 		int res;
-		ACL_FIBER *fb = mbox_read(waiter->box, delay, &res);
+		ACL_FIBER *fb = (ACL_FIBER*) mbox_read(waiter->box, delay, &res);
 		if (fb) {
 			assert(fb->status == FIBER_STATUS_SUSPEND);
 			FIBER_READY(fb);
@@ -97,7 +99,9 @@ SYNC_WAITER *sync_waiter_get(void)
 
 void sync_waiter_wakeup(SYNC_WAITER *waiter, ACL_FIBER *fb)
 {
-	if (var_hook_sys_api) {
+	if (!var_hook_sys_api) {
+		mbox_send(waiter->box, fb);
+	} else if (thread_self() != waiter->tid) {
 		// When using io_uring, we should call the system API of write
 		// to send data, because the fd is shared by multiple threads
 		// and which can't use io_uring directly, so we set the mask
@@ -119,9 +123,12 @@ void sync_waiter_wakeup(SYNC_WAITER *waiter, ACL_FIBER *fb)
 			if (fe->mbox_wsem == NULL) {
 				fe->mbox_wsem = acl_fiber_sem_create(1);
 			}
-		} else {
-			assert(fe->mbox_wsem);
+		} else if (fe->mbox_wsem == NULL) {
+			msg_fatal("%s(%d): mbox_wsem NULL, out=%d, fd=%d, refer=%d",
+				__FUNCTION__, __LINE__, (int) out, fe->fd, fe->refer);
 		}
+
+		file_event_refer(fe);
 
 		// Reduce the sem number and maybe be suspended if sem is 0.
 		acl_fiber_sem_wait(fe->mbox_wsem);
@@ -132,11 +139,30 @@ void sync_waiter_wakeup(SYNC_WAITER *waiter, ACL_FIBER *fb)
 		// ->fiber_file_open->fiber_file_get.
 		mbox_send(waiter->box, fb);
 
+#ifdef	DEBUG
+		FILE_EVENT *f = fiber_file_get(out);
+		if (f == NULL) {
+			msg_fatal("%s(%d): fiber_file_get NULL, fe=%p, out=%d",
+				__FUNCTION__, __LINE__, fe, out);
+		} else if (f->mbox_wsem == NULL) {
+			msg_fatal("%s(%d): mbox_wsem NULL, f=%p, fe=%p, out=%d",
+				__FUNCTION__, __LINE__, f, fe, out);
+		} else if (f != fe) {
+			msg_fatal("%s(%d): invalid f=%p, fe=%p, out=%d",
+				__FUNCTION__, __LINE__, f, fe, out);
+		}
+#endif
+
 		// If no other fiber is suspended by the sem, then release it.
 		if (acl_fiber_sem_post(fe->mbox_wsem) == 1) {
 			fiber_file_cache_put(fe);
 		}
+
+		file_event_unrefer(fe);
 	} else {
-		mbox_send(waiter->box, fb);
+		// If the current notifier is a fiber in the same thread with
+		// the one to be awakened, just wakeup it directly.
+		assert(fb->status == FIBER_STATUS_SUSPEND);
+		FIBER_READY(fb);
 	}
 }
